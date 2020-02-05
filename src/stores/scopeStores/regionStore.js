@@ -84,7 +84,7 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams,
       propsStructure: PropTypes.shape()
     })
     ],
-    ['component', PropTypes.shape()],
+    ['component', PropTypes.func],
     ['props', PropTypes.shape().isRequired]
   ],
   'makeRegionsQueryContainer'
@@ -128,6 +128,6 @@ export const makeRegionMutationContainer = v(R.curry(
     outputParams: PropTypes.array.isRequired
   })
   ],
-  ['component', PropTypes.shape()],
+  ['component', PropTypes.func],
   ['props', PropTypes.shape().isRequired]
 ], 'makeRegionMutationContainer');

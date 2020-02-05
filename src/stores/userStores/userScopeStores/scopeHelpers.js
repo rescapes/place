@@ -107,7 +107,7 @@ export const makeUserScopeObjsQueryContainer = v(R.curry(
       userStateOutputParamsCreator: PropTypes.func.isRequired,
       scopeOutputParams: PropTypes.array.isRequired
     }).isRequired],
-    ['component', PropTypes.shape()],
+    ['component', PropTypes.func],
     ['props', PropTypes.shape({
       userState: PropTypes.shape({
         user: PropTypes.shape({
@@ -183,7 +183,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
       scopeName: PropTypes.string.isRequired,
       scopeOutputParams: PropTypes.array.isRequired
     }).isRequired],
-    ['component', PropTypes.shape()],
+    ['component', PropTypes.func],
     ['props', PropTypes.shape({
       scope: PropTypes.shape().isRequired,
       userScopeObjs: PropTypes.array.isRequired

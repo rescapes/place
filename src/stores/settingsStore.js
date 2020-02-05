@@ -99,7 +99,7 @@ export const makeSettingsQueryContainer = v(R.curry((apolloConfig, {outputParams
       propsStructure: PropTypes.shape()
     })
     ],
-    ['component', PropTypes.shape()],
+    ['component', PropTypes.func],
     ['props', PropTypes.shape().isRequired]
   ], 'makeSettingsQueryContainer');
 
@@ -142,7 +142,7 @@ export const makeSettingsMutationContainer = v(R.curry(
     outputParams: PropTypes.array.isRequired
   })
   ],
-  ['component', PropTypes.shape()],
+  ['component', PropTypes.func],
   ['props', PropTypes.shape().isRequired]
 ], 'makeSettingsMutationContainer');
 
@@ -172,6 +172,6 @@ export const makeSettingsClientMutationContainer = v(R.curry(
     outputParams: PropTypes.array.isRequired
   })
   ],
-  ['component', PropTypes.shape()],
+  ['component', PropTypes.func],
   ['props', PropTypes.shape().isRequired]
 ], 'makeSettingsClientMutationContainer');

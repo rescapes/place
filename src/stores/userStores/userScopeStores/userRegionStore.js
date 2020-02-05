@@ -62,7 +62,7 @@ export const userRegionsQueryContainer = v(R.curry(
     ['outputParamSets', PropTypes.shape({
       regionOutputParams: PropTypes.shape()
     })],
-    ['component', PropTypes.shape()],
+    ['component', PropTypes.func],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape({
         user: PropTypes.shape({

@@ -70,7 +70,7 @@ export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutpu
     ['outputParamSets', PropTypes.shape({
       projectOutputParams: PropTypes.shape()
     })],
-    ['component', PropTypes.shape()],
+    ['component', PropTypes.func],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape({
         user: PropTypes.shape({

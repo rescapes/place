@@ -245,7 +245,7 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['outputParams', PropTypes.array.isRequired],
-    ['component', PropTypes.shape()],
+    ['component', PropTypes.func],
     ['propSets', PropTypes.shape({
       user: PropTypes.shape().isRequired,
       region: PropTypes.shape().isRequired,

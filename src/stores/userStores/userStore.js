@@ -131,7 +131,7 @@ export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputPara
   [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['outputParams', PropTypes.array.isRequired],
-    ['component', PropTypes.shape()]
+    ['component', PropTypes.func]
   ], 'makeCurrentUserQueryContainer');
 
 
@@ -164,7 +164,7 @@ export const makeUserStateQueryContainer = v(R.curry(
       ).isRequired,
       propsStructure: PropTypes.shape()
     })],
-    ['component', PropTypes.shape()],
+    ['component', PropTypes.func],
     ['props', PropTypes.shape().isRequired]
   ], 'makeUserStateQueryContainer');
 
@@ -191,7 +191,7 @@ export const makeUserStateMutationContainer = v(R.curry(
     ['mutationStructure', PropTypes.shape({
       outputParams: PropTypes.array.isRequired
     })],
-    ['component', PropTypes.shape()],
+    ['component', PropTypes.func],
     ['props', PropTypes.shape().isRequired]
   ],
   'makeUserStateMutationContainer'
