@@ -25,8 +25,6 @@ export {
   makeActiveUserSelectedRegionAndSettingsSelector
 } from './selectors/storeSelectors';
 export {
-  mergeAndApplyMatchingStyles,
-  applyMatchingStyles,
   browserDimensionsSelector,
   makeBrowserProportionalDimensionsSelector,
   makeMergeDefaultStyleWithProps

@@ -39,7 +39,6 @@ describe('settingsStore', () => {
         ({apolloClient, cacheOnlySettings}) => makeSettingsQueryContainer(
           {apolloClient},
           {outputParams: settingsOutputParams(true)},
-          null,
           {id: parseInt(cacheOnlySettings.id)}
         )
       ),

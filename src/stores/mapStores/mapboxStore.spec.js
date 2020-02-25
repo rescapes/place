@@ -25,7 +25,6 @@ describe('mapboxStore', () => {
       ({apolloClient, user, region, project, userState}) => makeMapboxesQueryResultTask(
         {apolloClient},
         [mapboxOutputParamsFragment],
-        null,
         {
           user: {id: parseInt(user.id)},
           region: {id: parseInt(region.id)},
@@ -42,7 +41,7 @@ describe('mapboxStore', () => {
       }),
       // Get the current user
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       // Authenticate
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',

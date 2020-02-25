@@ -40,7 +40,6 @@ const readInputTypeMapper = {
  * @param {Object} outputParamSets Optional outputParam sets to override the defaults
  * @param {Object} [outputParamSets.projectOutputParams] Optional project output params.
  * Defaults to projectStore.projectOutputParams
- * @param {Function} [component] Optional component when doing and Apollo Component query
  * @param {Object} propSets The props used for the query. userState and project objects are required
  * @param {Object} propSets.userState Props for the UserStates queries {user: {id: }} is required to limit
  * the query to one user
@@ -49,7 +48,7 @@ const readInputTypeMapper = {
  * the UserState query selects the ids
  * @returns {Object} The resulting Projects in a Task in {data: usersProjects: [...]}}
  */
-export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutputParams}, component, propSets) => {
+export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutputParams}, propSets) => {
     return makeUserScopeObjsQueryContainer(
       apolloConfig,
       {
@@ -61,7 +60,6 @@ export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutpu
         ),
         scopeOutputParams: projectOutputParams || defaultProjectOutputParams
       },
-      component,
       {userState: reqStrPathThrowing('userState', propSets), scope: reqStrPathThrowing('project', propSets)}
     );
   }),
@@ -70,7 +68,6 @@ export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutpu
     ['outputParamSets', PropTypes.shape({
       projectOutputParams: PropTypes.shape()
     })],
-    ['component', PropTypes.func],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape({
         user: PropTypes.shape({

@@ -29,7 +29,7 @@ describe('userStore', () => {
   test('makeUserQueryTask', done => {
     const someUserKeys = ['id', 'email', 'username'];
     R.composeK(
-      ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null),
+      ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {}),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => localTestAuthTask
       )
@@ -49,11 +49,10 @@ describe('userStore', () => {
       ({apolloClient, userId}) => makeUserStateQueryContainer(
         {apolloClient},
         {outputParams: userStateOutputParamsFull},
-        null,
         {user: {id: parseInt(userId)}}
       ),
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => localTestAuthTask
@@ -91,7 +90,7 @@ describe('userStore', () => {
         projectKey: 'shrangrila'
       }),
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => localTestAuthTask

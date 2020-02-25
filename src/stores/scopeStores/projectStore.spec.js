@@ -26,7 +26,7 @@ describe('projectStore', () => {
       ),
       // Get the current user
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       () => localTestAuthTask
     )().run().listen(defaultRunConfig({
@@ -44,14 +44,13 @@ describe('projectStore', () => {
       ({apolloClient, project}) => makeProjectsQueryContainer(
         {apolloClient},
         {outputParams: projectOutputParams, propsStructure: {key: ''}},
-        null,
         {key: reqStrPathThrowing('key', project)}
       ),
       mapToNamedPathAndInputs('project', 'data.createProject.project',
         ({apolloClient, user}) => createSampleProjectTask({apolloClient}, {user: {id: user.id}})
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => localTestAuthTask

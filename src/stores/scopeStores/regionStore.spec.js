@@ -38,7 +38,6 @@ describe('regionStore', () => {
       ({apolloClient, region}) => makeRegionsQueryContainer(
         {apolloClient},
         {outputParams: regionOutputParams},
-        null,
         {key: reqStrPathThrowing('key', region)}
       ),
       mapToNamedPathAndInputs('region', 'data.createRegion.region',

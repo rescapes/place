@@ -23,7 +23,6 @@ describe('userProjectStore', () => {
       ({apolloClient, userId}) => userProjectsQueryContainer(
         {apolloClient},
         {},
-        null,
         {
           userState: {user: {id: userId}},
           // The sample user is already limited to certain projects. We don't need to limit further
@@ -31,7 +30,7 @@ describe('userProjectStore', () => {
         }
       ),
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => localTestAuthTask
@@ -52,13 +51,13 @@ describe('userProjectStore', () => {
     R.composeK(
       // Filter for projects where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Projects so we can filter by Project
-      ({apolloClient, userId}) => userProjectsQueryContainer({apolloClient}, {}, null, {
+      ({apolloClient, userId}) => userProjectsQueryContainer({apolloClient}, {}, {
         userState: {user: {id: parseInt(userId)}},
         project: {geojson: {type: 'FeatureCollection'}}
       }),
       ({apolloClient}) => R.map(
         response => ({apolloClient, userId: reqStrPathThrowing('data.currentUser.id', response)}),
-        makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+        makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => localTestAuthTask
@@ -77,12 +76,11 @@ describe('userProjectStore', () => {
       ({apolloClient, userId}) => userProjectsQueryContainer(
         {apolloClient},
         {},
-        null,
         {userState: {user: {id: parseInt(userId)}}, project: {}}
       ),
       ({apolloClient}) => R.map(
         response => ({apolloClient, userId: reqStrPathThrowing('data.currentUser.id', response)}),
-        makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+        makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => localTestAuthTask

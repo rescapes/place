@@ -10,7 +10,13 @@
  */
 
 import {userRegionsQueryContainer, userStateOutputParamsCreator} from './userRegionStore';
-import {defaultRunConfig, reqStrPathThrowing, mapToNamedPathAndInputs} from 'rescape-ramda';
+import {
+  defaultRunConfig,
+  reqStrPathThrowing,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs,
+  composeWithChainMDeep
+} from 'rescape-ramda';
 import {expectKeysAtStrPath, stateLinkResolvers, localTestAuthTask, testConfig} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStore';
@@ -25,7 +31,6 @@ describe('userRegionStore', () => {
       ({apolloClient, userId}) => userRegionsQueryContainer(
         {apolloClient},
         {},
-        null,
         {
           userState: {user: {id: userId}},
           // The sample user is already limited to certain regions. We don't need to limit further
@@ -34,7 +39,7 @@ describe('userRegionStore', () => {
       ),
       // Get the authenticated user
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       // Authenticate
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
@@ -52,26 +57,28 @@ describe('userRegionStore', () => {
     expect.assertions(1);
     const errors = [];
     const someRegionKeys = ['id', 'key', 'name', 'data'];
-    R.composeK(
+    composeWithChainMDeep(1, [
       // Filter for regions where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Regions so we can filter by Region
-      ({apolloClient, userId}) => userRegionsQueryContainer(
-        {apolloClient},
-        {},
-        null,
-        {
-          userState: {user: {id: parseInt(userId)}},
-          region: {geojson: {type: 'FeatureCollection'}}
+      ({apolloConfig, userId}) => {
+        return userRegionsQueryContainer(
+          apolloConfig,
+          {},
+          {
+            userState: {user: {id: parseInt(userId)}},
+            region: {geojson: {type: 'FeatureCollection'}}
+          }
+        );
+      },
+      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
-      ({apolloClient}) => R.map(
-        response => ({apolloClient, userId: reqStrPathThrowing('data.currentUser.id', response)}),
-        makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
-      ),
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedResponseAndInputs('apolloConfig',
         () => localTestAuthTask
       )
-    )().run().listen(defaultRunConfig({
+    ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
           expectKeysAtStrPath(someRegionKeys, 'data.userRegions.0.region', response);
@@ -82,20 +89,18 @@ describe('userRegionStore', () => {
   test('makeActiveUserRegionQuery', done => {
     const someRegionKeys = ['id', 'key', 'name', 'data'];
     R.composeK(
-      ({apolloClient, userId}) => userRegionsQueryContainer(
-        {apolloClient},
+      ({apolloConfig, userId}) => userRegionsQueryContainer(
+        apolloConfig,
         {},
-        null,
         {userState: {user: {id: parseInt(userId)}}, region: {}}
       ),
-      ({apolloClient}) => R.map(
-        response => ({apolloClient, userId: reqStrPathThrowing('data.currentUser.id', response)}),
-        makeCurrentUserQueryContainer({apolloClient}, userOutputParams, null)
+      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+        ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedResponseAndInputs('apolloConfig',
         () => localTestAuthTask
       )
-    )().run().listen(defaultRunConfig({
+    )({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
           expectKeysAtStrPath(someRegionKeys, 'data.userRegions.0.region', response);

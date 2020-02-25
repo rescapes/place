@@ -24,7 +24,6 @@ export const createSampleProjectTask = ({apolloClient}, props) => {
   return makeProjectMutationContainer(
     {apolloClient},
     {outputParams: projectOutputParams},
-    null,
     mergeDeep(
       {
         key: 'downtownPincher',

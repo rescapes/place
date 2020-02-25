@@ -157,7 +157,6 @@ export const scopeObjMapboxOutputParamsCreator = (scopeName, mapboxOutputParamsF
  *
  * @params {Object} apolloClient The Apollo Client
  * @params {Object} outputParams OutputParams for the query such as regionOutputParams
- * @params {Object} component The Apollo component for component queries
  * @params {Object} propSets Arguments for each query as follows
  * @params {Object} propSets.users Arguments to limit the user to zero or one user. If unspecified no
  * user-specific queries are made, meaning no user state is merged into the result
@@ -167,12 +166,12 @@ export const scopeObjMapboxOutputParamsCreator = (scopeName, mapboxOutputParamsF
  * project queries are made
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
-export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams, component, propSets) => {
+export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams, propSets) => {
     return R.composeK(
       of(R.mergeAll),
       // Each Result.Ok is mapped to a Task. Result.Errors are mapped to a Task.of
       // [Result] -> [Task Object]
-      ({propSets, component}) => R.map(
+      ({propSets}) => R.map(
         // TODO. What is wanted here?
         values => R.complement(R.has)('error', values),
         waitAll([
@@ -188,7 +187,6 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
                 makeUserStateQueryContainer(
                   apolloConfig,
                   {outputParams: userStateMapboxOutputParamsCreator(outputParams)},
-                  component,
                   {user: userAsId}
                 )
               );
@@ -204,7 +202,6 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
               makeProjectsQueryContainer(
                 apolloConfig,
                 {name: 'projects', readInputTypeMapper, outputParams: projectMapboxOutputParamsCreator(outputParams)},
-                component,
                 projectAsId
               )
             ),
@@ -218,7 +215,6 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
               makeRegionsQueryContainer(
                 apolloConfig,
                 {name: 'regions', readInputTypeMapper, outputParams: regionMapboxOutputParamsCreator(outputParams)},
-                component,
                 regionAsId
               )
             ),
@@ -232,7 +228,6 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
               makeQueryContainer(
                 apolloConfig,
                 {name: 'settings', readInputTypeMapper, outputParams},
-                component,
                 // No args for global
                 {}
               )
@@ -240,12 +235,11 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
           )(Result.Ok({}))
         ])
       )
-    )({propSets, component});
+    )({propSets});
   }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['outputParams', PropTypes.array.isRequired],
-    ['component', PropTypes.func],
     ['propSets', PropTypes.shape({
       user: PropTypes.shape().isRequired,
       region: PropTypes.shape().isRequired,

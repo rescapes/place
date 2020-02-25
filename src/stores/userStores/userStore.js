@@ -113,17 +113,17 @@ export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
  * Queries users
  * @params {Object} apolloClient The Apollo Client
  * @params {Object} ouptputParams OutputParams for the query such as userOutputParams
+ * @params {Object} props Unused but here to match the Apollo Component pattern. Use {}.
  * @returns {Task<Result>} A Task containing the Result.Ok with a User in an object with Result.Ok({data: currentUser: {}})
  * or errors in Result.Error({errors: [...]})
  */
-export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputParams, component) => {
+export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputParams, props) => {
     return makeQueryContainer(
       apolloConfig,
       {
         // If we have to query for users separately use the limited output userStateOutputParamsCreator
         name: 'currentUser', readInputTypeMapper: userReadInputTypeMapper, outputParams
       },
-      component,
       // No arguments, the server resolves the current user based on authentication
       {}
     );
@@ -131,7 +131,7 @@ export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputPara
   [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['outputParams', PropTypes.array.isRequired],
-    ['component', PropTypes.func]
+    ['props', PropTypes.shape().isRequired]
   ], 'makeCurrentUserQueryContainer');
 
 
@@ -139,16 +139,14 @@ export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputPara
  * Queries userState.
  * @param {Object} apolloClient The Apollo Client
  * @param [Object] outputParams OutputParams for the query
- * @param {Function} component The Apollo component if doing a component mutation. Otherwise null
  * @param {Object} userStateArguments Arguments for the UserState query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.userStates or errors in obj.errors
  */
 export const makeUserStateQueryContainer = v(R.curry(
-  (apolloConfig, {outputParams, propsStructure}, component, props) => {
+  (apolloConfig, {outputParams, propsStructure}, props) => {
     return makeQueryContainer(
       apolloConfig,
       {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams, propsStructure},
-      component,
       props
     );
   }),
@@ -164,7 +162,6 @@ export const makeUserStateQueryContainer = v(R.curry(
       ).isRequired,
       propsStructure: PropTypes.shape()
     })],
-    ['component', PropTypes.func],
     ['props', PropTypes.shape().isRequired]
   ], 'makeUserStateQueryContainer');
 
@@ -172,26 +169,24 @@ export const makeUserStateQueryContainer = v(R.curry(
  * Makes a UserState mutation container;
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
  * @param [Object] outputParams OutputParams for the query
- * @param {Function} component The Apollo component if doing a component mutation. Otherwise null
  * @param {Object} props Object matching the shape of a userState for the create or update
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeUserStateMutationContainer = v(R.curry(
-  (apolloConfig, {outputParams}, component, props) => makeMutationRequestContainer(
-    apolloConfig,
-    {
-      name: 'userState',
-      outputParams
-    },
-    component,
-    props
-  )), [
+export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
+  return makeMutationRequestContainer(
+      apolloConfig,
+      {
+        name: 'userState',
+        outputParams
+      },
+      props
+    )
+  }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationStructure', PropTypes.shape({
       outputParams: PropTypes.array.isRequired
     })],
-    ['component', PropTypes.func],
     ['props', PropTypes.shape().isRequired]
   ],
   'makeUserStateMutationContainer'

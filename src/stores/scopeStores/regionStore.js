@@ -65,15 +65,13 @@ export const regionOutputParams = [
  * Queries regions
  * @params {Object} apolloConfig The Apollo config. See makeQueryContainer for options
  * @params {Object} outputParams OutputParams for the query such as regionOutputParams
- * @params {Object} component Optional component for ApolloComponent queries. Leave null for client queries
  * @params {Object} props Arguments for the Regions query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
-export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams, propsStructure}, component, props) => {
+export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams, propsStructure}, props) => {
     return makeQueryContainer(
       apolloConfig,
       {name: 'regions', readInputTypeMapper, outputParams, propsStructure},
-      component,
       props
     );
   }),
@@ -82,9 +80,7 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams,
     ['queryStructure', PropTypes.shape({
       outputParams: PropTypes.array.isRequired,
       propsStructure: PropTypes.shape()
-    })
-    ],
-    ['component', PropTypes.func],
+    })],
     ['props', PropTypes.shape().isRequired]
   ],
   'makeRegionsQueryContainer'
@@ -108,19 +104,17 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams,
  *       ]
  *    }
  *  ]
- *  @param {Function} component The Apollo component if doing a component mutation. Otherwise null
  *  @param {Object} props Object matching the shape of a region. E.g. {id: 1, city: "Stavanger", data: {foo: 2}}
  *  @returns {Task|Object} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const makeRegionMutationContainer = v(R.curry(
-  (apolloConfig, {outputParams}, component, props) => makeMutationRequestContainer(
+  (apolloConfig, {outputParams}, props) => makeMutationRequestContainer(
     apolloConfig,
     {
       name: 'region',
       outputParams
     },
-    component,
     props
   )), [
   ['apolloConfig', PropTypes.shape().isRequired],
@@ -128,6 +122,5 @@ export const makeRegionMutationContainer = v(R.curry(
     outputParams: PropTypes.array.isRequired
   })
   ],
-  ['component', PropTypes.func],
   ['props', PropTypes.shape().isRequired]
 ], 'makeRegionMutationContainer');

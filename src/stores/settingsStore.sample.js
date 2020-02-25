@@ -32,8 +32,6 @@ export const createSampleSettingsTask = ({apolloClient}) => {
         {apolloClient},
         // These outputParams are used as output to the query of the cache before we update the cache with the cache only props
         {outputParams: settingsOutputParams(true)},
-        // Component is always null for sample data tasks
-        null,
         // Combine props with the results of the mutation so we have the id and Apollo __typename properties
         // We need these to write to the correct place in the cache
         mergeDeep(props, settings)
@@ -43,8 +41,6 @@ export const createSampleSettingsTask = ({apolloClient}) => {
       ({props, apolloClient}) => makeSettingsMutationContainer(
         {apolloClient},
         {outputParams: settingsOutputParams()},
-        // Component is always null for sample data tasks
-        null,
         props
       )
     )

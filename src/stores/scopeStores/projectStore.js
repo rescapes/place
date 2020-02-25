@@ -65,15 +65,13 @@ export const projectOutputParams = [
  * @params {Object} apolloConfig The Apollo config. See makeQueryContainer for options
  * @param {Object} apolloClient An authorized Apollo Client
  * @params {Object} outputParams OutputParams for the query such as projectOutputParams
- * @params {Object} component Optional component for ApolloComponent queries. Leave null for client queries
  * @params {Object} props Arguments for the Regions query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
-export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams, propsStructure}, component, props) => {
+export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams, propsStructure}, props) => {
     return makeQueryContainer(
       apolloConfig,
       {name: 'projects', readInputTypeMapper, outputParams, propsStructure},
-      component,
       props
     );
   }),
@@ -84,7 +82,6 @@ export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams
       propsStructure: PropTypes.shape()
     })
     ],
-    ['component', PropTypes.func],
     ['props', PropTypes.shape().isRequired]
   ], 'makeRegionsQueryContainer');
 
@@ -107,26 +104,24 @@ export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams
  *       ]
  *    }
  *  ]
- *  @param {Function} component The Apollo component if doing a component mutation. Otherwise null
  *  @param {Object} props Object matching the shape of a region. E.g. {id: 1, city: "Stavanger", data: {foo: 2}}
  *  @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeProjectMutationContainer = v(R.curry(
-  (apolloConfig, {outputParams}, component, props) => makeMutationRequestContainer(
+export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
+  return makeMutationRequestContainer(
     apolloConfig,
     {
       name: 'project',
       outputParams
     },
-    component,
     props
-  )), [
+  );
+}), [
   ['apolloConfig', PropTypes.shape().isRequired],
   ['mutationStructure', PropTypes.shape({
     outputParams: PropTypes.array.isRequired
   })
   ],
-  ['component', PropTypes.func],
   ['props', PropTypes.shape().isRequired]
 ], 'makeProjectMutationContainer');

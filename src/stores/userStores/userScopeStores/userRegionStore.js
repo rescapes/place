@@ -33,7 +33,6 @@ import {reqStrPathThrowing} from 'rescape-ramda';
  * Defaults to regionStore.regionOutputParams
  * @param {Object} userStateArguments arguments for the UserStates query. {user: {id: }} is required to limit
  * the query to one user
- * @param {Function} [component] Optional component when doing and Apollo Component query
  * @param {Object} propSets The props used for the query. userState and project objects are required
  * @param {Object} propSets.userState Props for the UserStates query. {user: {id: }} is required to limit
  * the query to one user
@@ -41,7 +40,7 @@ import {reqStrPathThrowing} from 'rescape-ramda';
  * @returns {Object} The resulting Regions in a Task in {data: usersRegions: [...]}}
  */
 export const userRegionsQueryContainer = v(R.curry(
-  (apolloConfig, {regionOutputParams}, component, propSets) => {
+  (apolloConfig, {regionOutputParams}, propSets) => {
     return makeUserScopeObjsQueryContainer(
       apolloConfig,
       {
@@ -53,7 +52,6 @@ export const userRegionsQueryContainer = v(R.curry(
         ),
         scopeOutputParams: regionOutputParams || defaultRegionOutputParams
       },
-      component,
       {userState: reqStrPathThrowing('userState', propSets), scope: reqStrPathThrowing('region', propSets)}
     );
   }),
@@ -62,7 +60,6 @@ export const userRegionsQueryContainer = v(R.curry(
     ['outputParamSets', PropTypes.shape({
       regionOutputParams: PropTypes.shape()
     })],
-    ['component', PropTypes.func],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape({
         user: PropTypes.shape({

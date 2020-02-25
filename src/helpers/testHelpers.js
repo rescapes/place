@@ -10,13 +10,15 @@
  */
 import {getCurrentConfig} from 'rescape-sample-data';
 import * as R from 'ramda';
-import {loginToAuthClientTask} from 'rescape-apollo'
+import {loginToAuthClientTask, expectKeys} from 'rescape-apollo'
 import {createStateLinkDefaults, defaultStateLinkResolvers} from 'rescape-apollo'
 import {capitalize, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
 import {makeUserStateMutationContainer, userStateMutateOutputParams} from '../stores/userStores/userStore';
 import {createSampleProjectTask} from '../stores/scopeStores/projectStore.sample';
 import {createSampleRegionContainer} from '../stores/scopeStores/regionStore.sample';
 import privateTestSettings from './privateTestSettings';
+import PropTypes from 'prop-types';
+import {v} from 'rescape-validate'
 
 /**
  * The config for test
@@ -56,7 +58,6 @@ export const mutateUserStateWithProjectAndRegion = ({apolloClient, user, regionK
     ({apolloClient, user, region, project}) => makeUserStateMutationContainer(
       {apolloClient},
       {outputParams: userStateMutateOutputParams},
-      null,
       createInputParams({user, region, project})
     )
   ),
@@ -123,3 +124,18 @@ const createInputParams = ({user, region, project}) => ({
     ]
   }
 });
+
+/**
+ * Convenient way to check if an object has a few expected keys at the given path
+ * @param {[String]} keyPaths keys or dot-separated key paths of the object to check
+ * @param {String} strPath Dot separated path of keys into the object
+ * @param {Object} obj The object to check
+ * @return {*} Expects the object has the given keys. Throws if expect fails* @return {*}
+ */
+export const expectKeysAtStrPath = v(R.curry((keyPaths, strPath, obj) =>
+  expectKeys(keyPaths, reqStrPathThrowing(strPath)(obj))
+), [
+  ['keys', PropTypes.arrayOf(PropTypes.string).isRequired],
+  ['strPath', PropTypes.string.isRequired],
+  ['obj', PropTypes.shape({}).isRequired]
+]);
