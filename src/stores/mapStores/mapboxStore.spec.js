@@ -1,9 +1,10 @@
-import {expectKeysAtStrPath, localTestAuthTask, mutateUserStateWithProjectAndRegion} from '../../helpers/testHelpers';
+import {localTestAuthTask, mutateUserStateWithProjectAndRegion} from '../../helpers/testHelpers';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStore';
 import {makeMapboxesQueryResultTask} from '../mapStores/mapboxStore';
 import * as R from 'ramda';
 import {defaultRunConfig, mapToNamedPathAndInputs} from 'rescape-ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
+import {expectKeysAtPath} from 'rescape-helpers-test'
 
 /**
  * Created by Andy Likuski on 2018.12.31
@@ -50,7 +51,7 @@ describe('mapboxStore', () => {
     )().run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtStrPath(someMapboxKeys, 'data.mapboxes.0.region', response);
+          expectKeysAtPath(someMapboxKeys, 'data.mapboxes.0.region', response);
           done();
         }
     }, errors, done));

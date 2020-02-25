@@ -10,8 +10,14 @@
  */
 
 import {userProjectsQueryContainer, userStateOutputParamsCreator} from './userProjectStore';
-import {defaultRunConfig, reqStrPathThrowing, mapToNamedPathAndInputs} from 'rescape-ramda';
-import {expectKeysAtStrPath, stateLinkResolvers, localTestAuthTask, testConfig} from '../../../helpers/testHelpers';
+import {
+  composeWithChainMDeep,
+  defaultRunConfig,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs
+} from 'rescape-ramda';
+import {localTestAuthTask} from '../../../helpers/testHelpers';
+import {expectKeys, expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStore';
 
@@ -19,9 +25,9 @@ describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
     const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
-    R.composeK(
-      ({apolloClient, userId}) => userProjectsQueryContainer(
-        {apolloClient},
+    composeWithChainMDeep(1, [
+      ({apolloConfig, userId}) => userProjectsQueryContainer(
+        apolloConfig,
         {},
         {
           userState: {user: {id: userId}},
@@ -30,67 +36,66 @@ describe('userProjectStore', () => {
         }
       ),
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
+        ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedResponseAndInputs('apolloConfig',
         () => localTestAuthTask
       )
-    )().run().listen(defaultRunConfig({
+    ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtStrPath(someProjectKeys, 'data.userProjects.0.project', response);
+          expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
           done();
         }
     }, errors, done));
   }, 10000);
 
-  test('makeUserProjectQueryTaskWithProjectFilter', done => {
+  test('userProjectQueryTaskWithProjectFilter', done => {
     expect.assertions(1);
     const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
-    R.composeK(
+    composeWithChainMDeep(1, [
       // Filter for projects where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Projects so we can filter by Project
-      ({apolloClient, userId}) => userProjectsQueryContainer({apolloClient}, {}, {
+      ({apolloConfig, userId}) => userProjectsQueryContainer(apolloConfig, {}, {
         userState: {user: {id: parseInt(userId)}},
         project: {geojson: {type: 'FeatureCollection'}}
       }),
-      ({apolloClient}) => R.map(
-        response => ({apolloClient, userId: reqStrPathThrowing('data.currentUser.id', response)}),
-        makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
+      ({apolloConfig}) => mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+        makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedResponseAndInputs('apolloConfig',
         () => localTestAuthTask
       )
-    )().run().listen(defaultRunConfig({
+    ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtStrPath(someProjectKeys, 'data.userProjects.0.project', response);
+          expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
         }
     }, errors, done));
   });
 
   test('makeActiveUserProjectQuery', done => {
+    const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
     R.composeK(
-      ({apolloClient, userId}) => userProjectsQueryContainer(
-        {apolloClient},
+      ({apolloConfig, userId}) => userProjectsQueryContainer(
+        apolloConfig,
         {},
         {userState: {user: {id: parseInt(userId)}}, project: {}}
       ),
-      ({apolloClient}) => R.map(
-        response => ({apolloClient, userId: reqStrPathThrowing('data.currentUser.id', response)}),
-        makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
+      ({apolloConfig}) => mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+        makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedResponseAndInputs('apolloConfig',
         () => localTestAuthTask
       )
-    )().run().listen(defaultRunConfig({
+    )({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtStrPath(someProjectKeys, 'data.userProjects.0.project', response);
+          expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
           done();
         }
-    }));
+    }, errors, done));
   });
 });

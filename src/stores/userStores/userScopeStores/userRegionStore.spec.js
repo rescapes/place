@@ -11,13 +11,13 @@
 
 import {userRegionsQueryContainer, userStateOutputParamsCreator} from './userRegionStore';
 import {
+  composeWithChainMDeep,
   defaultRunConfig,
-  reqStrPathThrowing,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs,
-  composeWithChainMDeep
+  mapToNamedResponseAndInputs
 } from 'rescape-ramda';
-import {expectKeysAtStrPath, stateLinkResolvers, localTestAuthTask, testConfig} from '../../../helpers/testHelpers';
+import {localTestAuthTask} from '../../../helpers/testHelpers';
+import {expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStore';
 
@@ -48,7 +48,7 @@ describe('userRegionStore', () => {
     )().run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtStrPath(someRegionKeys, 'data.userRegions.0.region', response);
+          expectKeysAtPath(someRegionKeys, 'data.userRegions.0.region', response);
         }
     }, errors, done));
   });
@@ -81,7 +81,7 @@ describe('userRegionStore', () => {
     ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtStrPath(someRegionKeys, 'data.userRegions.0.region', response);
+          expectKeysAtPath(someRegionKeys, 'data.userRegions.0.region', response);
         }
     }, errors, done));
   });
@@ -103,7 +103,7 @@ describe('userRegionStore', () => {
     )({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtStrPath(someRegionKeys, 'data.userRegions.0.region', response);
+          expectKeysAtPath(someRegionKeys, 'data.userRegions.0.region', response);
           done();
         }
     }));

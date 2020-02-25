@@ -11,7 +11,14 @@
 
 import * as R from 'ramda';
 import {v} from 'rescape-validate';
-import {capitalize, compact, reqPathThrowing, reqStrPathThrowing, composeWithChainMDeep} from 'rescape-ramda';
+import {
+  capitalize,
+  compact,
+  reqPathThrowing,
+  reqStrPathThrowing,
+  composeWithChainMDeep,
+  mapToNamedResponseAndInputs
+} from 'rescape-ramda';
 import {of} from 'folktale/concurrency/task';
 import {makeQueryContainer} from 'rescape-apollo';
 import {mapQueryTaskToNamedResultAndInputs} from 'rescape-apollo';
@@ -119,6 +126,78 @@ export const makeUserScopeObjsQueryContainer = v(R.curry(
       scope: PropTypes.shape().isRequired
     })]
   ], 'makeUserScopeObjsQueryContainer');
+
+/**
+ * Queries scope objects (Region, Project, etc) that are in the scope of the given user. If scopeArguments are
+ * specified the returned scope objects are queried by the scopeArguments to possibly reduce those matching
+ * @param {Object} apolloClient The Apollo Client
+ * @param {Function} scopeQueryTask Task querying the scope class, such as makeRegionsQueryContainer
+ * @param {String} scopeName The name of the scope, such as 'region' or 'project'
+ * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
+ * and returning output parameters for each the scope class query. If don't have to query scope seperately
+ * then scopeOutputParams is passed to this. Otherwise we just was ['id'] since that's all the initial query needs
+ * @param {[Object]} scopeOutputParams Output parameters for each the scope class query
+ * @param {Object} userStateArgumentsCreator arguments for the UserStates query. {user: {id: }} is required to limit
+ * the query to one user
+ * @param {Object} props Props to query with. userState is required and a scope property that can contain none
+ * or more of region, project, etc. keys with their query values
+ * @param {Object} props.userState props for the UserState
+ * @param {Object} props.scope props for the region, project, etc. query. This can be {} or null to not filter.
+ * Scope will be limited to those scope values returned by the UserState query. These should not specify ids since
+ * the UserState query selects the ids
+ * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {data: usersScopeName: [...]}}
+ * where ScopeName is the capitalized and pluralized version of scopeName (e.g. region is Regions)
+ */
+export const makeUserScopeObjsMutationContainer = v(R.curry(
+  (apolloConfig,
+   {scopeQueryTask, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams},
+   {userState, scope}) => {
+
+    return composeWithChainMDeep(1, [
+      // If there is a match with what the caller is submitting, update it, else add it
+      ({userScopeObjs}) => {
+
+      },
+      // Query for userScopeObjs that match the scope
+      mapToNamedResponseAndInputs('userScopeObjs',
+        ({
+           apolloConfig,
+           scopeQueryTask, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams,
+           userState, scope
+         }) => {
+          return makeUserScopeObjsQueryContainer(
+            apolloConfig,
+            {scopeQueryTask, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams},
+            {userState, scope}
+          );
+        })
+    ])({
+      apolloConfig,
+      scopeQueryTask, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams,
+      userState, scope
+    });
+  }),
+  [
+    ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
+    ['scopeSettings', PropTypes.shape({
+      scopeQueryTask: PropTypes.func.isRequired,
+      scopeName: PropTypes.string.isRequired,
+      readInputTypeMapper: PropTypes.shape().isRequired,
+      userStateOutputParamsCreator: PropTypes.func.isRequired,
+      scopeOutputParams: PropTypes.array.isRequired
+    }).isRequired],
+    ['props', PropTypes.shape({
+      userState: PropTypes.shape({
+        user: PropTypes.shape({
+          id: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.number
+          ])
+        })
+      }).isRequired,
+      scope: PropTypes.shape().isRequired
+    })]
+  ], 'makeUserScopeObjsMutationContainer');
 
 /**
  * Given resolved objects from the user state about the scope and further arguments to filter those scope objects,

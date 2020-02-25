@@ -23,6 +23,7 @@ import {
   userStateReadInputTypeMapper
 } from '../userStore';
 import {reqStrPathThrowing} from 'rescape-ramda';
+import {makeMutationRequestContainer} from 'rescape-apollo';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -80,3 +81,34 @@ export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutpu
       project: PropTypes.shape().isRequired
     })]
   ], 'userProjectsQueryContainer');
+
+/**
+ *  Mutates the given userState.data.userProjects with the given project
+ * If a matching project is in userState.data.userProjects it is updated, otherwise it is added
+ * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
+ * @param [Object] outputParams OutputParams for the query
+ * @param {Object} props Object matching the shape of a userState for the create or update
+ * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
+ * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
+ */
+export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
+    return makeMutationRequestContainer(
+      apolloConfig,
+      {
+        name: 'userState',
+        outputParams
+      },
+      props
+    )
+  }), [
+    ['apolloConfig', PropTypes.shape().isRequired],
+    ['mutationStructure', PropTypes.shape({
+      outputParams: PropTypes.array.isRequired
+    })],
+    ['props', PropTypes.shape({
+      userState: PropTypes.shape().isRequired,
+      project: PropTypes.shape().isRequired,
+    }).isRequired]
+  ],
+  'makeUserStateMutationContainer'
+);

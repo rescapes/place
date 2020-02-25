@@ -9,19 +9,20 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {defaultRunConfig, reqStrPathThrowing, capitalize, mapToNamedPathAndInputs} from 'rescape-ramda';
+import {defaultRunConfig, mapToNamedPathAndInputs} from 'rescape-ramda';
 import {
-  expectKeys,
-  expectKeysAtStrPath,
-  stateLinkResolvers,
   localTestAuthTask,
-  testConfig, mutateUserStateWithProjectAndRegion
+  mutateUserStateWithProjectAndRegion
 } from '../../helpers/testHelpers';
+import {expectKeys, expectKeysAtPath} from 'rescape-helpers-test'
 import * as R from 'ramda';
 import {of} from 'folktale/concurrency/task';
 import {
-  makeCurrentUserQueryContainer, makeUserStateMutationContainer, makeUserStateQueryContainer, userOutputParams,
-  userStateMutateOutputParams, userStateOutputParamsFull
+  makeCurrentUserQueryContainer,
+  makeUserStateMutationContainer,
+  makeUserStateQueryContainer,
+  userOutputParams,
+  userStateOutputParamsFull
 } from './userStore';
 
 
@@ -36,7 +37,7 @@ describe('userStore', () => {
     )().run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtStrPath(someUserKeys, 'data.currentUser', response);
+          expectKeysAtPath(someUserKeys, 'data.currentUser', response);
           done();
         }
     }));
@@ -60,13 +61,14 @@ describe('userStore', () => {
     )().run().listen(
       defaultRunConfig({
         onResolved: response => {
-          expectKeysAtStrPath(someUserStateKeys, 'data.userStates.0', response);
+          expectKeysAtPath(someUserStateKeys, 'data.userStates.0', response);
         }
       }, errors, done)
     );
   });
 
   test('makeUserStateMutationContainer', done => {
+    const errors = []
     const someUserStateKeys = ['id', 'data.userRegions.0.region.id', 'data.userProjects.0.project.id'];
 
     R.composeK(
@@ -99,9 +101,8 @@ describe('userStore', () => {
       onResolved:
         ({userState}) => {
           expectKeys(someUserStateKeys, userState);
-          done();
         }
-    }));
+    }, errors, done));
   });
 });
 
