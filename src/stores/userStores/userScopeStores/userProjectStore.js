@@ -16,13 +16,14 @@ import {
   makeProjectsQueryContainer,
   projectOutputParams as defaultProjectOutputParams
 } from '../../scopeStores/projectStore';
-import {makeUserScopeObjsQueryContainer} from './scopeHelpers';
+import {makeUserScopeObjsMutationContainer, makeUserScopeObjsQueryContainer} from './scopeHelpers';
 import {
+  makeUserStateMutationContainer,
   userProjectsOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStore';
-import {reqStrPathThrowing} from 'rescape-ramda';
+import {composeWithChainMDeep, mapToResponseAndInputs, reqStrPathThrowing} from 'rescape-ramda';
 import {makeMutationRequestContainer} from 'rescape-apollo';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
@@ -61,7 +62,10 @@ export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutpu
         ),
         scopeOutputParams: projectOutputParams || defaultProjectOutputParams
       },
-      {userState: reqStrPathThrowing('userState', propSets), scope: reqStrPathThrowing('project', propSets)}
+      {
+        userState: reqStrPathThrowing('userState', propSets),
+        scope: reqStrPathThrowing('project', propSets)
+      }
     );
   }),
   [
@@ -86,20 +90,31 @@ export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutpu
  *  Mutates the given userState.data.userProjects with the given project
  * If a matching project is in userState.data.userProjects it is updated, otherwise it is added
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
- * @param [Object] outputParams OutputParams for the query
- * @param {Object} props Object matching the shape of a userState for the create or update
+ * @param [Object] outputParams outputParams Project output params that will be returned for the mutated project
+ * within the user state
+ * @param {Object} propSets Object matching the shape of a userState and project for the create or update
+ * @param {Object} propSets.userState Object matching the shape of a userState
+ * @param {Object} propSets.userProject Object matching the shape of the project to mutate in the user state
+ * @param {Object} propSets.userProject.project Object matching the shape of the project to mutate in the user state
+ * @param {Number} propSets.userProject.project.id Required id of the project to update or add in userState.data.userProjects
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
-    return makeMutationRequestContainer(
+export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outputParams}, propSets) => {
+    const {userState, userProject} = propSets;
+    return makeUserScopeObjsMutationContainer(
       apolloConfig,
       {
-        name: 'userState',
-        outputParams
+        scopeQueryTask: makeProjectsQueryContainer,
+        scopeName: 'project',
+        readInputTypeMapper,
+        userStateOutputParamsCreator: scopeOutputParams => userStateOutputParamsCreator(
+          userProjectsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
+        ),
+        scopeOutputParams: outputParams
       },
-      props
-    )
+      {userState, scope: userProject}
+    );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationStructure', PropTypes.shape({
@@ -107,7 +122,11 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outpu
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
-      project: PropTypes.shape().isRequired,
+      userProject: PropTypes.shape({
+        project: PropTypes.shape({
+          id: PropTypes.number.isRequired
+        })
+      }).isRequired
     }).isRequired]
   ],
   'makeUserStateMutationContainer'
