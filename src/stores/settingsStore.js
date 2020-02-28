@@ -85,10 +85,10 @@ const cacheIdProps = ['id', '__typename', 'data.__typename'];
  * @params {Object} props Arguments for the Settingss query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Settingss in an object with obj.data.settingss or errors in obj.errors
  */
-export const makeSettingsQueryContainer = v(R.curry((apolloConfig, {outputParams, propsStructure}, props) => {
+export const makeSettingsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeQueryContainer(
       apolloConfig,
-      {name: 'settings', readInputTypeMapper, outputParams, propsStructure},
+      {name: 'settings', readInputTypeMapper, outputParams},
       props
     );
   }),
@@ -96,7 +96,6 @@ export const makeSettingsQueryContainer = v(R.curry((apolloConfig, {outputParams
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryStructure', PropTypes.shape({
       outputParams: PropTypes.array.isRequired,
-      propsStructure: PropTypes.shape()
     })
     ],
     ['props', PropTypes.shape().isRequired]

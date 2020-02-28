@@ -17,7 +17,7 @@ import {of, waitAll} from 'folktale/concurrency/task';
 import Result from 'folktale/result';
 import {reqStrPathThrowing, resultToTaskNeedingResult, reqStrPath, strPathOr} from 'rescape-ramda';
 import {makeRegionsQueryContainer} from '../scopeStores/regionStore';
-import {makeUserStateQueryContainer} from '../userStores/userStore';
+import {makeAdminUserStateQueryContainer, makeCurrentUserStateQueryContainer} from '../userStores/userStore';
 import {makeProjectsQueryContainer} from '../scopeStores/projectStore';
 
 
@@ -184,7 +184,7 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
                   strPathOr({}, 'data.userRegion.mapbox', value)
                 ]),
                 // Query for the user state by id
-                makeUserStateQueryContainer(
+                makeCurrentUserStateQueryContainer(
                   apolloConfig,
                   {outputParams: userStateMapboxOutputParamsCreator(outputParams)},
                   {user: userAsId}

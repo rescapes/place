@@ -44,7 +44,7 @@ describe('projectStore', () => {
     R.composeK(
       ({apolloClient, project}) => makeProjectsQueryContainer(
         {apolloClient},
-        {outputParams: projectOutputParams, propsStructure: {key: ''}},
+        {outputParams: projectOutputParams},
         {key: reqStrPathThrowing('key', project)}
       ),
       mapToNamedPathAndInputs('project', 'data.createProject.project',

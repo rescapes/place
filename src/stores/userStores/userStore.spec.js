@@ -9,20 +9,25 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {defaultRunConfig, mapToNamedPathAndInputs} from 'rescape-ramda';
+import {
+  composeWithChainMDeep,
+  defaultRunConfig,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs, strPathOr
+} from 'rescape-ramda';
 import {
   localTestAuthTask,
   mutateUserStateWithProjectAndRegion
 } from '../../helpers/testHelpers';
-import {expectKeys, expectKeysAtPath} from 'rescape-helpers-test'
+import {expectKeys, expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
 import {of} from 'folktale/concurrency/task';
 import {
   makeCurrentUserQueryContainer,
   makeUserStateMutationContainer,
-  makeUserStateQueryContainer,
+  makeAdminUserStateQueryContainer,
   userOutputParams,
-  userStateOutputParamsFull
+  userStateOutputParamsFull, makeCurrentUserStateQueryContainer
 } from './userStore';
 
 
@@ -43,22 +48,51 @@ describe('userStore', () => {
     }));
   });
 
-  test('makeUserStateQueryContainer', done => {
+  test('makeCurrentUserStateQueryContainer', done => {
     const errors = [];
-    const someUserStateKeys = ['user.id', 'data.userRegions.0.region.id'];
+    const someUserStateKeys = ['user.id', 'data'];
     R.composeK(
-      ({apolloClient, userId}) => makeUserStateQueryContainer(
-        {apolloClient},
-        {outputParams: userStateOutputParamsFull},
-        {user: {id: parseInt(userId)}}
+      mapToNamedResponseAndInputs('userStates',
+        ({apolloConfig}) => {
+          return makeCurrentUserStateQueryContainer(
+            apolloConfig,
+            {outputParams: userStateOutputParamsFull},
+            null
+          );
+        }
       ),
-      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
-      ),
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedResponseAndInputs('apolloConfig',
         () => localTestAuthTask
       )
-    )().run().listen(
+    )({}).run().listen(
+      defaultRunConfig({
+        onResolved: ({userStates}) => {
+          expectKeysAtPath(someUserStateKeys, 'data.userStates.0', userStates);
+        }
+      }, errors, done)
+    );
+  }, 2000090);
+
+  test('makeAdminUserStateQueryContainer', done => {
+    const errors = [];
+    const someUserStateKeys = ['user.id', 'data.userRegions.0.region.id'];
+    composeWithChainMDeep(1, [
+      ({apolloConfig, userId}) => {
+        return makeAdminUserStateQueryContainer(
+          apolloConfig,
+          {outputParams: userStateOutputParamsFull},
+          {user: {id: parseInt(userId)}}
+        );
+      },
+      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => localTestAuthTask
+      )
+    ])({}).run().listen(
       defaultRunConfig({
         onResolved: response => {
           expectKeysAtPath(someUserStateKeys, 'data.userStates.0', response);
@@ -68,7 +102,7 @@ describe('userStore', () => {
   });
 
   test('makeUserStateMutationContainer', done => {
-    const errors = []
+    const errors = [];
     const someUserStateKeys = ['id', 'data.userRegions.0.region.id', 'data.userProjects.0.project.id'];
 
     R.composeK(
@@ -97,7 +131,7 @@ describe('userStore', () => {
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => localTestAuthTask
       )
-    )().run().listen(defaultRunConfig({
+    )({}).run().listen(defaultRunConfig({
       onResolved:
         ({userState}) => {
           expectKeys(someUserStateKeys, userState);

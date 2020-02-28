@@ -11,13 +11,14 @@
 
 
 import * as R from 'ramda';
-import {makeMutationRequestContainer} from 'rescape-apollo'
-import {makeQueryContainer} from 'rescape-apollo'
+import {makeMutationRequestContainer} from 'rescape-apollo';
+import {makeQueryContainer} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {regionOutputParams} from '../scopeStores/regionStore';
 import {projectOutputParams} from '../scopeStores/projectStore';
 import {mapboxOutputParamsFragment} from '../mapStores/mapboxOutputParams';
+import {composeWithChainMDeep, mapToNamedPathAndInputs} from 'rescape-ramda';
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -63,19 +64,22 @@ export const userStateOutputParamsCreator = userScopeFragmentOutputParams => [
  * User state output params with full scope output params. This should only be used for querying when values of the scope
  * instances are needed beyond the ids
  */
-export const userStateOutputParamsFull = [{
-  user: ['id'],
-  data: [{
-    userRegions: {
-      region: regionOutputParams,
-      ...mapboxOutputParamsFragment
-    },
-    userProjects: {
-      project: projectOutputParams,
-      ...mapboxOutputParamsFragment
-    }
-  }]
-}];
+export const userStateOutputParamsFull = [
+  'id',
+  {
+    user: ['id'],
+    data: [{
+      userRegions: {
+        region: regionOutputParams,
+        ...mapboxOutputParamsFragment
+      },
+      userProjects: {
+        project: projectOutputParams,
+        ...mapboxOutputParamsFragment
+      }
+    }]
+  }
+];
 
 /***
  * userRegions output params fragment when we only want the region ids
@@ -113,7 +117,7 @@ export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
  * Queries users
  * @params {Object} apolloClient The Apollo Client
  * @params {Object} ouptputParams OutputParams for the query such as userOutputParams
- * @params {Object} props Unused but here to match the Apollo Component pattern. Use {}.
+ * @params {Object} props Unused but here to match the Apollo Component pattern. Use null or {}.
  * @returns {Task<Result>} A Task containing the Result.Ok with a User in an object with Result.Ok({data: currentUser: {}})
  * or errors in Result.Error({errors: [...]})
  */
@@ -131,22 +135,67 @@ export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputPara
   [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['outputParams', PropTypes.array.isRequired],
-    ['props', PropTypes.shape().isRequired]
+    ['props', PropTypes.shape()]
   ], 'makeCurrentUserQueryContainer');
 
+/**
+ * Queries userState for the current user as identified by the apollo client.
+ * @param {Object} apolloClient The Apollo Client
+ * @param [Object] outputParams OutputParams for the query
+ * @param {Object} props Arguments for the UserState query. Likely null unless testing whether the current
+ * user state has passes a certain precicate
+ * @returns {Task|Just<Object>} A Task containing the single item user state response {data: {usersStates: []}}
+ */
+export const makeCurrentUserStateQueryContainer = v(R.curry(
+  (apolloConfig, {outputParams}, props) => {
+    return composeWithChainMDeep(1, [
+      ({apolloConfig, outputParams, user, props}) => {
+        // Get the current user state
+        return makeQueryContainer(
+          apolloConfig,
+          {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
+          // Merge any other props (usually null) with current user
+          R.merge(
+            props,
+            // Limit to the number version of the id
+            {user: R.pick(['id'], R.over(R.lensProp('id'), id => parseInt(id), user))}
+          )
+        );
+      },
+      // Get the current user
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, ['id'], null);
+        }
+      )
+    ])({apolloConfig, outputParams, props});
+  }),
+  [
+    ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
+    ['queryStructure', PropTypes.shape({
+      outputParams: PropTypes.arrayOf(
+        PropTypes.oneOfType([
+          PropTypes.string,
+          PropTypes.array,
+          PropTypes.shape()
+        ])
+      ).isRequired
+    })],
+    ['props', PropTypes.shape()]
+  ], 'makeCurrentUserStateQueryContainer');
 
 /**
- * Queries userState.
+ * Admin only. Queries userState. This will fail unless the apollo client is authenticated to an admin
  * @param {Object} apolloClient The Apollo Client
  * @param [Object] outputParams OutputParams for the query
  * @param {Object} userStateArguments Arguments for the UserState query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.userStates or errors in obj.errors
  */
-export const makeUserStateQueryContainer = v(R.curry(
-  (apolloConfig, {outputParams, propsStructure}, props) => {
+export const makeAdminUserStateQueryContainer = v(R.curry(
+  (apolloConfig, {outputParams}, props) => {
     return makeQueryContainer(
       apolloConfig,
-      {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams, propsStructure},
+      {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
       props
     );
   }),
@@ -159,11 +208,10 @@ export const makeUserStateQueryContainer = v(R.curry(
           PropTypes.array,
           PropTypes.shape()
         ])
-      ).isRequired,
-      propsStructure: PropTypes.shape()
+      ).isRequired
     })],
     ['props', PropTypes.shape().isRequired]
-  ], 'makeUserStateQueryContainer');
+  ], 'makeAdminUserStateQueryContainer');
 
 /**
  * Makes a UserState mutation container;
@@ -174,14 +222,14 @@ export const makeUserStateQueryContainer = v(R.curry(
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
-  return makeMutationRequestContainer(
+    return makeMutationRequestContainer(
       apolloConfig,
       {
         name: 'userState',
         outputParams
       },
       props
-    )
+    );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationStructure', PropTypes.shape({

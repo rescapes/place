@@ -18,14 +18,23 @@ import {
   composeWithChainMDeep,
   defaultRunConfig,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs
+  mapToNamedResponseAndInputs, reqStrPathThrowing, strPathOr
 } from 'rescape-ramda';
 import {createUserProjectWithDefaults, localTestAuthTask} from '../../../helpers/testHelpers';
 import {expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../userStore';
+import {
+  makeCurrentUserQueryContainer,
+  makeAdminUserStateQueryContainer,
+  userOutputParams,
+  makeCurrentUserStateQueryContainer,
+  makeUserStateMutationContainer,
+  userStateOutputParamsFull,
+  userStateMutateOutputParams
+} from '../userStore';
 import {makeProjectMutationContainer, projectOutputParams} from '../../..';
 import moment from 'moment';
+import {makeUserStateScopeObjsMutationContainer} from './scopeHelpers';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -107,47 +116,55 @@ describe('userProjectStore', () => {
 
   test('userStateProjectMutationContainer', done => {
     const errors = [];
-    const someProjectKeys = ['id', 'key', 'name'];
     const projectKey = `testProjectKey${moment().format('HH-mm-SS')}`;
     const projectName = `TestProjectName${moment().format('HH-mm-SS')}`;
     R.composeK(
-      ({apolloConfig, userId, project}) => {
-        return userStateProjectMutationContainer(
-          apolloConfig,
-          {
-            // We only need each project id back from userState.data.userProjects: [...]
-            outputParams: ['id']
-          },
-          {
-            userState: {user: {id: parseInt(userId)}},
-            userProject: createUserProjectWithDefaults(
-              R.over(
-                R.lensProp('id'),
-                id => parseInt(id),
+      mapToNamedResponseAndInputs('userState',
+        ({apolloConfig, userState, project}) => {
+          return userStateProjectMutationContainer(
+            apolloConfig,
+            {
+              // We only need each project id back from userState.data.userProjects: [...]
+              outputParams: ['id']
+            },
+            {
+              userState,
+              userProject: createUserProjectWithDefaults(
                 project
               )
-            )
-          }
-        );
-      },
+            }
+          );
+        }
+      ),
       // Save a test project
       mapToNamedPathAndInputs('project', 'data.createProject.project',
-        ({apolloConfig, userId}) => {
+        ({apolloConfig, userState}) => {
           return makeProjectMutationContainer(
             apolloConfig,
             {outputParams: projectOutputParams},
             {
-              user: {id: userId},
+              user: {id: reqStrPathThrowing('user.id', userState)},
               key: projectKey,
               name: projectName
             }
           );
         }
       ),
+      // Remove all the projects from the user state
       // Resolve the user state
-      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+      mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
+        ({apolloConfig, userState}) => {
+          return makeUserStateMutationContainer(
+            apolloConfig,
+            {outputParams: userStateMutateOutputParams},
+            R.over(R.lensPath(['data', 'userProjects']), () => [], userState)
+          );
+        }
+      ),
+      // Resolve the user state
+      mapToNamedPathAndInputs('userState', 'data.userStates.0',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return makeCurrentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsFull}, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
@@ -155,8 +172,8 @@ describe('userProjectStore', () => {
       )
     )({}).run().listen(defaultRunConfig({
       onResolved:
-        response => {
-          expectKeysAtPath(someProjectKeys, 'data.createUserState.userState.data.userProjects.0.project', response);
+        ({project, userState}) => {
+          expect(strPathOr(null, 'data.updateUserState.userState.data.userProjects.0.project.id', userState)).toEqual(project.id);
           done();
         }
     }, errors, done));

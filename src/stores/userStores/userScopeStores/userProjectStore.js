@@ -16,7 +16,7 @@ import {
   makeProjectsQueryContainer,
   projectOutputParams as defaultProjectOutputParams
 } from '../../scopeStores/projectStore';
-import {makeUserScopeObjsMutationContainer, makeUserScopeObjsQueryContainer} from './scopeHelpers';
+import {makeUserStateScopeObjsMutationContainer, makeUserScopeObjsQueryContainer} from './scopeHelpers';
 import {
   makeUserStateMutationContainer,
   userProjectsOutputParamsFragmentDefaultOnlyIds,
@@ -93,7 +93,9 @@ export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutpu
  * @param [Object] outputParams outputParams Project output params that will be returned for the mutated project
  * within the user state
  * @param {Object} propSets Object matching the shape of a userState and project for the create or update
- * @param {Object} propSets.userState Object matching the shape of a userState
+ * @param {Object} propSets.userState Object matching the shape of a userState.
+ * @param {Object} propSets.userState.data The data to mutate. For updates any array in data will replace that
+ * on the server, but otherwise this data is deep merged with the existing data on the server
  * @param {Object} propSets.userProject Object matching the shape of the project to mutate in the user state
  * @param {Object} propSets.userProject.project Object matching the shape of the project to mutate in the user state
  * @param {Number} propSets.userProject.project.id Required id of the project to update or add in userState.data.userProjects
@@ -102,7 +104,7 @@ export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutpu
  */
 export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outputParams}, propSets) => {
     const {userState, userProject} = propSets;
-    return makeUserScopeObjsMutationContainer(
+    return makeUserStateScopeObjsMutationContainer(
       apolloConfig,
       {
         scopeQueryTask: makeProjectsQueryContainer,

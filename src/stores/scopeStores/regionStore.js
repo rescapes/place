@@ -68,10 +68,10 @@ export const regionOutputParams = [
  * @params {Object} props Arguments for the Regions query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
-export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams, propsStructure}, props) => {
+export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeQueryContainer(
       apolloConfig,
-      {name: 'regions', readInputTypeMapper, outputParams, propsStructure},
+      {name: 'regions', readInputTypeMapper, outputParams},
       props
     );
   }),
@@ -79,7 +79,6 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams,
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryStructure', PropTypes.shape({
       outputParams: PropTypes.array.isRequired,
-      propsStructure: PropTypes.shape()
     })],
     ['props', PropTypes.shape().isRequired]
   ],

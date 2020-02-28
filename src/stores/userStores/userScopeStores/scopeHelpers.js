@@ -17,11 +17,11 @@ import {
   reqPathThrowing,
   reqStrPathThrowing,
   composeWithChainMDeep,
-  mapToNamedResponseAndInputs, pickDeepPaths
+  mapToNamedResponseAndInputs, pickDeepPaths, strPathOr, strPathOrNullOk, mapToNamedPathAndInputs
 } from 'rescape-ramda';
 import {of} from 'folktale/concurrency/task';
 import {makeQueryContainer} from 'rescape-apollo';
-import {mapQueryTaskToNamedResultAndInputs} from 'rescape-apollo';
+import {mapQueryTaskToNamedResultAndInputs, containerForApolloType} from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {makeUserStateMutationContainer} from '../userStore';
 
@@ -76,7 +76,16 @@ export const makeUserScopeObjsQueryContainer = v(R.curry(
       result => {
         return R.chain(
           ({data}) => {
-            const userScopeObjs = reqStrPathThrowing(userScopeNames, data);
+            // This can be null or empty, but not undefined
+            const userScopeObjs = strPathOrNullOk(undefined, userScopeNames, data);
+            if (typeof userScopeObjs === 'undefined') {
+              throw new Error(`data lacks property ${userScopeNames}: ${JSON.stringify(data, null, 2)}`);
+            }
+            // If there are no userScopeObj return an empty response
+            else if (!userScopeObjs || !R.length(userScopeObjs)) {
+              return containerForApolloType(apolloConfig, {data: {[userScopeNames]: []}});
+            }
+
             return R.map(
               userScopeObjs => {
                 return ({data: {[userScopeNames]: userScopeObjs}});
@@ -92,7 +101,7 @@ export const makeUserScopeObjsQueryContainer = v(R.curry(
                   );
                 },
                 of
-              )(userScopeObjs)
+              )(userScopeObjs || [])
             );
           },
           result
@@ -115,7 +124,7 @@ export const makeUserScopeObjsQueryContainer = v(R.curry(
               )
             },
             // The props
-            userState
+            R.pick(['id'], userState)
           ),
           // We only ever get 1 userState since we are querying by user
           `userStates.0.data.${userScopeNames}`,
@@ -147,8 +156,7 @@ export const makeUserScopeObjsQueryContainer = v(R.curry(
   ], 'makeUserScopeObjsQueryContainer');
 
 /**
- * Queries scope objects (Region, Project, etc) that are in the scope of the given user. If scopeArguments are
- * specified the returned scope objects are queried by the scopeArguments to possibly reduce those matching
+ * Mutates the given scope object (UserRegion, UserProject, etc) that are in the scope of the given user.
  * @param {Object} apolloClient The Apollo Client
  * @param {Function} scopeQueryTask Task querying the scope class, such as makeRegionsQueryContainer
  * @param {String} scopeName The name of the scope, such as 'region' or 'project'
@@ -161,25 +169,27 @@ export const makeUserScopeObjsQueryContainer = v(R.curry(
  * @param {Object} props Props to query with. userState is required and a scope property that can contain none
  * or more of region, project, etc. keys with their query values
  * @param {Object} props.userState props for the UserState
- * @param {Object} props.scope props for the userRegion, userProject, etc. query.
+ * @param {Object} props.scope userRegion, userProject, etc. query to add/update in the userState.
  * @param {Number} props.scope.[region|project].id
  * Required id of the scope instance to add or update within userState.data[scope]
- * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {data: usersScopeName: [...]}}
- * where ScopeName is the capitalized and pluralized version of scopeName (e.g. region is Regions)
+ * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {
+ * createUserState|updateUserState: {userState: {data: [userScopeName]: [...]}}}}
+ * where userScopeName is the capitalized and pluralized version of scopeName (e.g. region is UserRegions)
  */
-export const makeUserScopeObjsMutationContainer = v(R.curry(
+export const makeUserStateScopeObjsMutationContainer = v(R.curry(
   (apolloConfig,
    {scopeQueryTask, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams},
    {userState, scope}) => {
     const userScopeName = _userScopeName(scopeName);
     return composeWithChainMDeep(1, [
       // If there is a match with what the caller is submitting, update it, else add it
-      ({userStateOutputParamsCreator, userState}) => {
+      ({userStateOutputParamsCreator, userState, userScopeObjs}) => {
         // We have 1 or 0 scope objects. 1 for update case, 0 for insert case
-        const userScopeObj = R.view(R.lensPath(['data', userScopeName, 0]), userState);
+        const userScopeObj = R.head(userScopeObjs);
         const userStateWithCreatedOrUpdatedScopeObj = R.over(
           R.lensPath(['data', userScopeName]),
-          scopeObjs => {
+          _scopeObjs => {
+            const scopeObjs = R.defaultTo([], _scopeObjs);
             const matchingScopeInstance = R.find(
               // Find the matching project if there is one
               scopeObj => R.propEq('id', R.propOr(null, 'id', userScopeObj))(scopeObj),
@@ -211,14 +221,14 @@ export const makeUserScopeObjsMutationContainer = v(R.curry(
           {
             outputParams: userStateOutputParamsCreator(
               // If we have to query for scope objs separately then just query for their ids here
-              R.when(hasScopeParams, R.always(['id']))(scopeOutputParams)
+              R.when(s => hasScopeParams(s), R.always(['id']))(scopeOutputParams)
             )
           },
           userStateWithCreatedOrUpdatedScopeObj
         );
       },
       // Query for userScopeObjs that match the scope
-      mapToNamedResponseAndInputs('userState',
+      mapToNamedPathAndInputs('userScopeObjs', `data.${userScopeName}`,
         ({
            apolloConfig,
            scopeQueryTask, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams,
@@ -257,7 +267,7 @@ export const makeUserScopeObjsMutationContainer = v(R.curry(
       }).isRequired,
       scope: PropTypes.shape({}).isRequired
     })]
-  ], 'makeUserScopeObjsMutationContainer');
+  ], 'makeUserStateScopeObjsMutationContainer');
 
 /**
  * Given resolved objects from the user state about the scope and further arguments to filter those scope objects,
