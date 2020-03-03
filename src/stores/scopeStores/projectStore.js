@@ -24,6 +24,14 @@ export const readInputTypeMapper = {
   'geojson': 'FeatureCollectionDataTypeofProjectTypeRelatedReadInputType'
 };
 
+export const projectOutputParamsMinimized = [
+  'id',
+  'key',
+  'name',
+  'createdAt',
+  'updatedAt',
+];
+
 export const projectOutputParams = [
   'id',
   'key',

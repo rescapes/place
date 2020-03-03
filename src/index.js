@@ -49,6 +49,7 @@ export {
 } from './stores/mapStores/mapboxStore';
 export {
   projectOutputParams,
+  projectOutputParamsMinimized,
   makeProjectMutationContainer,
   makeProjectsQueryContainer
 } from './stores/scopeStores/projectStore';
@@ -77,9 +78,13 @@ export {
 } from './stores/userStores/userScopeStores/userRegionStore';
 
 export {
-  userProjectsQueryContainer
+  userStateProjectsQueryContainer, userStateProjectMutationContainer
 } from './stores/userStores/userScopeStores/userProjectStore';
 
 export {
   createSampleRegionContainer
 } from './stores/scopeStores/regionStore.sample';
+
+export {
+  queryUsingPaginationContainer
+} from './stores/helpers/pagedRequestHelpers'

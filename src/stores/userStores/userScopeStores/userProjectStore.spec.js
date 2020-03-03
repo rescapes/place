@@ -10,7 +10,7 @@
  */
 
 import {
-  userProjectsQueryContainer,
+  userStateProjectsQueryContainer,
   userStateOutputParamsCreator,
   userStateProjectMutationContainer
 } from './userProjectStore';
@@ -41,7 +41,7 @@ describe('userProjectStore', () => {
     const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
     composeWithChainMDeep(1, [
-      ({apolloConfig, userId}) => userProjectsQueryContainer(
+      ({apolloConfig, userId}) => userStateProjectsQueryContainer(
         apolloConfig,
         {},
         {
@@ -72,12 +72,16 @@ describe('userProjectStore', () => {
     composeWithChainMDeep(1, [
       // Filter for projects where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Projects so we can filter by Project
-      ({apolloConfig, userId}) => userProjectsQueryContainer(apolloConfig, {}, {
-        userState: {user: {id: parseInt(userId)}},
-        project: {geojson: {type: 'FeatureCollection'}}
-      }),
-      ({apolloConfig}) => mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
+      ({apolloConfig, userId}) => {
+        return userStateProjectsQueryContainer(apolloConfig, {}, {
+          userState: {user: {id: parseInt(userId)}},
+          project: {geojson: {type: 'FeatureCollection'}}
+        });
+      },
+      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => localTestAuthTask
@@ -94,16 +98,22 @@ describe('userProjectStore', () => {
     const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
     R.composeK(
-      ({apolloConfig, userId}) => userProjectsQueryContainer(
-        apolloConfig,
-        {},
-        {userState: {user: {id: parseInt(userId)}}, project: {}}
-      ),
-      ({apolloConfig}) => mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
+      ({apolloConfig, userId}) => {
+        return userStateProjectsQueryContainer(
+          apolloConfig,
+          {},
+          {userState: {user: {id: parseInt(userId)}}, project: {}}
+        );
+      },
+      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => localTestAuthTask
+        () => {
+          return localTestAuthTask;
+        }
       )
     )({}).run().listen(defaultRunConfig({
       onResolved:

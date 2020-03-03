@@ -28,24 +28,30 @@ describe('userRegionStore', () => {
     const someRegionKeys = ['id', 'key', 'name', 'data'];
     R.composeK(
       // Get the authenticated user
-      ({apolloClient, userId}) => userRegionsQueryContainer(
-        {apolloClient},
-        {},
-        {
-          userState: {user: {id: userId}},
-          // The sample user is already limited to certain regions. We don't need to limit further
-          region: {}
-        }
-      ),
+      ({apolloClient, userId}) => {
+        return userRegionsQueryContainer(
+          {apolloClient},
+          {},
+          {
+            userState: {user: {id: userId}},
+            // The sample user is already limited to certain regions. We don't need to limit further
+            region: {}
+          }
+        );
+      },
       // Get the authenticated user
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
+        ({apolloClient}) => {
+          return makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {});
+        }
       ),
       // Authenticate
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
-        () => localTestAuthTask
+        () => {
+          return localTestAuthTask;
+        }
       )
-    )().run().listen(defaultRunConfig({
+    )({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
           expectKeysAtPath(someRegionKeys, 'data.userRegions.0.region', response);
@@ -76,7 +82,9 @@ describe('userRegionStore', () => {
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => localTestAuthTask
+        () => {
+          return localTestAuthTask;
+        }
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:

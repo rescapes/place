@@ -16,7 +16,7 @@ import {
   makeProjectsQueryContainer,
   projectOutputParams as defaultProjectOutputParams
 } from '../../scopeStores/projectStore';
-import {makeUserStateScopeObjsMutationContainer, makeUserScopeObjsQueryContainer} from './scopeHelpers';
+import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
 import {
   makeUserStateMutationContainer,
   userProjectsOutputParamsFragmentDefaultOnlyIds,
@@ -50,8 +50,8 @@ const readInputTypeMapper = {
  * the UserState query selects the ids
  * @returns {Object} The resulting Projects in a Task in {data: usersProjects: [...]}}
  */
-export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutputParams}, propSets) => {
-    return makeUserScopeObjsQueryContainer(
+export const userStateProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutputParams}, propSets) => {
+    return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
       {
         scopeQueryTask: makeProjectsQueryContainer,
@@ -84,7 +84,7 @@ export const userProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutpu
       }).isRequired,
       project: PropTypes.shape().isRequired
     })]
-  ], 'userProjectsQueryContainer');
+  ], 'userStateProjectsQueryContainer');
 
 /**
  *  Mutates the given userState.data.userProjects with the given project

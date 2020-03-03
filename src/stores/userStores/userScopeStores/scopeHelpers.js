@@ -63,7 +63,7 @@ const hasScopeParams = scope => {
  * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {data: usersScopeName: [...]}}
  * where ScopeName is the capitalized and pluralized version of scopeName (e.g. region is Regions)
  */
-export const makeUserScopeObjsQueryContainer = v(R.curry(
+export const makeUserStateScopeObjsQueryContainer = v(R.curry(
   (apolloConfig,
    {scopeQueryTask, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams},
    {userState, scope}) => {
@@ -91,7 +91,9 @@ export const makeUserScopeObjsQueryContainer = v(R.curry(
                 return ({data: {[userScopeNames]: userScopeObjs}});
               },
               R.ifElse(
-                hasScopeParams(scope),
+                userScopeObjs => {
+                  return hasScopeParams(scope, userScopeObjs);
+                },
                 userScopeObjs => {
                   return queryScopeObjsOfUserStateContainer(
                     apolloConfig,
@@ -153,7 +155,7 @@ export const makeUserScopeObjsQueryContainer = v(R.curry(
       }).isRequired,
       scope: PropTypes.shape().isRequired
     })]
-  ], 'makeUserScopeObjsQueryContainer');
+  ], 'makeUserStateScopeObjsQueryContainer');
 
 /**
  * Mutates the given scope object (UserRegion, UserProject, etc) that are in the scope of the given user.
@@ -235,7 +237,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
            userState, scope
          }) => {
           // Query for the scope instance by id
-          return makeUserScopeObjsQueryContainer(
+          return makeUserStateScopeObjsQueryContainer(
             apolloConfig,
             {scopeQueryTask, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams},
             {userState, scope: pickDeepPaths([`${scopeName}.id`], scope)}
@@ -296,25 +298,29 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
         const matchingScopeObjs = reqPathThrowing(['data', scopeNamePlural], scopeObjsResponse);
         const matchingScopeObjsById = R.indexBy(R.prop('id'), matchingScopeObjs);
         return R.compose(
-          compact,
+          values => compact(values),
           R.map(
             R.ifElse(
               // Does this user project's project match one of the project ids
-              userScopeObj => R.has(userScopeObj[scopeName].id, matchingScopeObjsById),
+              userScopeObj => {
+                return R.has(userScopeObj[scopeName].id, matchingScopeObjsById);
+              },
               // If so merge the query result for that scope object with the user project
-              userScopeObj => R.merge(
-                userScopeObj,
-                {
-                  [scopeName]: R.compose(
-                    // Convert the string id to int
-                    matchingScopeObj => R.over(R.lensProp('id'), id => parseInt(id), matchingScopeObj),
-                    // Get the matching scope object
-                    matchingScopeObjsById => R.prop(userScopeObj[scopeName].id, matchingScopeObjsById)
-                  )(matchingScopeObjsById)
-                }
-              ),
+              userScopeObj => {
+                return R.merge(
+                  userScopeObj,
+                  {
+                    [scopeName]: R.compose(
+                      // Convert the string id to int
+                      matchingScopeObj => R.over(R.lensProp('id'), id => parseInt(id), matchingScopeObj),
+                      // Get the matching scope object
+                      matchingScopeObjsById => R.prop(userScopeObj[scopeName].id, matchingScopeObjsById)
+                    )(matchingScopeObjsById)
+                  }
+                );
+              },
               // Otherwise return null, which will remove the user scope obj from the list
-              R.always(null)
+              () => null
             )
           )
         )(userScopeObjs);

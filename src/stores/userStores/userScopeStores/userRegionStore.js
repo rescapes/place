@@ -16,7 +16,7 @@ import {
   makeRegionsQueryContainer,
   regionOutputParams as defaultRegionOutputParams
 } from '../../scopeStores/regionStore';
-import {makeUserScopeObjsQueryContainer} from './scopeHelpers';
+import {makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
 import {
   userRegionsOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
@@ -41,7 +41,7 @@ import {reqStrPathThrowing} from 'rescape-ramda';
  */
 export const userRegionsQueryContainer = v(R.curry(
   (apolloConfig, {regionOutputParams}, propSets) => {
-    return makeUserScopeObjsQueryContainer(
+    return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
       {
         scopeQueryTask: makeRegionsQueryContainer,
