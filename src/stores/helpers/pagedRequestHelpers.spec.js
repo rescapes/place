@@ -9,22 +9,19 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {queryUsingPaginationContainer} from './pagedRequestHelpers';
+import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers';
 import {
   composeWithChain,
   defaultRunConfig,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs, reqStrPathThrowing,
-  traverseReduce
+  mapToNamedResponseAndInputs,
+  reqStrPathThrowing
 } from 'rescape-ramda';
-import {testAuthTask} from 'rescape-apollo';
-import {createSampleProjectTask} from '../scopeStores/projectStore.sample';
+import {createSampleProjectsTask} from '../scopeStores/projectStore.sample';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStore';
 import * as R from 'ramda';
 import {projectOutputParams} from '../..';
-import {of, fromPromised} from 'folktale/concurrency/task';
 import {localTestAuthTask} from '../../helpers/testHelpers';
-import moment from 'moment';
 
 test('queryUsingPaginationContainer', done => {
   const task = composeWithChain([
@@ -47,28 +44,7 @@ test('queryUsingPaginationContainer', done => {
       );
     },
     mapToNamedResponseAndInputs('projects',
-      ({apolloConfig, user}) => {
-        return traverseReduce(
-          (projects, project) => {
-            return R.concat(projects, [reqStrPathThrowing('data.createProject.project', project)]);
-          },
-          of([]),
-          R.times(() => {
-            return composeWithChain([
-              () => {
-                return createSampleProjectTask(apolloConfig, {
-                    key: `test${moment().format('HH-mm-SS')}`,
-                    user: {
-                      id: user.id
-                    }
-                  }
-                );
-              },
-              () => fromPromised(() => new Promise(r => setTimeout(r, 100)))()
-            ])();
-          }, 10)
-        );
-      }
+      ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, user)
     ),
     mapToNamedPathAndInputs('user', 'data.currentUser',
       ({apolloConfig}) => {
@@ -85,6 +61,71 @@ test('queryUsingPaginationContainer', done => {
   task.run().listen(defaultRunConfig({
     onResolved: projects => {
       expect(R.length(projects)).toEqual(10);
+    }
+  }, errors, done));
+}, 100000);
+
+test('queryPageContainer', done => {
+  const pageSize = 1;
+  expect.assertions(4);
+  const task = composeWithChain([
+    mapToNamedResponseAndInputs('projectsPaged10',
+      ({apolloConfig, projects}) => {
+        return queryPageContainer(
+          {apolloConfig, regionConfig: {}},
+          {
+            pageSize,
+            page: 10,
+            typeName: 'project',
+            name: 'projectsPaginated',
+            filterObjsByConfig: ({regionConfig}, objs) => objs,
+            outputParams: projectOutputParams,
+            normalizeProps: props => {
+              return props;
+            }
+          },
+          {idIn: R.map(R.prop('id'), projects)}
+        );
+      }),
+    mapToNamedResponseAndInputs('projectsPaged1',
+      ({apolloConfig, projects}) => {
+        return queryPageContainer(
+          {apolloConfig, regionConfig: {}},
+          {
+            pageSize,
+            page: 1,
+            typeName: 'project',
+            name: 'projectsPaginated',
+            filterObjsByConfig: ({regionConfig}, objs) => objs,
+            outputParams: projectOutputParams,
+            normalizeProps: props => {
+              return props;
+            }
+          },
+          {idIn: R.map(R.prop('id'), projects)}
+        );
+      }),
+    mapToNamedResponseAndInputs('projects',
+      ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, user)
+    ),
+    mapToNamedPathAndInputs('user', 'data.currentUser',
+      ({apolloConfig}) => {
+        return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+      }
+    ),
+    mapToNamedResponseAndInputs('apolloConfig',
+      ({}) => {
+        return localTestAuthTask;
+      }
+    )
+  ])({});
+  const errors = [];
+  task.run().listen(defaultRunConfig({
+    onResolved: ({projectsPaged1, projectsPaged10}) => {
+      expect(R.length(reqStrPathThrowing('objects', projectsPaged1))).toEqual(1);
+      expect(reqStrPathThrowing('pages', projectsPaged1)).toEqual(10);
+      expect(R.length(reqStrPathThrowing('objects', projectsPaged10))).toEqual(1);
+      expect(reqStrPathThrowing('hasNext', projectsPaged10)).toEqual(false);
     }
   }, errors, done));
 }, 100000);

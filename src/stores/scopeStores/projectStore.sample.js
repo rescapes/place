@@ -1,5 +1,8 @@
 import {makeProjectMutationContainer, projectOutputParams} from './projectStore';
-import {mergeDeep} from 'rescape-ramda';
+import {composeWithChain, mergeDeep, reqStrPathThrowing, traverseReduce} from 'rescape-ramda';
+import * as R from 'ramda';
+import moment from 'moment';
+import {fromPromised, of} from 'folktale/concurrency/task';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -59,5 +62,34 @@ export const createSampleProjectTask = ({apolloClient}, props) => {
         locations: []
       },
       props)
+  );
+};
+
+/**
+ * Creates 10 projects for the given user
+ * @param apolloConfig
+ * @param user
+ * @return {f2|f1}
+ */
+export const createSampleProjectsTask = (apolloConfig, user) => {
+  return traverseReduce(
+    (projects, project) => {
+      return R.concat(projects, [reqStrPathThrowing('data.createProject.project', project)]);
+    },
+    of([]),
+    R.times(() => {
+      return composeWithChain([
+        () => {
+          return createSampleProjectTask(apolloConfig, {
+              key: `test${moment().format('HH-mm-SS')}`,
+              user: {
+                id: user.id
+              }
+            }
+          );
+        },
+        () => fromPromised(() => new Promise(r => setTimeout(r, 100)))()
+      ])();
+    }, 10)
   );
 };

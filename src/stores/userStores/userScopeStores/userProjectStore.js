@@ -23,8 +23,7 @@ import {
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStore';
-import {composeWithChainMDeep, mapToResponseAndInputs, reqStrPathThrowing} from 'rescape-ramda';
-import {makeMutationRequestContainer} from 'rescape-apollo';
+import {reqStrPathThrowing} from 'rescape-ramda';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
