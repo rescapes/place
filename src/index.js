@@ -51,7 +51,7 @@ export {
   projectOutputParams,
   projectOutputParamsMinimized,
   makeProjectMutationContainer,
-  makeProjectsQueryContainer
+  makeProjectsQueryContainer,
 } from './stores/scopeStores/projectStore';
 export {
   regionOutputParams,

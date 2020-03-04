@@ -41,6 +41,7 @@
     "folktale": "^2.3.2",
     "graphql-tag": "^2.10.1",
     "http-https": "^1.0.0",
+    "inflected": "^2.0.4",
     "node-fetch": "^2.6.0",
     "path": "^0.12.7",
     "prop-types": "^15.7.2",

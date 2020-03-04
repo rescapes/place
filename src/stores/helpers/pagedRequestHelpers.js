@@ -12,6 +12,7 @@
 import * as R from 'ramda';
 import {containerForApolloType, makeQueryContainer} from 'rescape-apollo';
 import {
+  capitalize,
   composeWithChainMDeep,
   composeWithMapMDeep,
   reqPathThrowing,
@@ -21,9 +22,114 @@ import {
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
 import {loggers} from 'rescape-log';
+import { singularize } from 'inflected';
 import {of} from 'folktale/concurrency/task';
 
 const log = loggers.get('rescapeDefault');
+
+
+/**
+ * Queries for all objects using pagination to break up query results. All results are combined
+ * @type {function(): any}
+ * @param {Object} config
+ * @param {Object} config.apolloConfig
+ * @param {Object} config.regionConfig
+ * @param {Number} [queryConfig.pageSize] Optional pageSize, defaults to 100
+ * @param {String} queryConfig.typeName the type name of the object being queried, such as 'region' or 'project'
+ * @param {String} queryConfig.name the name matching the paginated query name on the server,
+ * such as regionsPaginated or projectsPaginated
+ * @param {String} queryConfig.paginatedObjectsName The name for the query
+ * @param {Function} queryConfig.paginatedQueryContainer The query container function. This is passed most of the parameters
+ * @param {Function} [queryConfig.filterObjsByConfig] Optional function expecting ({regionConfig}, objs)
+ * to filter objects returned by pagination based on the regionConfig, where objs are all objects returned by pagination.
+ * This is used to filter out objects that can't easily be filtered out using direct props on the pagination query,
+ * such as properties embedded in json data
+ * @param {Object} queryConfig.outputParams
+ * @param {Object} [queryConfig.readInputTypeMapper] This should not be needed, it specifies the graphql input type.
+ * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`}
+ * Where objects are the paginated objects returned by the query and thus
+ * `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType` is the input type argument we can use for
+ * filtering
+ * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
+ * passed to the query. Defaults to passing all of them
+ * @param {Object} props
+ */
+export const queryUsingPaginationContainer = v(R.curry((
+  {apolloConfig, regionConfig},
+  {
+    pageSize,
+    typeName, name, filterObjsByConfig, outputParams, readInputTypeMapper, normalizeProps
+  },
+  props
+) => {
+  const pageSizeOrDefault = R.defaultTo(100, pageSize);
+  const readInputTypeMapperOrDefault = R.defaultTo(
+    {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`},
+    readInputTypeMapper
+  );
+  log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizeProps(props))}`);
+
+  return composeWithChainMDeep(1, [
+    // Extract the paginated objects, removing those that don't pass regionConfig's feature property filters
+    objs => {
+      return containerForApolloType(apolloConfig,
+        R.when(R.identity, objs => {
+            return filterObjsByConfig({regionConfig}, objs);
+          }
+        )(objs)
+      );
+    },
+
+    firstPageObjs => {
+      // Get the number of pages so we can query for the remaining pages if there are any
+      const pageInfo = R.omit(['objects'], reqPathThrowing(['data', name], firstPageObjs));
+      // Run a query for each page (based on the result of the first query)
+      // TODO Should be traverseReduceBucketedWhile but there is a weird bug that causes it to resolve to a task
+      return traverseReduceWhile({predicate: () => true, mappingFunction: R.chain},
+        // Query for the page and extract the objects, since we don't need intermediate page info
+        (previousResults, page) => {
+          return _singlePageQueryContainer(
+            {apolloConfig, regionConfig},
+            {name, outputParams, readInputTypeMapper: readInputTypeMapperOrDefault, normalizeProps, pageSize: pageSizeOrDefault, page},
+            {previousResults, firstPageLocations: firstPageObjs},
+            props
+          );
+        },
+        of([]),
+        // Iterate the pages, 1-based index
+        R.times(R.compose(of, R.add(1)), reqStrPathThrowing('pages', pageInfo))
+      );
+    },
+    // Initial query determines tells us the number of pages
+    page => {
+      return _paginatedQueryContainer(
+        {apolloConfig, regionConfig},
+        {name, outputParams, pageSize: pageSizeOrDefault, page, readInputTypeMapper: readInputTypeMapperOrDefault, normalizeProps},
+        props
+      );
+    }
+  ])(1);
+}), [
+  ['config', PropTypes.shape(
+    {
+      apolloConfig: PropTypes.shape({
+        apolloClient: PropTypes.shape().isRequired
+      }).isRequired
+    },
+    {
+      regionConfig: PropTypes.shape().isRequired
+    }
+  ).isRequired
+  ],
+  ['queryConfig', PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    typeName: PropTypes.string.isRequired,
+    outputParams: PropTypes.array.isRequired,
+    readInputTypeMapper: PropTypes.shape()
+  })
+  ],
+  ['props', PropTypes.shape().isRequired]
+], 'queryUsingPaginationContainer');
 
 /**
  * Query objects paginated and return objects and the queryParams
@@ -55,10 +161,10 @@ export const queryObjectsPaginatedContainer = v(R.curry(
     return makeQueryContainer(
       apolloConfig,
       {name, readInputTypeMapper, outputParams},
-      // Currently we don't support querying by objects.geojson, where objects is the location props
       R.over(
         R.lensProp('objects'),
         objs => {
+          // Apply the normalizeProps function if specified
           return (normalizeProps || R.identity)(objs);
         },
         props
@@ -106,98 +212,6 @@ export const _paginatedQueryContainer = (
     {pageSize, page, objects: props}
   );
 };
-
-/**
- * Queries for object using pagination
- * @type {function(): any}
- * @param {Object} config
- * @param {Object} config.apolloConfig
- * @param {Object} config.regionConfig
- * @param {String} queryConfig.paginatedObjectsName The name for the query
- * @param {Function} queryConfig.paginatedQueryContainer The query container function. This is passed most of the parameters
- * @param {Function} [queryConfig.filterObjsByConfig] Optional function to filter objects returned by pagination based on
- * the regionConfig
- * @param {Object} queryConfig.outputParams
- * @param {Object} queryConfig.readInputTypeMapper Maps complex input types
- * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
- * passed to the query. Defaults to passing all of them
- */
-export const queryUsingPaginationContainer = v(R.curry((
-  {apolloConfig, regionConfig},
-  {
-    name, filterObjsByConfig, outputParams, readInputTypeMapper, normalizeProps
-  },
-  props
-) => {
-  const pageSize = 100;
-  // We can't query geojson yet
-  const limitedProps = R.omit(['geojson'], props);
-  log.debug(`Checking for existence of objects with props ${JSON.stringify(limitedProps)}`);
-
-  return composeWithChainMDeep(1, [
-    // Extract the paginated objects, removing those that don't pass regionConfig's feature property filters
-    objs => {
-      return containerForApolloType(apolloConfig,
-        R.when(R.identity, objs => {
-            return filterObjsByConfig({regionConfig}, objs);
-          }
-        )(objs)
-      );
-    },
-
-    firstPageObjs => {
-      // Get the number of pages so we can query for the remaining pages if there are any
-      const pageInfo = R.omit(['objects'], reqPathThrowing(['data', name], firstPageObjs));
-      // Run a query for each page (based on the result of the first query)
-      // TODO Should be traverseReduceWhile but there is a weird bug that causes it to resolve to a task
-      return traverseReduceWhile({predicate: () => true, mappingFunction: R.chain},
-        // Query for the page and extract the objects, since we don't need intermediate page info
-        (previousResults, page) => {
-          return _singlePageQueryContainer(
-            {apolloConfig, regionConfig},
-            {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
-            {previousResults, firstPageLocations: firstPageObjs},
-            limitedProps
-          );
-        },
-        of([]),
-        // Iterate the pages, 1-based index
-        R.times(R.compose(of, R.add(1)), reqStrPathThrowing('pages', pageInfo))
-      );
-    },
-    // Initial query determines tells us the number of pages
-    page => {
-      return _paginatedQueryContainer({apolloConfig, regionConfig}, {
-          name,
-          outputParams,
-          pageSize,
-          page,
-          readInputTypeMapper,
-          normalizeProps
-        },
-        limitedProps
-      );
-    }
-  ])(1);
-}), [
-  ['config', PropTypes.shape(
-    {
-      apolloConfig: PropTypes.shape({
-        apolloClient: PropTypes.shape().isRequired
-      }).isRequired
-    },
-    {
-      regionConfig: PropTypes.shape().isRequired
-    }
-  ).isRequired
-  ],
-  ['queryConfig', PropTypes.shape({
-    outputParams: PropTypes.array.isRequired,
-    propsStructure: PropTypes.shape()
-  })
-  ],
-  ['props', PropTypes.shape().isRequired]
-], 'queryLocationsUsingPaginationContainer');
 
 /**
  * Queries for a single page of a paginated query
