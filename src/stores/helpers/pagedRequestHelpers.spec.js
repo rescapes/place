@@ -44,7 +44,7 @@ test('queryUsingPaginationContainer', done => {
       );
     },
     mapToNamedResponseAndInputs('projects',
-      ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, user)
+      ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, {user})
     ),
     mapToNamedPathAndInputs('user', 'data.currentUser',
       ({apolloConfig}) => {
@@ -106,7 +106,7 @@ test('queryPageContainer', done => {
         );
       }),
     mapToNamedResponseAndInputs('projects',
-      ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, user)
+      ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, {user})
     ),
     mapToNamedPathAndInputs('user', 'data.currentUser',
       ({apolloConfig}) => {

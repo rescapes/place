@@ -3,6 +3,8 @@ import {composeWithChain, mergeDeep, reqStrPathThrowing, traverseReduce} from 'r
 import * as R from 'ramda';
 import moment from 'moment';
 import {fromPromised, of} from 'folktale/concurrency/task';
+import {v} from 'rescape-validate'
+import PropTypes from 'prop-types'
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -67,11 +69,13 @@ export const createSampleProjectTask = ({apolloClient}, props) => {
 
 /**
  * Creates 10 projects for the given user
- * @param apolloConfig
- * @param user
- * @return {f2|f1}
+ * @param {Object} apolloConfig
+ * @param {Object} props
+ * @param {Object} props.user
+ * @param {Number} props.user.id
+ * @return Task resolving to a list of 10 projects
  */
-export const createSampleProjectsTask = (apolloConfig, user) => {
+export const createSampleProjectsTask = v((apolloConfig, props) => {
   return traverseReduce(
     (projects, project) => {
       return R.concat(projects, [reqStrPathThrowing('data.createProject.project', project)]);
@@ -83,7 +87,7 @@ export const createSampleProjectsTask = (apolloConfig, user) => {
           return createSampleProjectTask(apolloConfig, {
               key: `test${moment().format('HH-mm-SS')}`,
               user: {
-                id: user.id
+                id: reqStrPathThrowing('user.id', props)
               }
             }
           );
@@ -92,4 +96,12 @@ export const createSampleProjectsTask = (apolloConfig, user) => {
       ])();
     }, 10)
   );
-};
+}, [
+  ['apolloConfig', PropTypes.shape({
+  }).isRequired],
+  ['props', PropTypes.shape({
+    user: PropTypes.shape({
+      id: PropTypes.number.isRequired
+    }).isRequired
+  }).isRequired]
+], 'createSampleProjectsTask');

@@ -24,7 +24,7 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {localTestAuthTask} from '../../helpers/testHelpers';
-import {createSampleProjectTask} from '../scopeStores/projectStore.sample';
+import {createSampleProjectsTask, createSampleProjectTask} from '../scopeStores/projectStore.sample';
 import {readInputTypeMapper} from '../scopeStores/projectStore';
 import {of} from 'folktale/concurrency/task';
 import * as R from 'ramda';
@@ -34,26 +34,28 @@ describe('variedRequestHelpers', () => {
     expect.assertions(4);
     const task = composeWithChain([
       mapToNamedResponseAndInputs('projectsPagedAll',
-        ({project, variations}) => {
-          const props = {id: reqStrPathThrowing('id', project)};
-          return reqStrPathThrowing('projectsPaginatedAll', variations)(props);
+        ({projects, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          // Returns all 10 with 2 queries of pageSize 5
+          return reqStrPathThrowing('projectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('projectsPaged',
-        ({project, variations}) => {
-          const props = {id: reqStrPathThrowing('id', project)};
-          return reqStrPathThrowing('projectsPaginated', variations)(props);
+        ({projects, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          // Returns 3 of the 10 projects on page 3
+          return reqStrPathThrowing('projectsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
         }
       ),
       mapToNamedResponseAndInputs('projectsMinimized',
-        ({project, variations}) => {
-          const props = {id: reqStrPathThrowing('id', project)};
+        ({projects, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
           return reqStrPathThrowing('projectsMinimized', variations)(props);
         }
       ),
-      mapToNamedResponseAndInputs('projects',
-        ({project, variations}) => {
-          const props = {id: reqStrPathThrowing('id', project)};
+      mapToNamedResponseAndInputs('projectsFull',
+        ({projects, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
           return reqStrPathThrowing('projects', variations)(props);
         }
       ),
@@ -66,8 +68,12 @@ describe('variedRequestHelpers', () => {
               requestTypes: [
                 {},
                 {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},
-                {type: 'paginated', args: {page: 1, pageSize: 1}},
-                {type: 'paginatedAll', args: {page: 1}}
+                // Note that we don't pass page and page size here because we want to be able to query for different pages
+                // We either pass page and page size here or in props instead
+                {type: 'paginated', args: {}},
+                // Note that we don't pass page size here because we want to be able to query for different pages
+                // We either pass page and page size here or in props instead
+                {type: 'paginatedAll', args: {}}
               ],
               queryConfig: {
                 outputParams: projectOutputParams,
@@ -78,8 +84,8 @@ describe('variedRequestHelpers', () => {
           ));
         }
       ),
-      mapToNamedPathAndInputs('project', 'data.createProject.project',
-        ({apolloConfig, user}) => createSampleProjectTask(apolloConfig, {user: {id: user.id}})
+      mapToNamedResponseAndInputs('projects',
+        ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, {user})
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
@@ -94,11 +100,11 @@ describe('variedRequestHelpers', () => {
     ])({});
     const errors = [];
     task.run().listen(defaultRunConfig({
-      onResolved: ({projects, projectsMinimized, projectsPaged, projectsPagedAll}) => {
-        expect(R.length(reqStrPathThrowing('data.projects', projects))).toEqual(1);
-        expect(R.length(reqStrPathThrowing('data.projects', projectsMinimized))).toEqual(1);
-        expect(R.length(reqStrPathThrowing('objects', projectsPaged))).toEqual(1);
-        expect(projectsPagedAll).toEqual(1);
+      onResolved: ({projectsFull, projectsMinimized, projectsPaged, projectsPagedAll}) => {
+        expect(R.length(reqStrPathThrowing('data.projects', projectsFull))).toEqual(10);
+        expect(R.length(reqStrPathThrowing('data.projects', projectsMinimized))).toEqual(10);
+        expect(R.length(reqStrPathThrowing('objects', projectsPaged))).toEqual(3);
+        expect(R.length(projectsPagedAll)).toEqual(10);
       }
     }, errors, done));
   });

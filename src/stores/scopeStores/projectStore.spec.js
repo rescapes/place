@@ -8,20 +8,34 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import {defaultRunConfig, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
+import {
+  composeWithChain,
+  defaultRunConfig,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs,
+  reqStrPathThrowing
+} from 'rescape-ramda';
 import {expectKeysAtPath} from 'rescape-helpers-test';
 import {localTestAuthTask} from '../../helpers/testHelpers';
 import * as R from 'ramda';
-import {makeProjectMutationContainer, makeProjectsQueryContainer, projectOutputParams} from './projectStore';
-import {createSampleProjectTask} from './projectStore.sample';
+import {
+  makeProjectMutationContainer,
+  makeProjectsQueryContainer,
+  projectOutputParams,
+  projectOutputParamsMinimized,
+  readInputTypeMapper
+} from './projectStore';
+import {createSampleProjectsTask, createSampleProjectTask} from './projectStore.sample';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStore';
+import {queryVariationContainers} from '../helpers/variedRequestHelpers';
+import {of} from 'folktale/concurrency/task';
 
 const someProjectKeys = ['id', 'key', 'geojson'];
 describe('projectStore', () => {
   const errors = [];
   test('makeProjectMutationContainer', done => {
     expect.assertions(1);
-    R.composeK(
+    composeWithChain([
       mapToNamedPathAndInputs('project', 'data.createProject.project',
         ({apolloClient, userId}) => createSampleProjectTask({apolloClient}, {user: {id: userId}})
       ),
@@ -30,7 +44,7 @@ describe('projectStore', () => {
         ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       () => localTestAuthTask
-    )().run().listen(defaultRunConfig({
+    ])().run().listen(defaultRunConfig({
       onResolved:
         response => {
           expectKeysAtPath(someProjectKeys, 'project', response);
@@ -38,29 +52,82 @@ describe('projectStore', () => {
     }, errors, done));
   });
 
-  test('makeProjectsQueryContainer', done => {
-    expect.assertions(1);
-    const errors = [];
-    R.composeK(
-      ({apolloClient, project}) => makeProjectsQueryContainer(
-        {apolloClient},
-        {outputParams: projectOutputParams},
-        {key: reqStrPathThrowing('key', project)}
+  test('queryProjectVariationsContainers', done => {
+    expect.assertions(4);
+    const task = composeWithChain([
+      mapToNamedResponseAndInputs('projectsPagedAll',
+        ({projects, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          // Returns all 10 with 2 queries of pageSize 5
+          return reqStrPathThrowing('projectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+        }
       ),
-      mapToNamedPathAndInputs('project', 'data.createProject.project',
-        ({apolloClient, user}) => createSampleProjectTask({apolloClient}, {user: {id: user.id}})
+      mapToNamedResponseAndInputs('projectsPaged',
+        ({projects, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          // Returns 3 of the 10 projects on page 3
+          return reqStrPathThrowing('projectsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
+        }
+      ),
+      mapToNamedResponseAndInputs('projectsMinimized',
+        ({projects, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          return reqStrPathThrowing('projectsMinimized', variations)(props);
+        }
+      ),
+      mapToNamedResponseAndInputs('projectsFull',
+        ({projects, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          return reqStrPathThrowing('projects', variations)(props);
+        }
+      ),
+      mapToNamedResponseAndInputs('variations',
+        ({apolloConfig}) => {
+          return of(queryVariationContainers(
+            {apolloConfig, regionConfig: {}},
+            {
+              name: 'project',
+              requestTypes: [
+                {},
+                {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},
+                // Note that we don't pass page and page size here because we want to be able to query for different pages
+                // We either pass page and page size here or in props instead
+                {type: 'paginated', args: {}},
+                // Note that we don't pass page size here because we want to be able to query for different pages
+                // We either pass page and page size here or in props instead
+                {type: 'paginatedAll', args: {}}
+              ],
+              queryConfig: {
+                outputParams: projectOutputParams,
+                readInputTypeMapper: readInputTypeMapper
+              },
+              queryContainer: makeProjectsQueryContainer
+            }
+          ));
+        }
+      ),
+      mapToNamedResponseAndInputs('projects',
+        ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, {user})
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
-      ),
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
-        () => localTestAuthTask
-      )
-    )().run().listen(defaultRunConfig({
-      onResolved:
-        response => {
-          expectKeysAtPath(someProjectKeys, 'data.projects.0', response);
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => {
+          return localTestAuthTask;
+        }
+      )
+    ])({});
+    const errors = [];
+    task.run().listen(defaultRunConfig({
+      onResolved: ({projectsFull, projectsMinimized, projectsPaged, projectsPagedAll}) => {
+        expect(R.length(reqStrPathThrowing('data.projects', projectsFull))).toEqual(10);
+        expect(R.length(reqStrPathThrowing('data.projects', projectsMinimized))).toEqual(10);
+        expect(R.length(reqStrPathThrowing('objects', projectsPaged))).toEqual(3);
+        expect(R.length(projectsPagedAll)).toEqual(10);
+      }
     }, errors, done));
-  }, 50000);
+  },100000);
 });

@@ -11,15 +11,12 @@
 
 import * as R from 'ramda';
 import {containerForApolloType, makeQueryContainer} from 'rescape-apollo';
-import moment from 'moment';
 import {
   capitalize,
   composeWithChain,
   composeWithChainMDeep,
   composeWithMapMDeep,
-  mapToMergedResponseAndInputs,
   mapToNamedResponseAndInputs,
-  memoized, memoizedWith,
   reqPathThrowing,
   reqStrPathThrowing,
   traverseReduceWhile
@@ -34,6 +31,7 @@ const log = loggers.get('rescapeDefault');
 
 /**
  * Queries for all objects using pagination to break up query results. All results are combined
+ * Note that pageSize and page can either be passed to queryConfig or in via props, but props takes precedence
  * @type {function(): any}
  * @param {Object} config
  * @param {Object} config.apolloConfig
@@ -57,6 +55,7 @@ const log = loggers.get('rescapeDefault');
  * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
  * passed to the query. Defaults to passing all of them
  * @param {Object} props
+ * @returns {Task|Object} Object or Task resolving to the all the matching objects of all pages
  */
 export const queryUsingPaginationContainer = v(R.curry((
   {apolloConfig, regionConfig},
@@ -64,10 +63,11 @@ export const queryUsingPaginationContainer = v(R.curry((
     pageSize,
     typeName, name, filterObjsByConfig, outputParams, readInputTypeMapper, normalizeProps
   },
-  props
+  {pageSize: propsPageSize, ...props}
 ) => {
+  // Prefer the props page size and then page size and defult to 100
+  const pageSizeOrDefault = propsPageSize || pageSize || 100;
   const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
-  const pageSizeOrDefault = R.defaultTo(100, pageSize);
   const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
   const readInputTypeMapperOrDefault = R.defaultTo(
     {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`},
@@ -153,16 +153,34 @@ export const queryUsingPaginationContainer = v(R.curry((
 ], 'queryUsingPaginationContainer');
 
 /**
- * Query for one page at a time.
- * @type {function(...[*]=)}
- * @return {Object} paginated results in the form {
- *   pageSize,
- *   page,
- *   pages,
- *   hasNext,
- *   hasPrev,
- *   objects: []
- * }
+ * Queries for one page at a time. Note that pageSize and page can either be passed to queryConfig or in via props.
+ * props takes precedence
+ * @type {function(): any}
+ * @param {Object} config
+ * @param {Object} config.apolloConfig
+ * @param {Object} config.regionConfig
+ * @param {Number} [queryConfig.pageSize] Optional pageSize, defaults to 100
+ * @param {String} queryConfig.typeName the type name of the object being queried, such as 'region' or 'project'
+ * @param {String} queryConfig.name the name matching the paginated query name on the server,
+ * such as regionsPaginated or projectsPaginated
+ * @param {String} queryConfig.paginatedObjectsName The name for the query
+ * @param {Function} queryConfig.paginatedQueryContainer The query container function. This is passed most of the parameters
+ * @param {Function} [queryConfig.filterObjsByConfig] Optional function expecting ({regionConfig}, objs)
+ * to filter objects returned by pagination based on the regionConfig, where objs are all objects returned by pagination.
+ * This is used to filter out objects that can't easily be filtered out using direct props on the pagination query,
+ * such as properties embedded in json data
+ * @param {Object} queryConfig.outputParams
+ * @param {Object} [queryConfig.readInputTypeMapper] This should not be needed, it specifies the graphql input type.
+ * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`}
+ * Where objects are the paginated objects returned by the query and thus
+ * `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType` is the input type argument we can use for
+ * filtering
+ * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
+ * passed to the query. Defaults to passing all of them
+ * @param {Object} props
+ * @returns {Task|Object} Object or Task resolving to the all the matching objects for the given page. Note
+ * that if filterObjsByConfig removes objects then not all objects of the page will be returned, so don't rely
+ * on the number of objects returned if using filterObjsByConfig
  */
 export const queryPageContainer = v(R.curry((
   {apolloConfig, regionConfig},
@@ -170,9 +188,14 @@ export const queryPageContainer = v(R.curry((
     page, pageSize,
     typeName, name, filterObjsByConfig, outputParams, readInputTypeMapper, normalizeProps
   },
-  props
+  {pageSize: propsPageSize, page: propsPage, ...props}
   ) => {
-    const pageSizeOrDefault = R.defaultTo(100, pageSize);
+    // Default to propsPageSize then pageSize then 100
+    const pageSizeOrDefault = propsPageSize || pageSize || 100;
+    const pageOrDefault = propsPage || page;
+    if (!pageOrDefault) {
+      throw new Error(`Neither props.page queryConfig.page was specified. Props: ${JSON.stringify(props)}`);
+    }
     const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
     const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
     const readInputTypeMapperOrDefault = R.defaultTo(
@@ -208,7 +231,7 @@ export const queryPageContainer = v(R.curry((
               readInputTypeMapper: readInputTypeMapperOrDefault,
               normalizeProps: normalizePropsOrDefault,
               pageSize: pageSizeOrDefault,
-              page
+              page: pageOrDefault
             },
             props
           );
