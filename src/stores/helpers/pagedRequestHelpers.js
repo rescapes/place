@@ -66,19 +66,21 @@ export const queryUsingPaginationContainer = v(R.curry((
   },
   props
 ) => {
+  const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
   const pageSizeOrDefault = R.defaultTo(100, pageSize);
+  const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
   const readInputTypeMapperOrDefault = R.defaultTo(
     {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`},
     readInputTypeMapper
   );
-  log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizeProps(props))}`);
+  log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
 
   return composeWithChainMDeep(1, [
     // Extract the paginated objects, removing those that don't pass regionConfig's feature property filters
     objs => {
       return containerForApolloType(apolloConfig,
         R.when(R.identity, objs => {
-            return filterObjsByConfig({regionConfig}, objs);
+            return filterObjsByConfigOrDefault({regionConfig}, objs);
           }
         )(objs)
       );
@@ -122,7 +124,7 @@ export const queryUsingPaginationContainer = v(R.curry((
           pageSize: pageSizeOrDefault,
           page,
           readInputTypeMapper: readInputTypeMapperOrDefault,
-          normalizeProps
+          normalizeProps: normalizePropsOrDefault
         },
         props
       );
@@ -171,11 +173,13 @@ export const queryPageContainer = v(R.curry((
   props
   ) => {
     const pageSizeOrDefault = R.defaultTo(100, pageSize);
+    const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
+    const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
     const readInputTypeMapperOrDefault = R.defaultTo(
       {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`},
       readInputTypeMapper
     );
-    log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizeProps(props))}`);
+    log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
 
     return composeWithChain([
       // Extract the paginated objects, removing those that don't pass regionConfig's feature property filters
@@ -184,7 +188,7 @@ export const queryPageContainer = v(R.curry((
           R.when(
             R.identity,
             objs => {
-              return filterObjsByConfig(
+              return filterObjsByConfigOrDefault(
                 {regionConfig},
                 reqPathThrowing(['data', name], objs)
               );
@@ -202,7 +206,7 @@ export const queryPageContainer = v(R.curry((
               name,
               outputParams,
               readInputTypeMapper: readInputTypeMapperOrDefault,
-              normalizeProps,
+              normalizeProps: normalizePropsOrDefault,
               pageSize: pageSizeOrDefault,
               page
             },
@@ -236,6 +240,7 @@ export const queryPageContainer = v(R.curry((
   'queryPageContainer'
 );
 
+/*
 export const initQueryPageContainer = v((
   {apolloConfig, regionConfig},
   {
@@ -294,6 +299,7 @@ export const initQueryPageContainer = v((
   ],
   ['props', PropTypes.shape().isRequired]
 ], 'initQueryPageContainer');
+ */
 
 /**
  * Query objects paginated and return objects and the queryParams

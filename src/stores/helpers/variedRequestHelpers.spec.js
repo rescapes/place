@@ -8,50 +8,98 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import {queryVariationContainers} from './variedRequestHelpers';
+import {
+  makeCurrentUserQueryContainer,
+  userOutputParams
+} from '../../stores/userStores/userStore';
+import {
+  makeProjectsQueryContainer,
+  projectOutputParams, projectOutputParamsMinimized
+} from '../../stores/scopeStores/projectStore';
+import {
+  composeWithChain, defaultRunConfig,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs,
+  reqStrPathThrowing
+} from 'rescape-ramda';
+import {localTestAuthTask} from '../../helpers/testHelpers';
+import {createSampleProjectTask} from '../scopeStores/projectStore.sample';
+import {readInputTypeMapper} from '../scopeStores/projectStore';
+import {of} from 'folktale/concurrency/task';
 import * as R from 'ramda';
-import {queryObjectsPaginatedContainer, queryUsingPaginationContainer} from './pagedRequestHelpers';
 
-/**
- * Given a query container and request type returns version of the query for the given request types.
- * @param name
- * @param requestTypes List of objects with type and outputParams. The following options are available
- * Returns the queryContainer using the given outputParams. The name of the query is name + capitalized(type)
- * {
- *   type: string or null or undefined
- *   args: arguments to pass to the container
- *   outputParams
- * }
- * A paged version of queryContainer
- * {
- *   type: 'paged'
- *   outputParams
- * }
- * @param queryContainer
- */
-export const queryVariationContainers = (
-  {
-    name,
-    requestTypes
-  }, queryContainer
-) => {
-  R.fromPairs(R.map(
-    ({type, args}) => {
-      return R.cond([
-        // Queries for one page at a time
-        [R.equals('paged'),
-          [`${name}${type}`, R.apply(queryObjectsPaginatedContainer, args)]
-        ],
-        // Queries for all objects using pages whose results are combined.
-        // This prevents large query results that tax the server
-        [R.equals('pagedAll'),
-          [`${name}${type}`, R.apply(queryObjectsPaginatedContainer, args)]
-        ],
-        // Normal queries such as with full outputParams or minimized outputParams
-        [R.T,
-          [`${name}${type}`, R.apply(queryContainer, args)]
-        ]
-      ]);
-    },
-    requestTypes
-  ));
-};
+describe('variedRequestHelpers', () => {
+  test('queryVariationContainers', done => {
+    expect.assertions(4);
+    const task = composeWithChain([
+      mapToNamedResponseAndInputs('projectsPagedAll',
+        ({project, variations}) => {
+          const props = {id: reqStrPathThrowing('id', project)};
+          return reqStrPathThrowing('projectsPaginatedAll', variations)(props);
+        }
+      ),
+      mapToNamedResponseAndInputs('projectsPaged',
+        ({project, variations}) => {
+          const props = {id: reqStrPathThrowing('id', project)};
+          return reqStrPathThrowing('projectsPaginated', variations)(props);
+        }
+      ),
+      mapToNamedResponseAndInputs('projectsMinimized',
+        ({project, variations}) => {
+          const props = {id: reqStrPathThrowing('id', project)};
+          return reqStrPathThrowing('projectsMinimized', variations)(props);
+        }
+      ),
+      mapToNamedResponseAndInputs('projects',
+        ({project, variations}) => {
+          const props = {id: reqStrPathThrowing('id', project)};
+          return reqStrPathThrowing('projects', variations)(props);
+        }
+      ),
+      mapToNamedResponseAndInputs('variations',
+        ({apolloConfig}) => {
+          return of(queryVariationContainers(
+            {apolloConfig, regionConfig: {}},
+            {
+              name: 'project',
+              requestTypes: [
+                {},
+                {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},
+                {type: 'paginated', args: {page: 1, pageSize: 1}},
+                {type: 'paginatedAll', args: {page: 1}}
+              ],
+              queryConfig: {
+                outputParams: projectOutputParams,
+                readInputTypeMapper: readInputTypeMapper
+              },
+              queryContainer: makeProjectsQueryContainer
+            }
+          ));
+        }
+      ),
+      mapToNamedPathAndInputs('project', 'data.createProject.project',
+        ({apolloConfig, user}) => createSampleProjectTask(apolloConfig, {user: {id: user.id}})
+      ),
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => {
+          return localTestAuthTask;
+        }
+      )
+    ])({});
+    const errors = [];
+    task.run().listen(defaultRunConfig({
+      onResolved: ({projects, projectsMinimized, projectsPaged, projectsPagedAll}) => {
+        expect(R.length(reqStrPathThrowing('data.projects', projects))).toEqual(1);
+        expect(R.length(reqStrPathThrowing('data.projects', projectsMinimized))).toEqual(1);
+        expect(R.length(reqStrPathThrowing('objects', projectsPaged))).toEqual(1);
+        expect(projectsPagedAll).toEqual(1);
+      }
+    }, errors, done));
+  });
+});

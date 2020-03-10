@@ -72,7 +72,8 @@ export const projectOutputParams = [
  * Queries projects
  * @params {Object} apolloConfig The Apollo config. See makeQueryContainer for options
  * @param {Object} apolloClient An authorized Apollo Client
- * @params {Object} outputParams OutputParams for the query such as projectOutputParams
+ * @params {Object} queryConfig
+ * @params {Object} queryConfig.outputParams OutputParams for the query such as projectOutputParams
  * @params {Object} props Arguments for the Regions query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
@@ -85,12 +86,11 @@ export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams
   }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
-    ['queryStructure', PropTypes.shape({
+    ['queryConfig', PropTypes.shape({
       outputParams: PropTypes.array.isRequired,
-    })
-    ],
+    })],
     ['props', PropTypes.shape().isRequired]
-  ], 'makeRegionsQueryContainer');
+  ], 'makeProjectsQueryContainer');
 
 
 /**
