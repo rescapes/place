@@ -115,9 +115,15 @@
     "rescape-validate": ">=1.2.23"
   },
   "jest": {
-    "modulePaths": [],
+    "modulePaths": [
+      "<rootDir>/src"
+    ],
     "collectCoverageFrom": [
       "src/**/*.{js,jsx,mjs}"
+    ],
+    "setupFiles": [],
+    "setupFilesAfterEnv": [
+      "<rootDir>/config/jestsetup.js"
     ],
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
@@ -129,12 +135,12 @@
       "^.+\\.(js|jsx|mjs)$": "<rootDir>/node_modules/babel-jest",
       "^(?!.*\\.(js|jsx|mjs|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
     },
-    "setupFilesAfterEnv": [
-      "<rootDir>/config/jestsetup.js"
-    ],
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs)$"
     ],
+    "moduleNameMapper": {
+      "^react-native$": "react-native-web"
+    },
     "moduleFileExtensions": [
       "web.js",
       "js",

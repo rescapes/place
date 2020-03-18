@@ -10,31 +10,31 @@
  */
 
 import {
-  userStateProjectsQueryContainer,
   userStateOutputParamsCreator,
-  userStateProjectMutationContainer
+  userStateProjectMutationContainer,
+  userStateProjectsQueryContainer
 } from './userProjectStore';
 import {
   composeWithChainMDeep,
   defaultRunConfig,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs, reqStrPathThrowing, strPathOr
+  mapToNamedResponseAndInputs,
+  reqStrPathThrowing,
+  strPathOr
 } from 'rescape-ramda';
 import {createUserProjectWithDefaults, localTestAuthTask} from '../../../helpers/testHelpers';
 import {expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
 import {
   makeCurrentUserQueryContainer,
-  makeAdminUserStateQueryContainer,
-  userOutputParams,
   makeCurrentUserStateQueryContainer,
   makeUserStateMutationContainer,
-  userStateOutputParamsFull,
-  userStateMutateOutputParams
+  userOutputParams,
+  userStateMutateOutputParams,
+  userStateOutputParamsFull
 } from '../userStore';
 import {makeProjectMutationContainer, projectOutputParams} from '../../..';
 import moment from 'moment';
-import {makeUserStateScopeObjsMutationContainer} from './scopeHelpers';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {

@@ -2,38 +2,40 @@
  * Created by Andy Likuski on 2019.01.07
  * Copyright (c) 2019 Andy Likuski
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 import {
+  composeWithChain,
   composeWithChainMDeep,
   defaultRunConfig,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs, strPathOr
+  mapToNamedResponseAndInputs,
+  pickDeepPaths
 } from 'rescape-ramda';
-import {
-  localTestAuthTask,
-  mutateUserStateWithProjectAndRegion
-} from '../../helpers/testHelpers';
+import {localTestAuthTask, mutateSampleUserStateWithProjectAndRegion} from '../../helpers/testHelpers';
 import {expectKeys, expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
 import {of} from 'folktale/concurrency/task';
 import {
-  makeCurrentUserQueryContainer,
-  makeUserStateMutationContainer,
   makeAdminUserStateQueryContainer,
+  makeCurrentUserQueryContainer,
+  makeCurrentUserStateQueryContainer,
+  makeUserStateMutationContainer,
+  makeUserStateMutationWithClientDirective,
   userOutputParams,
-  userStateOutputParamsFull, makeCurrentUserStateQueryContainer
+  userStateOutputParamsFull
 } from './userStore';
 
 
 describe('userStore', () => {
   test('makeUserQueryTask', done => {
     const someUserKeys = ['id', 'email', 'username'];
+    const errors = [];
     R.composeK(
       ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {}),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
@@ -45,7 +47,7 @@ describe('userStore', () => {
           expectKeysAtPath(someUserKeys, 'data.currentUser', response);
           done();
         }
-    }));
+    }, errors, done));
   });
 
   test('makeCurrentUserStateQueryContainer', done => {
@@ -103,37 +105,168 @@ describe('userStore', () => {
 
   test('makeUserStateMutationContainer', done => {
     const errors = [];
-    const someUserStateKeys = ['id', 'data.userRegions.0.region.id', 'data.userProjects.0.project.id'];
+    const someUserStateKeysWithCacheKeys = [
+      'id',
+      'data.userRegions.0.region.id',
+      'data.userProjects.0.project.id',
+      'data.userProjects.0.selection.isSelected'
+    ];
 
-    R.composeK(
+    composeWithChain([
       // Set it again. This will wipe out the previous region and project ids
-      ({apolloClient, user}) => mutateUserStateWithProjectAndRegion({
-        apolloClient,
-        user,
-        regionKey: 'mars',
-        projectKey: 'tharsisVolcanoes'
-      }),
-      // We user state structure should match what we expect
-      ({apolloClient, user, userState}) => {
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectAndRegion({
+          apolloConfig,
+          user,
+          regionKey: 'mars',
+          projectKey: 'tharsisVolcanoes'
+        });
+      },
+      // The user state structure should match what we expect
+      ({apolloConfig, user, userState}) => {
         expectKeys(someUserStateKeys, userState);
-        return of({apolloClient, user});
+        return of({apolloConfig, user});
       },
       // Set the UserState
-      ({apolloClient, user}) => mutateUserStateWithProjectAndRegion({
-        apolloClient,
+      ({apolloConfig, user}) => mutateSampleUserStateWithProjectAndRegion({
+        apolloConfig,
         user,
         regionKey: 'earth',
         projectKey: 'shrangrila'
       }),
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
+        ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedPathAndInputs('apolloConfig',
         () => localTestAuthTask
       )
-    )({}).run().listen(defaultRunConfig({
+    ])({}).run().listen(defaultRunConfig({
       onResolved:
         ({userState}) => {
+          expectKeys(someUserStateKeysWithCacheKeys, userState);
+        }
+    }, errors, done));
+  });
+
+  test('makeUserStateMutationWithCacheValuesContainer', done => {
+    const errors = [];
+    const someUserStateKeys = ['id', 'data.userRegions.0.region.id', 'data.userProjects.0.project.id'];
+
+    composeWithChain([
+      // Query again to make sure we get the cache-only data
+      ({apolloConfig, userState}) => {
+        return makeCurrentUserStateQueryContainer(
+          apolloConfig,
+          {outputParams: userStateOutputParamsFull},
+          R.pick(['id'], userState)
+        );
+      },
+      mapToNamedPathAndInputs('user', 'data.updateUserState',
+        // Update the UserState with some cache only values
+        // We'll set the project's isSelected cache only property
+        ({apolloConfig, userState}) => {
+          const props = R.over(
+            R.lensPath(['data', 'userProjects', 0, 'selection']),
+            selection => R.merge(selection, {
+              isSelected: true
+            }),
+            // Just include the id and the userProjects
+            pickDeepPaths(['id', 'data.userProjects'], userState)
+          );
+          return makeUserStateMutationContainer(
+            apolloConfig,
+            {outputParams: userStateOutputParamsFull},
+            props
+          );
+        }
+      ),
+
+      // Set the UserState, returns previous values and {userState, project, region}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectAndRegion({
+          apolloConfig,
+          user,
+          regionKey: 'earth',
+          projectKey: 'shrangrila'
+        });
+      },
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => localTestAuthTask
+      )
+    ])({}).run().listen(defaultRunConfig({
+      onResolved:
+        ({userState}) => {
+          expectKeys(someUserStateKeys, userState);
+        }
+    }, errors, done));
+  }, 100000);
+
+  test('makeUserStateMutationWithClientDirective', done => {
+    const errors = [];
+    const someUserStateKeys = ['id', 'data.userProjects.0.project.id', 'data.userProjects.0.selection.isSelected'];
+
+    composeWithChain([
+      ({apolloConfig}) => {
+        return of(makeUserStateMutationWithClientDirective(
+          apolloConfig,
+          {outputParams: userStateOutputParamsFull},
+          {
+            id: 3,
+            user: {
+              id: 1,
+              __typename: 'UserType'
+            },
+            data: {
+              userRegions: [
+                {
+                  region: {
+                    id: 1267
+                  },
+                  mapbox: {
+                    viewport: {
+                      latitude: 49.54147,
+                      longitude: -114.17439,
+                      zoom: 8
+                    }
+                  }
+                }
+              ],
+              userProjects: [
+                {
+                  project: {
+                    "id": 2107,
+                    "__typename": "ProjectType"
+                  },
+                  mapbox: {
+                    viewport: {
+                      latitude: 49.54147,
+                      longitude: -114.17439,
+                      zoom: 8
+                    }
+                  },
+                  selection: {
+                    isSelected: true
+                  }
+                }
+              ],
+              __typename: 'UserStateDataType'
+            },
+            __typename: 'UserStateType'
+          }
+        ));
+      },
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => {
+          return localTestAuthTask;
+        }
+      )
+    ])({}).run().listen(defaultRunConfig({
+      onResolved:
+        userState => {
           expectKeys(someUserStateKeys, userState);
         }
     }, errors, done));

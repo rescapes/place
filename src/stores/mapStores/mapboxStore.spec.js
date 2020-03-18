@@ -1,10 +1,11 @@
-import {localTestAuthTask, mutateUserStateWithProjectAndRegion} from '../../helpers/testHelpers';
+import {localTestAuthTask} from '../../helpers/testHelpers';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStore';
 import {makeMapboxesQueryResultTask} from '../mapStores/mapboxStore';
 import * as R from 'ramda';
-import {defaultRunConfig, mapToNamedPathAndInputs} from 'rescape-ramda';
+import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs} from 'rescape-ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
 import {expectKeysAtPath} from 'rescape-helpers-test'
+import {mutateSampleUserStateWithProjectAndRegion} from '../userStores/userStateStore.sample';
 
 /**
  * Created by Andy Likuski on 2018.12.31
@@ -23,8 +24,8 @@ describe('mapboxStore', () => {
     expect.assertions(1);
     R.composeK(
       // Now that we have a user, region, and project, we query
-      ({apolloClient, user, region, project, userState}) => makeMapboxesQueryResultTask(
-        {apolloClient},
+      ({apolloConfig, user, region, project, userState}) => makeMapboxesQueryResultTask(
+        apolloConfig,
         [mapboxOutputParamsFragment],
         {
           user: {id: parseInt(user.id)},
@@ -34,18 +35,18 @@ describe('mapboxStore', () => {
       ),
 
       // Set the UserState
-      ({apolloClient, user}) => mutateUserStateWithProjectAndRegion({
-        apolloClient,
+      ({apolloConfig, user}) => mutateSampleUserStateWithProjectAndRegion({
+        apolloConfig,
         user,
         regionKey: 'antarctica',
         projectKey: 'refrost'
       }),
       // Get the current user
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
+        ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       // Authenticate
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedResponseAndInputs('apolloConfig',
         () => localTestAuthTask
       )
     )().run().listen(defaultRunConfig({

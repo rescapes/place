@@ -11,22 +11,30 @@
 
 
 import * as R from 'ramda';
-import {makeMutationRequestContainer} from 'rescape-apollo';
+import {createCacheOnlyProps, makeMutationRequestContainer, makeMutationWithClientDirective} from 'rescape-apollo';
 import {makeQueryContainer} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {regionOutputParams} from '../scopeStores/regionStore';
 import {projectOutputParams} from '../scopeStores/projectStore';
 import {mapboxOutputParamsFragment} from '../mapStores/mapboxOutputParams';
-import {composeWithChainMDeep, mapToNamedPathAndInputs} from 'rescape-ramda';
+import {
+  composeWithChainMDeep,
+  mapToNamedPathAndInputs,
+  mergeDeep,
+  mergeDeepWithRecurseArrayItems,
+  omitDeepPaths
+} from 'rescape-ramda';
+import {selectionOutputParamsFragment} from './selectionStore';
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
 // Following this location.data is represented as follows:
 // TODO These value should be dervived from the schema
 const userReadInputTypeMapper = {
-  //'data': 'DataTypeofLocationTypeRelatedReadInputType'
+  'data': 'DataTypeofUserTypeRelatedReadInputType'
 };
+
 export const userStateReadInputTypeMapper = {
   'user': 'UserTypeofUserStateTypeRelatedReadInputType'
 };
@@ -69,20 +77,23 @@ export const userStateOutputParamsFull = [
   {
     user: ['id'],
     data: [{
-      userRegions: {
+      userRegions: [{
         region: regionOutputParams,
         ...mapboxOutputParamsFragment
-      },
-      userProjects: {
+      }],
+      userProjects: [{
         project: projectOutputParams,
-        ...mapboxOutputParamsFragment
-      }
+        ...mapboxOutputParamsFragment,
+        ...selectionOutputParamsFragment
+      }]
     }]
   }
 ];
 
 /***
- * userRegions output params fragment when we only want the region ids
+ * userRegions output params fragment when we only want the region ids.
+ * The region property represents a single region and the other properties represent the relationship
+ * between the user and the region. This can be properties that are stored on the server or only in cache.
  */
 export const userRegionsOutputParamsFragmentDefaultOnlyIds = (regionOutputParams = ['id']) => ({
   userRegions: {
@@ -93,6 +104,8 @@ export const userRegionsOutputParamsFragmentDefaultOnlyIds = (regionOutputParams
 
 /***
  * userProjects output params fragment when we only want the project ids
+ * The region property represents a single region and the other properties represent the relationship
+ * between the user and the region. This can be properties that are stored on the server or only in cache.
  */
 export const userProjectsOutputParamsFragmentDefaultOnlyIds = (projectOutputParams = ['id']) => ({
   userProjects: {
@@ -112,6 +125,34 @@ export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
 
 
 export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
+
+// Paths to prop values that we don't store in the database, but only in the cache
+// The prop paths are marked with a client directive when querying (see settingsOutputParams)
+// so we never try to load them from the database.
+const cacheOnlyObjs = ['data.userProjects.*.selection'];
+const filterOutCacheOnlyObjs = obj => {
+  // TODO this should be done with wildcard lens 'data.userProjects.*.selection' to handle arrays
+  return R.over(
+    R.lensPath(['data', 'userProjects']),
+    userProjects => R.map(userProject => R.omit(['selection'], userProject), userProjects),
+    obj
+  );
+};
+// These values come back from the server and get merged into cacheOnlyProps for identification
+const cacheIdProps = [
+  'id',
+  '__typename',
+  'data.__typename',
+  'data.userProjects.__typename',
+  // We need to identify what project we are caching data for
+  'data.userProjects.*.project',
+  'data.userProjects.*.project.id',
+  'data.userProjects.*.project.__typename',
+];
+
+export const createCacheOnlyPropsForUserState = props => {
+  return createCacheOnlyProps({name: 'userStore', cacheIdProps, cacheOnlyObjs}, props);
+};
 
 /**
  * Queries users
@@ -214,25 +255,62 @@ export const makeAdminUserStateQueryContainer = v(R.curry(
   ], 'makeAdminUserStateQueryContainer');
 
 /**
+ * Client Directive mutation to cache cache-only props
+ * @param apolloConfig
+ * @param outputParams
+ * @param props
+ * @return {*}
+ */
+export const makeUserStateMutationWithClientDirective = (apolloConfig, {outputParams}, props) => {
+  return makeMutationWithClientDirective(
+    apolloConfig,
+    {
+      name: 'userState',
+      outputParams: userStateOutputParamsFull
+    },
+    createCacheOnlyPropsForUserState(props)
+  );
+};
+
+/**
  * Makes a UserState mutation container;
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
- * @param [Object] outputParams OutputParams for the query
+ * @param {Object} mutationConfig
+ * @param [Object] mutationConfig.outputParams OutputParams for the query
  * @param {Object} props Object matching the shape of a userState for the create or update
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeMutationRequestContainer(
-      apolloConfig,
+      R.merge(
+        apolloConfig,
+        {
+          options: {
+            update: (store, {data: {createUserState: {userState}}}) => {
+              // Mutate the cache to save settings to the database that are not stored on the server
+              makeUserStateMutationWithClientDirective(
+                apolloConfig,
+                {outputParams: userStateOutputParamsFull},
+                // Deep merge the result of the mutation with the props so that we can add cache only values
+                // in props. We'll only cache values that are cache only since the mutation will have put
+                // the other return objects from the server into the cache
+                mergeDeepWithRecurseArrayItems((l, r) => l, userState, props)
+              )
+            }
+          }
+        }
+      ),
       {
         name: 'userState',
         outputParams
       },
-      props
+      // Remove client-side only values
+      filterOutCacheOnlyObjs(props)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
-    ['mutationStructure', PropTypes.shape({
+    ['mutationConfig', PropTypes.shape({
       outputParams: PropTypes.array.isRequired
     })],
     ['props', PropTypes.shape().isRequired]
