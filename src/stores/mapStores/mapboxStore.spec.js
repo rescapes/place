@@ -1,11 +1,13 @@
-import {localTestAuthTask} from '../../helpers/testHelpers';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStore';
+import {testAuthTask} from '../../helpers/testHelpers';
+import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStateStore';
 import {makeMapboxesQueryResultTask} from '../mapStores/mapboxStore';
 import * as R from 'ramda';
 import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs} from 'rescape-ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
 import {expectKeysAtPath} from 'rescape-helpers-test'
 import {mutateSampleUserStateWithProjectAndRegion} from '../userStores/userStateStore.sample';
+import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
+import {expectKeys} from 'rescape-apollo';
 
 /**
  * Created by Andy Likuski on 2018.12.31
@@ -24,10 +26,11 @@ describe('mapboxStore', () => {
     expect.assertions(1);
     R.composeK(
       // Now that we have a user, region, and project, we query
-      ({apolloConfig, user, region, project, userState}) => makeMapboxesQueryResultTask(
+      ({apolloConfig, settings, user, region, project, userState}) => makeMapboxesQueryResultTask(
         apolloConfig,
-        [mapboxOutputParamsFragment],
+        mapboxOutputParamsFragment,
         {
+          settings: {key: rescapePlaceDefaultSettingsKey},
           user: {id: parseInt(user.id)},
           region: {id: parseInt(region.id)},
           project: {id: parseInt(project.id)}
@@ -47,14 +50,14 @@ describe('mapboxStore', () => {
       ),
       // Authenticate
       mapToNamedResponseAndInputs('apolloConfig',
-        () => localTestAuthTask
+        () => testAuthTask
       )
     )().run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtPath(someMapboxKeys, 'data.mapboxes.0.region', response);
+          expectKeys(someMapboxKeys, response);
           done();
         }
     }, errors, done));
-  }, 20000);
+  }, 2000000);
 });

@@ -24,49 +24,43 @@ export const readInputTypeMapper = {
   'geojson': 'FeatureCollectionDataTypeofProjectTypeRelatedReadInputType'
 };
 
-export const projectOutputParamsMinimized = [
-  'id',
-  'key',
-  'name',
-  'createdAt',
-  'updatedAt',
-];
+export const projectOutputParamsMinimized = {
+  id: 1,
+  key: 1,
+  name: 1,
+  createdAt: 1,
+  updatedAt: 1
+};
 
-export const projectOutputParams = [
-  'id',
-  'key',
-  'name',
-  'createdAt',
-  'updatedAt',
-  {
-    geojson: [
-      'type',
-      {
-        features: [
-          'type',
-          'id',
-          {
-            geometry: [
-              'type',
-              'coordinates'
-            ]
-          },
-          'properties'
-        ]
+export const projectOutputParams = {
+  id: 1,
+  key: 1,
+  name: 1,
+  createdAt: 1,
+  updatedAt: 1,
+
+  geojson: {
+    type: 1,
+    features: {
+      type: 1,
+      id: 1,
+      geometry: {
+        type: 1,
+        coordinates: 1
       },
-      'generator',
-      'copyright'
-    ],
-    data: [
-      {
-        locations: [
-          'params'
-        ],
-        ...mapboxOutputParamsFragment
+      properties: 1
+    },
+    generator: 1,
+    copyright: 1
+  },
+  data: R.merge({
+      locations: {
+        params: 1
       }
-    ]
-  }
-];
+    },
+    mapboxOutputParamsFragment
+  )
+};
 
 /**
  * Queries projects
@@ -87,10 +81,11 @@ export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryConfig', PropTypes.shape({
-      outputParams: PropTypes.array.isRequired,
+      outputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape().isRequired]
-  ], 'makeProjectsQueryContainer');
+  ],
+  'makeProjectsQueryContainer');
 
 
 /**
@@ -127,7 +122,7 @@ export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputPara
 }), [
   ['apolloConfig', PropTypes.shape().isRequired],
   ['mutationStructure', PropTypes.shape({
-    outputParams: PropTypes.array.isRequired
+    outputParams: PropTypes.shape().isRequired
   })
   ],
   ['props', PropTypes.shape().isRequired]

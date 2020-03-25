@@ -11,9 +11,10 @@
 
 
 import {capitalize, composeWithChain, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
-import {makeUserStateMutationContainer, userStateMutateOutputParams} from './userStore';
+import {makeUserStateMutationContainer, userStateMutateOutputParams} from './userStateStore';
 import {createSampleProjectTask} from '../scopeStores/projectStore.sample';
 import {createSampleRegionContainer} from '../..';
+import * as R from 'ramda';
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -35,10 +36,10 @@ export const mutateSampleUserStateWithProjectAndRegion = ({apolloConfig, user, r
     ),
     // Create a sample project
     mapToNamedPathAndInputs('project', 'data.createProject.project',
-      ({apolloConfig}) => createSampleProjectTask(apolloConfig, {
+      ({apolloConfig, user}) => createSampleProjectTask(apolloConfig, {
           key: projectKey,
           name: capitalize(projectKey),
-          user: {id: user.id}
+          user: R.pick(['id'], user)
         }
       )
     ),
@@ -95,6 +96,9 @@ export const createUserProjectWithDefaults = project => {
         // Zoom in one from he project's zoom
         zoom: project.data.mapbox.viewport.zoom + 1
       }
+    },
+    selection: {
+      isSelected: false
     }
   };
 };

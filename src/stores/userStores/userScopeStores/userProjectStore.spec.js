@@ -22,7 +22,6 @@ import {
   reqStrPathThrowing,
   strPathOr
 } from 'rescape-ramda';
-import {createUserProjectWithDefaults, localTestAuthTask} from '../../../helpers/testHelpers';
 import {expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
 import {
@@ -32,9 +31,10 @@ import {
   userOutputParams,
   userStateMutateOutputParams,
   userStateOutputParamsFull
-} from '../userStore';
+} from '../userStateStore';
 import {makeProjectMutationContainer, projectOutputParams} from '../../..';
 import moment from 'moment';
+import {testAuthTask} from 'rescape-apollo';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -54,7 +54,7 @@ describe('userProjectStore', () => {
         ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => localTestAuthTask
+        () => testAuthTask
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
@@ -84,7 +84,7 @@ describe('userProjectStore', () => {
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => localTestAuthTask
+        () => testAuthTask
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
@@ -112,7 +112,7 @@ describe('userProjectStore', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return localTestAuthTask;
+          return testAuthTask;
         }
       )
     )({}).run().listen(defaultRunConfig({
@@ -135,7 +135,7 @@ describe('userProjectStore', () => {
             apolloConfig,
             {
               // We only need each project id back from userState.data.userProjects: [...]
-              outputParams: ['id']
+              outputParams: {id: 1}
             },
             {
               userState,
@@ -178,7 +178,7 @@ describe('userProjectStore', () => {
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => localTestAuthTask
+        () => testAuthTask
       )
     )({}).run().listen(defaultRunConfig({
       onResolved:

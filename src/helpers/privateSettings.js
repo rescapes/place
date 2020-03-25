@@ -9,6 +9,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import {reqStrPathThrowing} from 'rescape-ramda';
+
+export const rescapePlaceDefaultSettingsKey = 'rescape-place.settings.default';
 /***
  * The private test config is used for testing.
  * In production the application seeds the ApolloClient with settings from the application.
@@ -20,30 +23,37 @@
  * See settingsStore.js
  */
 export default {
-  domain: 'localhost',
-  api: {
-    protocol: 'http',
-    host: 'localhost',
-    port: '8008',
-    path: '/graphql/'
-  },
-  // Used to authenticate with the API above in tests
-  testAuthorization: {
-    username: 'test',
-    password: 'testpass'
-  },
-  // Overpass API configuration to play nice with the server's strict throttling
-  overpass: {
-    cellSize: 100,
-    sleepBetweenCalls: 1000
-  },
-  mapbox: {
-    mapboxApiAccessToken: 'pk.eyJ1IjoiY2Fsb2NhbiIsImEiOiJjaXl1aXkxZjkwMG15MndxbmkxMHczNG50In0.07Zu3XXYijL6GJMuxFtvQg',
-    // Initial viewport
-    viewport: {
-      zoom: 0,
-      latitude: 0,
-      longitude: 0
+  key: rescapePlaceDefaultSettingsKey,
+  data: {
+    domain: 'localhost',
+    api: {
+      protocol: 'http',
+      host: 'localhost',
+      port: '8008',
+      path: '/graphql/'
+    },
+    // Used to authenticate with the API above in tests
+    // @client only
+    testAuthorization: {
+      username: 'test',
+      password: 'testpass'
+    },
+    // Overpass API configuration to play nice with the server's strict throttling
+    overpass: {
+      cellSize: 100,
+      sleepBetweenCalls: 1000
+    },
+    mapbox: {
+      // @client only
+      mapboxAuthentication: {
+        mapboxApiAccessToken: reqStrPathThrowing('MAPBOX_API_ACCESS_TOKEN', process.env)
+      },
+      // Initial viewport
+      viewport: {
+        zoom: 0,
+        latitude: 0,
+        longitude: 0
+      }
     }
   }
 };

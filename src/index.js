@@ -71,7 +71,7 @@ export {
   userRegionsOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsFull,
   userStateOutputParamsOnlyIds
-} from './stores/userStores/userStore';
+} from './stores/userStores/userStateStore';
 
 export {
   userRegionsQueryContainer
@@ -88,3 +88,7 @@ export {
 export {
   queryUsingPaginationContainer
 } from './stores/helpers/pagedRequestHelpers'
+
+export {
+  typePoliciesConfig
+} from './config'

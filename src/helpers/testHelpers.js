@@ -8,21 +8,38 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import {mergeLocalTestValuesIntoConfig, testAuthTask, writeConfigToServerAndCache} from 'rescape-apollo';
-import privateTestSettings from './privateTestSettings';
+import {
+  createAuthTask,
+  defaultSettingsCacheIdProps,
+  defaultSettingsCacheOnlyObjs,
+  defaultSettingsOutputParams,
+  defaultStateLinkResolvers,
+  writeConfigToServerAndCache
+} from 'rescape-apollo';
+import settings from './privateSettings';
+import {cacheOptions} from '../config';
 
 /**
  * The config for test. We add some cache only properties to
  */
-export const testConfig = mergeLocalTestValuesIntoConfig({
-    settings: privateTestSettings,
-    writeDefaults: writeConfigToServerAndCache,
-    stateLinkResolvers: {}
+export const testConfig = {
+  settings,
+  settingsConfig: {
+    settingsOutputParams: defaultSettingsOutputParams,
+    cacheOnlyObjs: defaultSettingsCacheOnlyObjs,
+    cacheIdProps: defaultSettingsCacheIdProps
+  },
+  apollo: {
+    writeDefaultsCreator: writeConfigToServerAndCache,
+    stateLinkResolvers: defaultStateLinkResolvers,
+    // typePolicies config combines type policies
+    cacheOptions
   }
-);
+};
+
 
 /**
  * Task to return and authorized client for tests
  * Returns an object {apolloClient:An authorized client}
  */
-export const localTestAuthTask = testAuthTask(testConfig);
+export const testAuthTask = createAuthTask(testConfig);

@@ -11,8 +11,13 @@
 
 
 import * as R from 'ramda';
-import {createCacheOnlyProps, makeMutationRequestContainer, makeMutationWithClientDirective} from 'rescape-apollo';
-import {makeQueryContainer} from 'rescape-apollo';
+import {
+  addMutateKeyToMutationResponse,
+  createCacheOnlyProps,
+  makeMutationRequestContainer,
+  makeMutationWithClientDirectiveContainer,
+  makeQueryContainer, mergeCacheable
+} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {regionOutputParams} from '../scopeStores/regionStore';
@@ -21,9 +26,8 @@ import {mapboxOutputParamsFragment} from '../mapStores/mapboxOutputParams';
 import {
   composeWithChainMDeep,
   mapToNamedPathAndInputs,
-  mergeDeep,
   mergeDeepWithRecurseArrayItems,
-  omitDeepPaths
+  reqStrPathThrowing
 } from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
 
@@ -36,59 +40,59 @@ const userReadInputTypeMapper = {
 };
 
 export const userStateReadInputTypeMapper = {
-  'user': 'UserTypeofUserStateTypeRelatedReadInputType'
+  'user': 'UserTypeofUserStateTypeRelatedReadInputType',
+  'data': 'UserStateDataTypeofUserStateTypeRelatedReadInputType'
 };
 
-export const userOutputParams = [
-  'id',
-  'lastLogin',
-  'username',
-  'firstName',
-  'lastName',
-  'email',
-  'isStaff',
-  'isActive',
-  'dateJoined'
-];
+export const userOutputParams = {
+  id: 1,
+  lastLogin: 1,
+  username: 1,
+  firstName: 1,
+  lastName: 1,
+  email: 1,
+  isStaff: 1,
+  isActive: 1,
+  dateJoined: 1
+};
+
 
 /**
  * Creates userState output params
  * @param userScopeFragmentOutputParams Object keyed by 'region', 'project', etc with
  * the output params those should return within userState.data.[userRegions|userProject|...]
  * @return {*} The complete UserState output params
- * @return {*[]}
+ * @return {*{}}
  */
-export const userStateOutputParamsCreator = userScopeFragmentOutputParams => [
-  'id',
-  [{
-    user: ['id'],
-    data: [
-      userScopeFragmentOutputParams
-    ]
-  }]
-];
+export const userStateOutputParamsCreator = userScopeFragmentOutputParams => ({
+  id: 1,
+  user: {id: 1},
+  data: userScopeFragmentOutputParams
+});
 
 /**
  * User state output params with full scope output params. This should only be used for querying when values of the scope
  * instances are needed beyond the ids
  */
-export const userStateOutputParamsFull = [
-  'id',
-  {
-    user: ['id'],
-    data: [{
-      userRegions: [{
-        region: regionOutputParams,
-        ...mapboxOutputParamsFragment
-      }],
-      userProjects: [{
-        project: projectOutputParams,
-        ...mapboxOutputParamsFragment,
-        ...selectionOutputParamsFragment
-      }]
-    }]
+export const userStateOutputParamsFull = {
+  id: 1,
+  user: {id: 1},
+  data: {
+    userRegions: R.merge(
+      {
+        region: regionOutputParams
+      },
+      mapboxOutputParamsFragment
+    ),
+    userProjects: R.mergeAll([
+      {
+        project: projectOutputParams
+      },
+      mapboxOutputParamsFragment,
+      selectionOutputParamsFragment
+    ])
   }
-];
+};
 
 /***
  * userRegions output params fragment when we only want the region ids.
@@ -108,10 +112,11 @@ export const userRegionsOutputParamsFragmentDefaultOnlyIds = (regionOutputParams
  * between the user and the region. This can be properties that are stored on the server or only in cache.
  */
 export const userProjectsOutputParamsFragmentDefaultOnlyIds = (projectOutputParams = ['id']) => ({
-  userProjects: {
-    project: projectOutputParams,
-    ...mapboxOutputParamsFragment
-  }
+  userProjects: R.mergeAll([
+    {project: projectOutputParams},
+    mapboxOutputParamsFragment,
+    selectionOutputParamsFragment
+  ])
 });
 
 /**
@@ -134,20 +139,48 @@ const filterOutCacheOnlyObjs = obj => {
   // TODO this should be done with wildcard lens 'data.userProjects.*.selection' to handle arrays
   return R.over(
     R.lensPath(['data', 'userProjects']),
-    userProjects => R.map(userProject => R.omit(['selection'], userProject), userProjects),
+    userProjects => R.map(
+      userProject => R.omit(['selection'], userProject),
+      userProjects || []
+    ),
     obj
   );
 };
+
+
 // These values come back from the server and get merged into cacheOnlyProps for identification
 const cacheIdProps = [
   'id',
   '__typename',
   'data.__typename',
   'data.userProjects.__typename',
-  // We need to identify what project we are caching data for
+  // Use project.id to identify the userProject.
   'data.userProjects.*.project',
   'data.userProjects.*.project.id',
   'data.userProjects.*.project.__typename',
+  // Use region.id to identify the userProject.
+  'data.userRegions.*.region',
+  'data.userRegions.*.region.id',
+  'data.userRegions.*.region.__typename'
+];
+
+export const userStateDataTypeIdPathLookup = {
+  // Merge userRegions by region. The two paths apply for non-ref and ref versions
+  userRegions: ['region.id', 'region.__ref'],
+  // Merge UserPojects by project. The two paths apply for non-ref and ref versions
+  userProjects: ['project.id', 'project.__ref']
+};
+
+// These fields need deep merge methods to keep cache only values
+export const userStateStorePoliciesConfig = [
+  {type: 'UserStateType', fields: ['data']},
+  {
+    type: 'UserStateDataType',
+    fields: ['userProjects', 'userRegions'],
+    idPathLookup: userStateDataTypeIdPathLookup
+  },
+  {type: 'UserProjectDataType', fields: ['selection']},
+  {type: 'UserRegionDataType', fields: ['selection']}
 ];
 
 export const createCacheOnlyPropsForUserState = props => {
@@ -175,7 +208,7 @@ export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputPara
   }),
   [
     ['apolloConfig', PropTypes.shape().isRequired],
-    ['outputParams', PropTypes.array.isRequired],
+    ['outputParams', PropTypes.shape().isRequired],
     ['props', PropTypes.shape()]
   ], 'makeCurrentUserQueryContainer');
 
@@ -243,13 +276,7 @@ export const makeAdminUserStateQueryContainer = v(R.curry(
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryStructure', PropTypes.shape({
-      outputParams: PropTypes.arrayOf(
-        PropTypes.oneOfType([
-          PropTypes.string,
-          PropTypes.array,
-          PropTypes.shape()
-        ])
-      ).isRequired
+      outputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape().isRequired]
   ], 'makeAdminUserStateQueryContainer');
@@ -287,16 +314,42 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputPa
         apolloConfig,
         {
           options: {
-            update: (store, {data: {createUserState: {userState}}}) => {
+            update: (store, response) => {
+              // Add mutate to response.data so we dont' have to guess if it's a create or udpate
+              const userState = reqStrPathThrowing(
+                'data.mutate.userState',
+                addMutateKeyToMutationResponse({silent: true}, response)
+              );
+              // Add the cache only values to the persisted settings
+              // Deep merge the result of the mutation with the props so that we can add cache only values
+              // in props. We'll only cache values that are cache only since the mutation will have put
+              // the other return objects from the server into the cache
+              // TODO this is a bit redundant since the cache write also triggers a merge
+              const propsWithCacheOnlyItems = mergeCacheable({idPathLookup: userStateDataTypeIdPathLookup}, userState, props);
+
               // Mutate the cache to save settings to the database that are not stored on the server
-              makeUserStateMutationWithClientDirective(
+              makeMutationWithClientDirectiveContainer(
                 apolloConfig,
-                {outputParams: userStateOutputParamsFull},
-                // Deep merge the result of the mutation with the props so that we can add cache only values
-                // in props. We'll only cache values that are cache only since the mutation will have put
-                // the other return objects from the server into the cache
-                mergeDeepWithRecurseArrayItems((l, r) => l, userState, props)
-              )
+                {
+                  name: 'userState',
+                  outputParams: userStateOutputParamsFull,
+                  // For merging cached array items of userState.data.userRegions|userProjedts
+                  idPathLookup: userStateDataTypeIdPathLookup
+                },
+                propsWithCacheOnlyItems
+                //createCacheOnlyPropsForUserState(propsWithCacheOnlyItems)
+              );
+
+              // Mutate the cache to save settings to the database that are not stored on the server
+              makeCacheMutation(
+                apolloConfig,
+                {
+                  name: 'settings',
+                  // output for the read fragment
+                  outputParams
+                },
+                createCacheOnlyPropsForSettings({cacheOnlyObjs, cacheIdProps}, propsWithCacheOnlyItems)
+              );
             }
           }
         }
@@ -311,7 +364,7 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputPa
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationConfig', PropTypes.shape({
-      outputParams: PropTypes.array.isRequired
+      outputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape().isRequired]
   ],

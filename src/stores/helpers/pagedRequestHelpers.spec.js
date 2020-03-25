@@ -18,10 +18,10 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {createSampleProjectsTask} from '../scopeStores/projectStore.sample';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStore';
+import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStateStore';
 import * as R from 'ramda';
 import {projectOutputParams} from '../..';
-import {localTestAuthTask} from '../../helpers/testHelpers';
+import {testAuthTask} from '../../helpers/testHelpers';
 
 test('queryUsingPaginationContainer', done => {
   const task = composeWithChain([
@@ -53,7 +53,7 @@ test('queryUsingPaginationContainer', done => {
     ),
     mapToNamedResponseAndInputs('apolloConfig',
       ({}) => {
-        return localTestAuthTask;
+        return testAuthTask;
       }
     )
   ])({});
@@ -115,7 +115,7 @@ test('queryPageContainer', done => {
     ),
     mapToNamedResponseAndInputs('apolloConfig',
       ({}) => {
-        return localTestAuthTask;
+        return testAuthTask;
       }
     )
   ])({});

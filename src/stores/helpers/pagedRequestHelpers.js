@@ -145,7 +145,7 @@ export const queryUsingPaginationContainer = v(R.curry((
   ['queryConfig', PropTypes.shape({
     name: PropTypes.string.isRequired,
     typeName: PropTypes.string.isRequired,
-    outputParams: PropTypes.array.isRequired,
+    outputParams: PropTypes.shape().isRequired,
     readInputTypeMapper: PropTypes.shape()
   })
   ],
@@ -254,14 +254,13 @@ export const queryPageContainer = v(R.curry((
     ['queryConfig', PropTypes.shape({
       name: PropTypes.string.isRequired,
       typeName: PropTypes.string.isRequired,
-      outputParams: PropTypes.array.isRequired,
+      outputParams: PropTypes.shape().isRequired,
       readInputTypeMapper: PropTypes.shape()
     })
     ],
     ['props', PropTypes.shape().isRequired]
   ],
-  'queryPageContainer'
-);
+  'queryPageContainer');
 
 /*
 export const initQueryPageContainer = v((
@@ -316,7 +315,7 @@ export const initQueryPageContainer = v((
   ['queryConfig', PropTypes.shape({
     name: PropTypes.string.isRequired,
     typeName: PropTypes.string.isRequired,
-    outputParams: PropTypes.array.isRequired,
+          outputParams: PropTypes.shape().isRequired,,
     readInputTypeMapper: PropTypes.shape()
   })
   ],
@@ -367,7 +366,7 @@ export const queryObjectsPaginatedContainer = v(R.curry(
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryConfig', PropTypes.shape({
-      outputParams: PropTypes.array.isRequired
+      outputParams: PropTypes.shape().isRequired
     })
     ],
     ['props', PropTypes.shape().isRequired]
@@ -398,7 +397,7 @@ export const _paginatedQueryContainer = (
     apolloConfig,
     {
       name,
-      outputParams: ['pageSize', 'page', 'pages', 'hasNext', 'hasPrev', {objects: outputParams}],
+      outputParams: {pageSize: 1, page: 1, pages: 1, hasNext: 1, hasPrev: 1, objects: outputParams},
       readInputTypeMapper,
       normalizeProps
     },

@@ -16,10 +16,10 @@ import {
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs
 } from 'rescape-ramda';
-import {localTestAuthTask} from '../../../helpers/testHelpers';
+import {testAuthTask} from '../../../helpers/testHelpers';
 import {expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../userStore';
+import {makeCurrentUserQueryContainer, userOutputParams} from '../userStateStore';
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
@@ -48,7 +48,7 @@ describe('userRegionStore', () => {
       // Authenticate
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => {
-          return localTestAuthTask;
+          return testAuthTask;
         }
       )
     )({}).run().listen(defaultRunConfig({
@@ -83,7 +83,7 @@ describe('userRegionStore', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return localTestAuthTask;
+          return testAuthTask;
         }
       )
     ])({}).run().listen(defaultRunConfig({
@@ -106,7 +106,7 @@ describe('userRegionStore', () => {
         ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => localTestAuthTask
+        () => testAuthTask
       )
     )({}).run().listen(defaultRunConfig({
       onResolved:

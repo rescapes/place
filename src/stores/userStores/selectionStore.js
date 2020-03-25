@@ -11,10 +11,10 @@
 
 /**
  * Selection fragment
- * @type {*[]}
+ * @type {*{}}
  */
 export const selectionOutputParamsFragment = {
-  'selection @client': [
-    'isSelected'
-  ]
+  'selection @client': {
+    isSelected: 1
+  }
 };

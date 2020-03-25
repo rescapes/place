@@ -17,7 +17,6 @@ import {
   mapToNamedResponseAndInputs,
   pickDeepPaths
 } from 'rescape-ramda';
-import {localTestAuthTask} from '../../helpers/testHelpers';
 import {expectKeys, expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
 import {of} from 'folktale/concurrency/task';
@@ -31,6 +30,7 @@ import {
   userStateOutputParamsFull
 } from './userStateStore';
 import {mutateSampleUserStateWithProjectAndRegion} from './userStateStore.sample';
+import {testAuthTask} from '../../helpers/testHelpers';
 
 
 describe('userStore', () => {
@@ -40,7 +40,7 @@ describe('userStore', () => {
     R.composeK(
       ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {}),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
-        () => localTestAuthTask
+        () => testAuthTask
       )
     )().run().listen(defaultRunConfig({
       onResolved:
@@ -81,7 +81,7 @@ describe('userStore', () => {
         }
       ),
       mapMonadByConfig({name: 'apolloConfig'},
-        () => localTestAuthTask
+        () => testAuthTask
       )
     )({}).run().listen(
       defaultRunConfig({
@@ -100,7 +100,7 @@ describe('userStore', () => {
         return makeAdminUserStateQueryContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFull},
-          {user}
+          {user: R.pick(['id'], user)}
         );
       },
       // Mutate the UserState to get cache-only data stored
@@ -120,7 +120,7 @@ describe('userStore', () => {
         }
       ),
       mapMonadByConfig({name: 'apolloConfig'},
-        () => localTestAuthTask
+        () => testAuthTask
       )
     ])({}).run().listen(
       defaultRunConfig({
@@ -129,7 +129,7 @@ describe('userStore', () => {
         }
       }, errors, done)
     );
-  });
+  }, 200000);
 
   test('makeUserStateMutationContainer', done => {
     const errors = [];
@@ -169,7 +169,7 @@ describe('userStore', () => {
         }
       ),
       mapMonadByConfig({name: 'apolloConfig'},
-        () => localTestAuthTask
+        () => testAuthTask
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
@@ -227,7 +227,7 @@ describe('userStore', () => {
         ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => localTestAuthTask
+        () => testAuthTask
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
@@ -293,7 +293,7 @@ describe('userStore', () => {
       },
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return localTestAuthTask;
+          return testAuthTask;
         }
       )
     ])({}).run().listen(defaultRunConfig({

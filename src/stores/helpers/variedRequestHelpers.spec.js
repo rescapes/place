@@ -12,7 +12,7 @@ import {queryVariationContainers} from './variedRequestHelpers';
 import {
   makeCurrentUserQueryContainer,
   userOutputParams
-} from '../../stores/userStores/userStore';
+} from '../userStores/userStateStore';
 import {
   makeProjectsQueryContainer,
   projectOutputParams, projectOutputParamsMinimized
@@ -23,7 +23,7 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from 'rescape-ramda';
-import {localTestAuthTask} from '../../helpers/testHelpers';
+import {testAuthTask} from '../../helpers/testHelpers';
 import {createSampleProjectsTask, createSampleProjectTask} from '../scopeStores/projectStore.sample';
 import {readInputTypeMapper} from '../scopeStores/projectStore';
 import {of} from 'folktale/concurrency/task';
@@ -94,7 +94,7 @@ describe('variedRequestHelpers', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return localTestAuthTask;
+          return testAuthTask;
         }
       )
     ])({});

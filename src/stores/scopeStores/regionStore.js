@@ -24,42 +24,36 @@ export const readInputTypeMapper = {
   'geojson': 'FeatureCollectionDataTypeofRegionTypeRelatedReadInputType'
 };
 
-export const regionOutputParams = [
-  'id',
-  'deleted',
-  'key',
-  'name',
-  'createdAt',
-  'updatedAt',
-  {
-    geojson: [
-      'type',
-      {
-        features: [
-          'type',
-          'id',
-          {
-            geometry: [
-              'type',
-              'coordinates'
-            ]
-          },
-          'properties'
-        ]
+export const regionOutputParams = {
+  id: 1,
+  deleted: 1,
+  key: 1,
+  name: 1,
+  createdAt: 1,
+  updatedAt: 1,
+  geojson: {
+    type: 1,
+    features: {
+      type: 1,
+      id: 1,
+      geometry: {
+        type: 1,
+        coordinates: 1
       },
-      'generator',
-      'copyright'
-    ],
-    data: [
-      {
-        locations: [
-          'params'
-        ],
-        ...mapboxOutputParamsFragment
+      properties: 1
+    },
+    generator: 1,
+    copyright: 1
+  },
+  data: R.merge({
+      locations: {
+        params: 1
       }
-    ]
-  }
-];
+    },
+    mapboxOutputParamsFragment
+  )
+};
+
 
 /**
  * Queries regions
@@ -78,7 +72,7 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams}
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryStructure', PropTypes.shape({
-      outputParams: PropTypes.array.isRequired,
+      outputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape().isRequired]
   ],
@@ -118,7 +112,7 @@ export const makeRegionMutationContainer = v(R.curry(
   )), [
   ['apolloConfig', PropTypes.shape().isRequired],
   ['mutationStructure', PropTypes.shape({
-    outputParams: PropTypes.array.isRequired
+    outputParams: PropTypes.shape().isRequired
   })
   ],
   ['props', PropTypes.shape().isRequired]

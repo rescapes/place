@@ -19,14 +19,14 @@
  * user_state.data.projects...[{mapbox}]
  * user_state.data.regions...[{mapbox}]
  * user_state.data.scenarios...[{mapbox}]
- * @type {*[]}
+ * @type {*{}}
  */
 export const mapboxOutputParamsFragment = {
-  mapbox: [{
-    viewport: [
-      'latitude',
-      'longitude',
-      'zoom'
-    ]
-  }]
+  mapbox: {
+    viewport: {
+      latitude: 1,
+      longitude: 1,
+      zoom: 1
+    }
+  }
 };

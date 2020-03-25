@@ -21,7 +21,7 @@ import {
   userRegionsOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
-} from '../userStore';
+} from '../userStateStore';
 import {reqStrPathThrowing} from 'rescape-ramda';
 
 /**

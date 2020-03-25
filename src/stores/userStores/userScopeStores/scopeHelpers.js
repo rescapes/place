@@ -23,7 +23,7 @@ import {of} from 'folktale/concurrency/task';
 import {makeQueryContainer} from 'rescape-apollo';
 import {mapQueryTaskToNamedResultAndInputs, containerForApolloType} from 'rescape-apollo';
 import PropTypes from 'prop-types';
-import {makeUserStateMutationContainer} from '../userStore';
+import {makeUserStateMutationContainer} from '../userStateStore';
 
 /**
  * returns userState.data.user[Project|Region]` based on scopeName = 'project' \ 'region'
@@ -142,7 +142,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       scopeName: PropTypes.string.isRequired,
       readInputTypeMapper: PropTypes.shape().isRequired,
       userStateOutputParamsCreator: PropTypes.func.isRequired,
-      scopeOutputParams: PropTypes.array.isRequired
+      scopeCutputParams: PropTypes.shape().isRequired
     }).isRequired],
     ['props', PropTypes.shape({
       userState: PropTypes.shape({
@@ -256,8 +256,9 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
       scopeName: PropTypes.string.isRequired,
       readInputTypeMapper: PropTypes.shape().isRequired,
       userStateOutputParamsCreator: PropTypes.func.isRequired,
-      scopeOutputParams: PropTypes.array.isRequired
-    }).isRequired],
+      scopeOutputParams: PropTypes.shape().isRequired
+    }).isRequired
+    ],
     ['props', PropTypes.shape({
       userState: PropTypes.shape({
         user: PropTypes.shape({
@@ -345,15 +346,15 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
     );
   }), [
 
-    ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
-    ['scopeSettings', PropTypes.shape({
-      scopeQueryTask: PropTypes.func.isRequired,
-      scopeName: PropTypes.string.isRequired,
-      scopeOutputParams: PropTypes.array.isRequired
-    }).isRequired],
-    ['props', PropTypes.shape({
-      scope: PropTypes.shape().isRequired,
-      userScopeObjs: PropTypes.array.isRequired
-    })]
-  ], 'queryScopeObjsOfUserStateContainer'
-);
+  ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
+  ['scopeSettings', PropTypes.shape({
+    scopeQueryTask: PropTypes.func.isRequired,
+    scopeName: PropTypes.string.isRequired,
+    scopeOutputParams: PropTypes.shape().isRequired
+  }).isRequired
+  ],
+  ['props', PropTypes.shape({
+    scope: PropTypes.shape().isRequired,
+    userScopeObjs: PropTypes.array.isRequired
+  })]
+], 'queryScopeObjsOfUserStateContainer');

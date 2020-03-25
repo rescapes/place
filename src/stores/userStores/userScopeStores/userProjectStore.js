@@ -22,7 +22,7 @@ import {
   userProjectsOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
-} from '../userStore';
+} from '../userStateStore';
 import {reqStrPathThrowing} from 'rescape-ramda';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
@@ -119,7 +119,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outpu
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationStructure', PropTypes.shape({
-      outputParams: PropTypes.array.isRequired
+            outputParams: PropTypes.shape().isRequired,
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,

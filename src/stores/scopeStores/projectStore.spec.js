@@ -16,7 +16,7 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {expectKeysAtPath} from 'rescape-helpers-test';
-import {localTestAuthTask} from '../../helpers/testHelpers';
+import {testAuthTask} from '../../helpers/testHelpers';
 import * as R from 'ramda';
 import {
   makeProjectMutationContainer,
@@ -26,7 +26,7 @@ import {
   readInputTypeMapper
 } from './projectStore';
 import {createSampleProjectsTask, createSampleProjectTask} from './projectStore.sample';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStore';
+import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStateStore';
 import {queryVariationContainers} from '../helpers/variedRequestHelpers';
 import {of} from 'folktale/concurrency/task';
 
@@ -43,7 +43,7 @@ describe('projectStore', () => {
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
         ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
-      () => localTestAuthTask
+      () => testAuthTask
     ])().run().listen(defaultRunConfig({
       onResolved:
         response => {
@@ -116,7 +116,7 @@ describe('projectStore', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return localTestAuthTask;
+          return testAuthTask;
         }
       )
     ])({});
