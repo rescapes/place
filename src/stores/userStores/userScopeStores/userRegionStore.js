@@ -47,13 +47,16 @@ export const userRegionsQueryContainer = v(R.curry(
         scopeQueryTask: makeRegionsQueryContainer,
         scopeName: 'region',
         readInputTypeMapper: userStateReadInputTypeMapper,
-        userStateOutputParamsCreator: scopeOutputParams => userStateOutputParamsCreator(
-          userRegionsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
-        ),
+        userStateOutputParamsCreator: scopeOutputParams => {
+          const params = userStateOutputParamsCreator(
+            userRegionsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
+          );
+          return params
+        },
         scopeOutputParams: regionOutputParams || defaultRegionOutputParams
       },
       {userState: reqStrPathThrowing('userState', propSets), scope: reqStrPathThrowing('region', propSets)}
-    );
+    )
   }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],

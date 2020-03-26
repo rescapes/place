@@ -12,20 +12,20 @@
 import {
   composeWithChain,
   composeWithChainMDeep,
-  defaultRunConfig, mapMonadByConfig,
+  defaultRunConfig,
+  mapMonadByConfig,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
-  pickDeepPaths
+  pickDeepPaths,
+  reqStrPathThrowing
 } from 'rescape-ramda';
 import {expectKeys, expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
-import {of} from 'folktale/concurrency/task';
 import {
   makeAdminUserStateQueryContainer,
   makeCurrentUserQueryContainer,
   makeCurrentUserStateQueryContainer,
   makeUserStateMutationContainer,
-  makeUserStateMutationWithClientDirective,
   userOutputParams,
   userStateOutputParamsFull
 } from './userStateStore';
@@ -141,6 +141,15 @@ describe('userStore', () => {
     ];
 
     composeWithChain([
+      mapMonadByConfig({name: 'userStateSecond', strPath: 'data.userStates.0'},
+        ({apolloConfig, mutatedUserStateSecond}) => {
+          return makeAdminUserStateQueryContainer(
+            apolloConfig,
+            {outputParams: userStateOutputParamsFull},
+            {id: reqStrPathThrowing('id', mutatedUserStateSecond)}
+          );
+        }
+      ),
       // Set it again. This will wipe out the previous region and project ids
       mapMonadByConfig({name: 'mutatedUserStateSecond', strPath: 'userState'},
         ({apolloConfig, user}) => {
@@ -150,6 +159,15 @@ describe('userStore', () => {
             regionKey: 'mars',
             projectKey: 'tharsisVolcanoes'
           });
+        }
+      ),
+      mapMonadByConfig({name: 'userStateFirst', strPath: 'data.userStates.0'},
+        ({apolloConfig, mutatedUserStateFirst}) => {
+          return makeAdminUserStateQueryContainer(
+            apolloConfig,
+            {outputParams: userStateOutputParamsFull},
+            {id: reqStrPathThrowing('id', mutatedUserStateFirst)}
+          );
         }
       ),
       // Mutate the UserState
@@ -163,7 +181,7 @@ describe('userStore', () => {
           });
         }
       ),
-      mapMonadByConfig({name:'user', paths: 'data.currentUser'},
+      mapMonadByConfig({name: 'user', strPath: 'data.currentUser'},
         ({apolloConfig}) => {
           return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
@@ -173,9 +191,9 @@ describe('userStore', () => {
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
-        ({mutatedUserStateFirst, mutatedUserStateSecond}) => {
-          expectKeys(someUserStateKeysWithCacheKeys, mutatedUserStateFirst);
-          expectKeys(someUserStateKeysWithCacheKeys, mutatedUserStateSecond);
+        ({userStateFirst, userStateSecond}) => {
+          expectKeys(someUserStateKeysWithCacheKeys, userStateFirst);
+          expectKeys(someUserStateKeysWithCacheKeys, userStateSecond);
         }
     }, errors, done));
   });
@@ -186,13 +204,14 @@ describe('userStore', () => {
 
     composeWithChain([
       // Query again to make sure we get the cache-only data
-      ({apolloConfig, userState}) => {
-        return makeCurrentUserStateQueryContainer(
-          apolloConfig,
-          {outputParams: userStateOutputParamsFull},
-          R.pick(['id'], userState)
-        );
-      },
+      mapToNamedPathAndInputs('user', 'data.userStates.0',
+        ({apolloConfig, userState}) => {
+          return makeCurrentUserStateQueryContainer(
+            apolloConfig,
+            {outputParams: userStateOutputParamsFull},
+            R.pick(['id'], userState)
+          );
+        }),
       mapToNamedPathAndInputs('user', 'data.updateUserState',
         // Update the UserState with some cache only values
         // We'll set the project's isSelected cache only property
@@ -212,7 +231,6 @@ describe('userStore', () => {
           );
         }
       ),
-
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
@@ -236,72 +254,5 @@ describe('userStore', () => {
         }
     }, errors, done));
   }, 100000);
-
-  test('makeUserStateMutationWithClientDirective', done => {
-    const errors = [];
-    const someUserStateKeys = ['id', 'data.userProjects.0.project.id', 'data.userProjects.0.selection.isSelected'];
-
-    composeWithChain([
-      ({apolloConfig}) => {
-        return of(makeUserStateMutationWithClientDirective(
-          apolloConfig,
-          {outputParams: userStateOutputParamsFull},
-          {
-            id: 3,
-            user: {
-              id: 1,
-              __typename: 'UserType'
-            },
-            data: {
-              userRegions: [
-                {
-                  region: {
-                    id: 1267
-                  },
-                  mapbox: {
-                    viewport: {
-                      latitude: 49.54147,
-                      longitude: -114.17439,
-                      zoom: 8
-                    }
-                  }
-                }
-              ],
-              userProjects: [
-                {
-                  project: {
-                    "id": 2107,
-                    "__typename": "ProjectType"
-                  },
-                  mapbox: {
-                    viewport: {
-                      latitude: 49.54147,
-                      longitude: -114.17439,
-                      zoom: 8
-                    }
-                  },
-                  selection: {
-                    isSelected: true
-                  }
-                }
-              ],
-              __typename: 'UserStateDataType'
-            },
-            __typename: 'UserStateType'
-          }
-        ));
-      },
-      mapToNamedResponseAndInputs('apolloConfig',
-        () => {
-          return testAuthTask;
-        }
-      )
-    ])({}).run().listen(defaultRunConfig({
-      onResolved:
-        userState => {
-          expectKeys(someUserStateKeys, userState);
-        }
-    }, errors, done));
-  });
 });
 

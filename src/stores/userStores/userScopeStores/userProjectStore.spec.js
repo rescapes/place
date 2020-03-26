@@ -30,27 +30,44 @@ import {
   makeUserStateMutationContainer,
   userOutputParams,
   userStateMutateOutputParams,
-  userStateOutputParamsFull
+  userStateOutputParamsOnlyIds
 } from '../userStateStore';
 import {makeProjectMutationContainer, projectOutputParams} from '../../..';
 import moment from 'moment';
-import {testAuthTask} from 'rescape-apollo';
+import {
+  createUserProjectWithDefaults,
+  mutateSampleUserStateWithProjectAndRegion,
+  mutateSampleUserStateWithProjectsAndRegions
+} from '../userStateStore.sample';
+import {testAuthTask} from '../../../helpers/testHelpers';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
     const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
     composeWithChainMDeep(1, [
-      ({apolloConfig, userId}) => userStateProjectsQueryContainer(
-        apolloConfig,
-        {},
-        {
-          userState: {user: {id: userId}},
-          // The sample user is already limited to certain projects. We don't need to limit further
-          project: {}
-        }
-      ),
-      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+      ({apolloConfig, user}) => {
+        return userStateProjectsQueryContainer(
+          apolloConfig,
+          {},
+          {
+            userState: {user: R.pick(['id'], user)},
+            // Don't limit the projects further
+            project: {}
+          }
+        );
+      },
+      // Set the UserState, returns previous values and {userState, project, region}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectAndRegion({
+          apolloConfig,
+          user: R.pick(['id'], user),
+          regionKey: 'earth',
+          projectKey: 'shrangrila'
+        });
+      },
+      mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
@@ -66,19 +83,30 @@ describe('userProjectStore', () => {
   }, 10000);
 
   test('userProjectQueryTaskWithProjectFilter', done => {
-    expect.assertions(1);
+    expect.assertions(2);
     const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
     composeWithChainMDeep(1, [
       // Filter for projects where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Projects so we can filter by Project
-      ({apolloConfig, userId}) => {
+      ({apolloConfig, user}) => {
         return userStateProjectsQueryContainer(apolloConfig, {}, {
-          userState: {user: {id: parseInt(userId)}},
-          project: {geojson: {type: 'FeatureCollection'}}
+          userState: {user: R.pick(['user'], user)},
+          // Limit by geojson (both pass this) and by name (1 passes this)
+          project: {geojson: {type: 'FeatureCollection'}, name: 'Pangea'}
         });
       },
-      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+      // Set the UserState, returns previous values and {userState, projects, regions}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectsAndRegions({
+          apolloConfig,
+          user: R.pick(['id'], user),
+          regionKeys: ['earth'],
+          projectKeys: ['shrangrila', 'pangea']
+        });
+      },
+      mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
           return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
@@ -90,6 +118,7 @@ describe('userProjectStore', () => {
       onResolved:
         response => {
           expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
+          expect(R.length(reqStrPathThrowing('data.userProjects', response))).toEqual(1)
         }
     }, errors, done));
   });
@@ -98,14 +127,24 @@ describe('userProjectStore', () => {
     const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
     R.composeK(
-      ({apolloConfig, userId}) => {
+      ({apolloConfig, user}) => {
         return userStateProjectsQueryContainer(
           apolloConfig,
           {},
-          {userState: {user: {id: parseInt(userId)}}, project: {}}
+          {userState: {user: R.pick(['id'], user)}, project: {}}
         );
       },
-      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+      // Set the UserState, returns previous values and {userState, project, region}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectAndRegion({
+          apolloConfig,
+          user: R.pick(['id'], user),
+          regionKey: 'earth',
+          projectKey: 'shrangrila'
+        });
+      },
+      mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
           return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
@@ -174,7 +213,22 @@ describe('userProjectStore', () => {
       // Resolve the user state
       mapToNamedPathAndInputs('userState', 'data.userStates.0',
         ({apolloConfig}) => {
-          return makeCurrentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsFull}, {});
+          return makeCurrentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
+        }
+      ),
+      // Set the UserState, returns previous values and {userState, project, region}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectAndRegion({
+          apolloConfig,
+          user: R.pick(['id'], user),
+          regionKey: 'earth',
+          projectKey: 'shrangrila'
+        });
+      },
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',

@@ -100,27 +100,21 @@ export const settingdMapboxOutputParamsCreator = mapboxOutputParamsFragment => (
 
 /**
  * Creates state output params
- * @param [Object] mapboxOutputParamsFragment The mapboxFragment of the params
+ * @param {Object} mapboxOutputParamsFragment The mapboxFragment of the params
  * @return {*[]}
  */
-export const userStateMapboxOutputParamsCreator = mapboxOutputParamsFragment => [
-  {
-    data: [{
+export const userStateMapboxOutputParamsCreator = mapboxOutputParamsFragment => {
+  return {
+    data: {
       // The Global mapbox state for the user
-      userGlobal: [
-        mapboxOutputParamsFragment
-      ],
+      userGlobal: mapboxOutputParamsFragment,
       // The mapbox state for the user regions
-      userRegions: [
-        mapboxOutputParamsFragment
-      ],
+      userRegions: mapboxOutputParamsFragment,
       // The mapbox state for the project regions
-      userProjects: [
-        mapboxOutputParamsFragment
-      ]
-    }]
+      userProjects: mapboxOutputParamsFragment
+    }
   }
-];
+};
 
 /**
  * Gets project.data.mapbox data

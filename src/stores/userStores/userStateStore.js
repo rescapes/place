@@ -16,19 +16,15 @@ import {
   createCacheOnlyProps,
   makeMutationRequestContainer,
   makeMutationWithClientDirectiveContainer,
-  makeQueryContainer, mergeCacheable
+  makeQueryContainer,
+  mergeCacheable
 } from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {regionOutputParams} from '../scopeStores/regionStore';
 import {projectOutputParams} from '../scopeStores/projectStore';
 import {mapboxOutputParamsFragment} from '../mapStores/mapboxOutputParams';
-import {
-  composeWithChainMDeep,
-  mapToNamedPathAndInputs,
-  mergeDeepWithRecurseArrayItems,
-  reqStrPathThrowing
-} from 'rescape-ramda';
+import {composeWithChainMDeep, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
 
 // Every complex input type needs a type specified in graphql. Our type names are
@@ -64,11 +60,13 @@ export const userOutputParams = {
  * @return {*} The complete UserState output params
  * @return {*{}}
  */
-export const userStateOutputParamsCreator = userScopeFragmentOutputParams => ({
-  id: 1,
-  user: {id: 1},
-  data: userScopeFragmentOutputParams
-});
+export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
+  return {
+    id: 1,
+    user: {id: 1},
+    data: userScopeFragmentOutputParams
+  };
+};
 
 /**
  * User state output params with full scope output params. This should only be used for querying when values of the scope
@@ -98,22 +96,29 @@ export const userStateOutputParamsFull = {
  * userRegions output params fragment when we only want the region ids.
  * The region property represents a single region and the other properties represent the relationship
  * between the user and the region. This can be properties that are stored on the server or only in cache.
+ * @param {Object} [regionOutputParams] Defaults to {id: 1}
  */
-export const userRegionsOutputParamsFragmentDefaultOnlyIds = (regionOutputParams = ['id']) => ({
-  userRegions: {
-    region: regionOutputParams,
-    ...mapboxOutputParamsFragment
-  }
-});
+export const userRegionsOutputParamsFragmentDefaultOnlyIds = regionOutputParams => {
+  return {
+    userRegions: R.merge({
+        region: regionOutputParams || ({id: 1})
+      },
+      mapboxOutputParamsFragment
+    )
+  };
+};
 
 /***
  * userProjects output params fragment when we only want the project ids
  * The region property represents a single region and the other properties represent the relationship
  * between the user and the region. This can be properties that are stored on the server or only in cache.
+ * @param {Object} [projectOutputParams] Defaults to {id: 1}
  */
-export const userProjectsOutputParamsFragmentDefaultOnlyIds = (projectOutputParams = ['id']) => ({
+export const userProjectsOutputParamsFragmentDefaultOnlyIds = projectOutputParams => ({
   userProjects: R.mergeAll([
-    {project: projectOutputParams},
+    {
+      project: projectOutputParams || ({id: 1})
+    },
     mapboxOutputParamsFragment,
     selectionOutputParamsFragment
   ])
@@ -239,7 +244,7 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
       // Get the current user
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, ['id'], null);
+          return makeCurrentUserQueryContainer(apolloConfig, {id: 1}, null);
         }
       )
     ])({apolloConfig, outputParams, props});
@@ -247,13 +252,7 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryStructure', PropTypes.shape({
-      outputParams: PropTypes.arrayOf(
-        PropTypes.oneOfType([
-          PropTypes.string,
-          PropTypes.array,
-          PropTypes.shape()
-        ])
-      ).isRequired
+      outputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape()]
   ], 'makeCurrentUserStateQueryContainer');
@@ -280,24 +279,6 @@ export const makeAdminUserStateQueryContainer = v(R.curry(
     })],
     ['props', PropTypes.shape().isRequired]
   ], 'makeAdminUserStateQueryContainer');
-
-/**
- * Client Directive mutation to cache cache-only props
- * @param apolloConfig
- * @param outputParams
- * @param props
- * @return {*}
- */
-export const makeUserStateMutationWithClientDirective = (apolloConfig, {outputParams}, props) => {
-  return makeMutationWithClientDirective(
-    apolloConfig,
-    {
-      name: 'userState',
-      outputParams: userStateOutputParamsFull
-    },
-    createCacheOnlyPropsForUserState(props)
-  );
-};
 
 /**
  * Makes a UserState mutation container;
@@ -338,17 +319,6 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputPa
                 },
                 propsWithCacheOnlyItems
                 //createCacheOnlyPropsForUserState(propsWithCacheOnlyItems)
-              );
-
-              // Mutate the cache to save settings to the database that are not stored on the server
-              makeCacheMutation(
-                apolloConfig,
-                {
-                  name: 'settings',
-                  // output for the read fragment
-                  outputParams
-                },
-                createCacheOnlyPropsForSettings({cacheOnlyObjs, cacheIdProps}, propsWithCacheOnlyItems)
               );
             }
           }

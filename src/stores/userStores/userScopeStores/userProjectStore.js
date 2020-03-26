@@ -56,9 +56,11 @@ export const userStateProjectsQueryContainer = v(R.curry((apolloConfig, {project
         scopeQueryTask: makeProjectsQueryContainer,
         scopeName: 'project',
         readInputTypeMapper: userStateReadInputTypeMapper,
-        userStateOutputParamsCreator: scopeOutputParams => userStateOutputParamsCreator(
-          userProjectsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
-        ),
+        userStateOutputParamsCreator: scopeOutputParams => {
+          return userStateOutputParamsCreator(
+            userProjectsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
+          );
+        },
         scopeOutputParams: projectOutputParams || defaultProjectOutputParams
       },
       {
@@ -119,7 +121,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outpu
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationStructure', PropTypes.shape({
-            outputParams: PropTypes.shape().isRequired,
+      outputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,

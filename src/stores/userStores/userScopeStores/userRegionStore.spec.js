@@ -20,6 +20,7 @@ import {testAuthTask} from '../../../helpers/testHelpers';
 import {expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStateStore';
+import {mutateSampleUserStateWithProjectAndRegion} from '../userStateStore.sample';
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
@@ -28,25 +29,35 @@ describe('userRegionStore', () => {
     const someRegionKeys = ['id', 'key', 'name', 'data'];
     R.composeK(
       // Get the authenticated user
-      ({apolloClient, userId}) => {
+      ({apolloConfig, user}) => {
         return userRegionsQueryContainer(
-          {apolloClient},
+          apolloConfig,
           {},
           {
-            userState: {user: {id: userId}},
+            userState: {user: R.pick(['id'], user)},
             // The sample user is already limited to certain regions. We don't need to limit further
             region: {}
           }
         );
       },
+      // Set the UserState, returns previous values and {userState, project, region}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectAndRegion({
+          apolloConfig,
+          user: R.pick(['id'], user),
+          regionKey: 'earth',
+          projectKey: 'shrangrila'
+        });
+      },
       // Get the authenticated user
-      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => {
-          return makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {});
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       // Authenticate
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedResponseAndInputs('apolloConfig',
         () => {
           return testAuthTask;
         }
@@ -66,17 +77,27 @@ describe('userRegionStore', () => {
     composeWithChainMDeep(1, [
       // Filter for regions where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Regions so we can filter by Region
-      ({apolloConfig, userId}) => {
+      ({apolloConfig, user}) => {
         return userRegionsQueryContainer(
           apolloConfig,
           {},
           {
-            userState: {user: {id: parseInt(userId)}},
+            userState: {user: R.pick(['id'], user)},
             region: {geojson: {type: 'FeatureCollection'}}
           }
         );
       },
-      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+      // Set the UserState, returns previous values and {userState, project, region}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectAndRegion({
+          apolloConfig,
+          user: R.pick(['id'], user),
+          regionKey: 'earth',
+          projectKey: 'shrangrila'
+        });
+      },
+      mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
           return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
@@ -95,14 +116,25 @@ describe('userRegionStore', () => {
   });
 
   test('makeActiveUserRegionQuery', done => {
+    const errors = [];
     const someRegionKeys = ['id', 'key', 'name', 'data'];
     R.composeK(
-      ({apolloConfig, userId}) => userRegionsQueryContainer(
+      ({apolloConfig, user}) => userRegionsQueryContainer(
         apolloConfig,
         {},
-        {userState: {user: {id: parseInt(userId)}}, region: {}}
+        {userState: {user: R.pick(['id'], user)}, region: {}}
       ),
-      mapToNamedPathAndInputs('userId', 'data.currentUser.id',
+      // Set the UserState, returns previous values and {userState, project, region}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectAndRegion({
+          apolloConfig,
+          user: R.pick(['id'], user),
+          regionKey: 'earth',
+          projectKey: 'shrangrila'
+        });
+      },
+      mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
@@ -112,8 +144,7 @@ describe('userRegionStore', () => {
       onResolved:
         response => {
           expectKeysAtPath(someRegionKeys, 'data.userRegions.0.region', response);
-          done();
         }
-    }));
+    }, errors, done));
   });
 });

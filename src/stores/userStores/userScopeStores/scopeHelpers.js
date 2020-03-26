@@ -121,12 +121,13 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
               name: 'userStates',
               readInputTypeMapper,
               outputParams: userStateOutputParamsCreator(
-                // If we have to query for scope objs separately then just query for their ids here
-                R.when(hasScopeParams, R.always(['id']))(scopeOutputParams)
+                // If we have to query for scope objs separately then
+                // pass null to default to the id
+                R.when(hasScopeParams, R.always(null))(scopeOutputParams)
               )
             },
-            // The props
-            R.pick(['id'], userState)
+            // The props that identify the user state. Either the user state id or user id
+            pickDeepPaths(['id', 'user.id'], userState)
           ),
           // We only ever get 1 userState since we are querying by user
           `userStates.0.data.${userScopeNames}`,
@@ -142,7 +143,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       scopeName: PropTypes.string.isRequired,
       readInputTypeMapper: PropTypes.shape().isRequired,
       userStateOutputParamsCreator: PropTypes.func.isRequired,
-      scopeCutputParams: PropTypes.shape().isRequired
+      scopeOutputParams: PropTypes.shape().isRequired
     }).isRequired],
     ['props', PropTypes.shape({
       userState: PropTypes.shape({
@@ -332,7 +333,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
         {outputParams: scopeOutputParams},
         R.merge(
           // Limit by an properties in the scope that aren't id
-          R.omit(['id'], R.propOr({}, scopeName, scope)), {
+          R.omit(['id'], scope), {
             // Map each scope object to its id
             idIn: R.map(
               R.compose(
