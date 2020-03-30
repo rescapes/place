@@ -86,7 +86,8 @@ export {
 } from './stores/scopeStores/regionStore.sample';
 
 export {
-  queryUsingPaginationContainer
+  queryUsingPaginationContainer,
+  singlePageQueryContainer
 } from './stores/helpers/pagedRequestHelpers'
 
 export {

@@ -94,7 +94,7 @@ export const queryUsingPaginationContainer = v(R.curry((
       return traverseReduceWhile({predicate: () => true, mappingFunction: R.chain},
         // Query for the page and extract the objects, since we don't need intermediate page info
         (previousResults, page) => {
-          return _singlePageQueryContainer(
+          return singlePageQueryContainer(
             {apolloConfig, regionConfig},
             {
               name,
@@ -421,7 +421,7 @@ export const _paginatedQueryContainer = (
  * @return {*}
  * @private
  */
-export const _singlePageQueryContainer = (
+export const singlePageQueryContainer = (
   {apolloConfig, regionConfig},
   {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
   {firstPageLocations: firstPageObjects, previousResults},
