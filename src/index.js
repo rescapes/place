@@ -51,10 +51,11 @@ export {
   projectOutputParams,
   projectOutputParamsMinimized,
   makeProjectMutationContainer,
-  makeProjectsQueryContainer,
+  makeProjectsQueryContainer
 } from './stores/scopeStores/projectStore';
 export {
   regionOutputParams,
+  regionOutputParamsMinimum,
   readInputTypeMapper,
   makeRegionMutationContainer,
   makeRegionsQueryContainer
@@ -70,7 +71,9 @@ export {
   userOutputParams,
   userRegionsOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsFull,
-  userStateOutputParamsOnlyIds
+  userStateOutputParamsOnlyIds,
+  makeCurrentUserStateQueryContainer
+
 } from './stores/userStores/userStateStore';
 
 export {
@@ -88,8 +91,15 @@ export {
 export {
   queryUsingPaginationContainer,
   singlePageQueryContainer
-} from './stores/helpers/pagedRequestHelpers'
+} from './stores/helpers/pagedRequestHelpers';
 
 export {
   typePoliciesConfig
-} from './config'
+} from './config';
+
+export {
+  createUserProjectWithDefaults,
+  createUserRegionWithDefaults,
+  mutateSampleUserStateWithProjectAndRegion,
+  mutateSampleUserStateWithProjectsAndRegions
+} from './stores/userStores/userStateStore.sample';

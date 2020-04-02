@@ -24,6 +24,12 @@ export const readInputTypeMapper = {
   'geojson': 'FeatureCollectionDataTypeofRegionTypeRelatedReadInputType'
 };
 
+export const regionOutputParamsMinimum = {
+  id: 1,
+  key: 1,
+  name: 1
+};
+
 export const regionOutputParams = {
   id: 1,
   deleted: 1,
