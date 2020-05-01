@@ -59,7 +59,7 @@ describe('userStore', () => {
         ({apolloConfig}) => {
           return makeCurrentUserStateQueryContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull},
+            {outputParams: userStateOutputParamsFull({})},
             null
           );
         }
@@ -99,7 +99,7 @@ describe('userStore', () => {
       ({apolloConfig, user}) => {
         return makeAdminUserStateQueryContainer(
           apolloConfig,
-          {outputParams: userStateOutputParamsFull},
+          {outputParams: userStateOutputParamsFull({})},
           {user: R.pick(['id'], user)}
         );
       },
@@ -145,7 +145,7 @@ describe('userStore', () => {
         ({apolloConfig, mutatedUserStateSecond}) => {
           return makeAdminUserStateQueryContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull},
+            {outputParams: userStateOutputParamsFull({})},
             {id: reqStrPathThrowing('id', mutatedUserStateSecond)}
           );
         }
@@ -165,7 +165,7 @@ describe('userStore', () => {
         ({apolloConfig, mutatedUserStateFirst}) => {
           return makeAdminUserStateQueryContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull},
+            {outputParams: userStateOutputParamsFull({})},
             {id: reqStrPathThrowing('id', mutatedUserStateFirst)}
           );
         }
@@ -208,7 +208,7 @@ describe('userStore', () => {
         ({apolloConfig, userState}) => {
           return makeCurrentUserStateQueryContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull},
+            {outputParams: userStateOutputParamsFull({})},
             R.pick(['id'], userState)
           );
         }),
@@ -226,7 +226,7 @@ describe('userStore', () => {
           );
           return makeUserStateMutationContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull},
+            {outputParams: userStateOutputParamsFull({})},
             props
           );
         }

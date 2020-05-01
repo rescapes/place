@@ -19,7 +19,7 @@
  * user_state.data.projects...[{mapbox}]
  * user_state.data.regions...[{mapbox}]
  * user_state.data.scenarios...[{mapbox}]
- * @type {*{}}
+ * @type {*}
  */
 export const mapboxOutputParamsFragment = {
   mapbox: {

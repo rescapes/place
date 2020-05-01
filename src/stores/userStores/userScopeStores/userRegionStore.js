@@ -15,14 +15,14 @@ import {v} from 'rescape-validate';
 import {
   makeRegionsQueryContainer,
   regionOutputParams as defaultRegionOutputParams
-} from '../../scopeStores/regionStore';
+} from '../../scopeStores/region/regionStore';
 import {makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
 import {
   userRegionsOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore';
-import {reqStrPathThrowing} from 'rescape-ramda';
+import {reqStrPathThrowing, strPathOr} from 'rescape-ramda';
 
 /**
  * Queries regions that are in the scope of the user and the values of that region
@@ -55,7 +55,7 @@ export const userRegionsQueryContainer = v(R.curry(
         },
         scopeOutputParams: regionOutputParams || defaultRegionOutputParams
       },
-      {userState: reqStrPathThrowing('userState', propSets), scope: reqStrPathThrowing('region', propSets)}
+      {userState: reqStrPathThrowing('userState', propSets), scope: strPathOr(null, 'region', propSets)}
     )
   }),
   [
@@ -72,6 +72,6 @@ export const userRegionsQueryContainer = v(R.curry(
           ])
         }).isRequired
       }).isRequired,
-      region: PropTypes.shape().isRequired
+      region: PropTypes.shape()
     })]
   ], 'userRegionsQueryContainer');

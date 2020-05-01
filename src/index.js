@@ -45,21 +45,26 @@ export {
   projectMapboxOutputParamsCreator,
   regionMapboxOutputParamsCreator,
   scopeObjMapboxOutputParamsCreator,
-  userStateMapboxOutputParamsCreator
+  userStateMapboxOutputParamsCreator,
 } from './stores/mapStores/mapboxStore';
+
+export {
+ mapboxOutputParamsFragment
+} from './stores/mapStores/mapboxOutputParams'
+
 export {
   projectOutputParams,
   projectOutputParamsMinimized,
   makeProjectMutationContainer,
   makeProjectsQueryContainer
-} from './stores/scopeStores/projectStore';
+} from './stores/scopeStores/project/projectStore';
 export {
   regionOutputParams,
   regionOutputParamsMinimum,
   readInputTypeMapper,
   makeRegionMutationContainer,
   makeRegionsQueryContainer
-} from './stores/scopeStores/regionStore';
+} from './stores/scopeStores/region/regionStore';
 
 export {
   makeCurrentUserQueryContainer,
@@ -86,7 +91,7 @@ export {
 
 export {
   createSampleRegionContainer
-} from './stores/scopeStores/regionStore.sample';
+} from './stores/scopeStores/region/regionStore.sample';
 
 export {
   queryUsingPaginationContainer,

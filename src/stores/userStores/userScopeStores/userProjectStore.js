@@ -15,7 +15,7 @@ import {v} from 'rescape-validate';
 import {
   makeProjectsQueryContainer,
   projectOutputParams as defaultProjectOutputParams
-} from '../../scopeStores/projectStore';
+} from '../../scopeStores/project/projectStore';
 import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
 import {
   makeUserStateMutationContainer,
@@ -24,6 +24,7 @@ import {
   userStateReadInputTypeMapper
 } from '../userStateStore';
 import {reqStrPathThrowing} from 'rescape-ramda';
+import {locationOutputParams} from '../../scopeStores/location/locationOutputParams';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -49,7 +50,10 @@ const readInputTypeMapper = {
  * the UserState query selects the ids
  * @returns {Object} The resulting Projects in a Task in {data: usersProjects: [...]}}
  */
-export const userStateProjectsQueryContainer = v(R.curry((apolloConfig, {projectOutputParams}, propSets) => {
+export const userStateProjectsQueryContainer = v(R.curry((
+  apolloConfig, {
+    projectOutputParams
+  }, propSets) => {
     return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
       {
@@ -72,7 +76,8 @@ export const userStateProjectsQueryContainer = v(R.curry((apolloConfig, {project
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['outputParamSets', PropTypes.shape({
-      projectOutputParams: PropTypes.shape()
+      projectOutputParams: PropTypes.shape(),
+      locationOutputParams: PropTypes.shape()
     })],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape({

@@ -5,6 +5,7 @@ import moment from 'moment';
 import {fromPromised, of} from 'folktale/concurrency/task';
 import {v} from 'rescape-validate'
 import PropTypes from 'prop-types'
+import {locationOutputParams} from '../location/locationOutputParams';
 
 /**
  * Created by Andy Likuski on 2019.01.22

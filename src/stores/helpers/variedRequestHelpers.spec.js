@@ -16,7 +16,7 @@ import {
 import {
   makeProjectsQueryContainer,
   projectOutputParams, projectOutputParamsMinimized
-} from '../../stores/scopeStores/projectStore';
+} from '../../stores/scopeStores/project/projectStore';
 import {
   composeWithChain, defaultRunConfig,
   mapToNamedPathAndInputs,
@@ -24,10 +24,11 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {testAuthTask} from '../../helpers/testHelpers';
-import {createSampleProjectsTask, createSampleProjectTask} from '../scopeStores/projectStore.sample';
-import {readInputTypeMapper} from '../scopeStores/projectStore';
+import {createSampleProjectsTask, createSampleProjectTask} from '../scopeStores/project/projectStore.sample';
+import {readInputTypeMapper} from '../scopeStores/project/projectStore';
 import {of} from 'folktale/concurrency/task';
 import * as R from 'ramda';
+import {locationOutputParamsMinimized} from '../scopeStores/location/locationOutputParams';
 
 describe('variedRequestHelpers', () => {
   test('queryVariationContainers', done => {

@@ -17,11 +17,12 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from 'rescape-ramda';
-import {createSampleProjectsTask} from '../scopeStores/projectStore.sample';
+import {createSampleProjectsTask} from '../scopeStores/project/projectStore.sample';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStateStore';
 import * as R from 'ramda';
-import {projectOutputParams} from '../..';
+import {projectOutputParams} from '../scopeStores/project/projectStore';
 import {testAuthTask} from '../../helpers/testHelpers';
+import {locationOutputParams} from '../scopeStores/location/locationOutputParams';
 
 test('queryUsingPaginationContainer', done => {
   const task = composeWithChain([

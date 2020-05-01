@@ -48,9 +48,9 @@ const log = loggers.get('rescapeDefault');
  * such as properties embedded in json data
  * @param {Object} queryConfig.outputParams
  * @param {Object} [queryConfig.readInputTypeMapper] This should not be needed, it specifies the graphql input type.
- * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`}
+ * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedFor{capitalize(typeName)}TypeMixinRelatedReadInputType`}
  * Where objects are the paginated objects returned by the query and thus
- * `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType` is the input type argument we can use for
+ * `${capitalize(typeName)}TypeofPaginated{capitalize(typeName)}TypeMixinRelatedReadInputType` is the input type argument we can use for
  * filtering
  * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
  * passed to the query. Defaults to passing all of them
@@ -69,8 +69,9 @@ export const queryUsingPaginationContainer = v(R.curry((
   const pageSizeOrDefault = propsPageSize || pageSize || 100;
   const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
   const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
+  const className = capitalize(typeName)
   const readInputTypeMapperOrDefault = R.defaultTo(
-    {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`},
+    {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
     readInputTypeMapper
   );
   log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
@@ -198,8 +199,9 @@ export const queryPageContainer = v(R.curry((
     }
     const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
     const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
+    const className = capitalize(typeName)
     const readInputTypeMapperOrDefault = R.defaultTo(
-      {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`},
+      {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
       readInputTypeMapper
     );
     log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
@@ -261,67 +263,6 @@ export const queryPageContainer = v(R.curry((
     ['props', PropTypes.shape().isRequired]
   ],
   'queryPageContainer');
-
-/*
-export const initQueryPageContainer = v((
-  {apolloConfig, regionConfig},
-  {
-    pageSize,
-    typeName, name, filterObjsByConfig, outputParams, readInputTypeMapper, normalizeProps
-  },
-  props
-) => {
-  const pageSizeOrDefault = R.defaultTo(100, pageSize);
-  const readInputTypeMapperOrDefault = R.defaultTo(
-    {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`},
-    readInputTypeMapper
-  );
-  return composeWithMapMDeep(1, [
-    ({firstPageObjs}) => {
-      // Get the number of pages so we can query for the remaining pages if there are any
-      return R.omit(['objects'], reqPathThrowing(['data', name], firstPageObjs));
-    },
-
-    // Initial query determines tells us the number of pages
-    mapToNamedResponseAndInputs('firstPageObjs',
-      ({page}) => {
-        return _paginatedQueryContainer(
-          {apolloConfig, regionConfig},
-          {
-            name,
-            outputParams,
-            pageSize: pageSizeOrDefault,
-            page,
-            readInputTypeMapper: readInputTypeMapperOrDefault,
-            normalizeProps
-          },
-          props
-        );
-      }
-    )
-  ])({page: 1});
-}, [
-  ['config', PropTypes.shape(
-    {
-      apolloConfig: PropTypes.shape({
-        apolloClient: PropTypes.shape().isRequired
-      }).isRequired
-    },
-    {
-      regionConfig: PropTypes.shape().isRequired
-    }
-  ).isRequired
-  ],
-  ['queryConfig', PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    typeName: PropTypes.string.isRequired,
-          outputParams: PropTypes.shape().isRequired,,
-    readInputTypeMapper: PropTypes.shape()
-  })
-  ],
-  ['props', PropTypes.shape().isRequired]
-], 'initQueryPageContainer');
- */
 
 /**
  * Query objects paginated and return objects and the queryParams

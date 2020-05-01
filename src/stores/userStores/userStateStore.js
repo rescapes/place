@@ -21,11 +21,15 @@ import {
 } from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
-import {regionOutputParams} from '../scopeStores/regionStore';
-import {projectOutputParams} from '../scopeStores/projectStore';
+import {regionOutputParams} from '../scopeStores/region/regionStore';
+import {
+  projectOutputParams as defaultProjectOutputParams,
+  projectOutputParams
+} from '../scopeStores/project/projectStore';
 import {mapboxOutputParamsFragment} from '../mapStores/mapboxOutputParams';
 import {composeWithChainMDeep, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
+import {locationOutputParams} from '../scopeStores/location/locationOutputParams';
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -71,8 +75,13 @@ export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
 /**
  * User state output params with full scope output params. This should only be used for querying when values of the scope
  * instances are needed beyond the ids
+ * @param {Object} outputParams
+ * @param {Object} [outputParams.projectOutputParams] Optional project output params for
+ * data.userProjects.project. Defaults to defaultProjectOutputParams
+ * is not to specify data. userProjects.project.data.locations
+ * @return {{data: {userProjects: *, userRegions: *}, id: number, user: {id: number}}}
  */
-export const userStateOutputParamsFull = {
+export const userStateOutputParamsFull = ({projectOutputParams}) => {return {
   id: 1,
   user: {id: 1},
   data: {
@@ -84,13 +93,13 @@ export const userStateOutputParamsFull = {
     ),
     userProjects: R.mergeAll([
       {
-        project: projectOutputParams
+        project: projectOutputParams || defaultProjectOutputParams,
       },
       mapboxOutputParamsFragment,
       selectionOutputParamsFragment
     ])
   }
-};
+};}
 
 /***
  * userRegions output params fragment when we only want the region ids.
@@ -313,7 +322,7 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputPa
                 apolloConfig,
                 {
                   name: 'userState',
-                  outputParams: userStateOutputParamsFull,
+                  outputParams: userStateOutputParamsFull({}),
                   // For merging cached array items of userState.data.userRegions|userProjedts
                   idPathLookup: userStateDataTypeIdPathLookup
                 },

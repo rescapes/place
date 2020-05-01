@@ -13,7 +13,7 @@ import * as R from 'ramda';
 import {makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
-import {mapboxOutputParamsFragment} from '../mapStores/mapboxOutputParams';
+import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType

@@ -19,8 +19,8 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {makeUserStateMutationContainer, userStateMutateOutputParams} from './userStateStore';
-import {createSampleProjectTask} from '../scopeStores/projectStore.sample';
-import {createSampleRegionContainer} from '../scopeStores/regionStore.sample';
+import {createSampleProjectTask} from '../scopeStores/project/projectStore.sample';
+import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample';
 import * as R from 'ramda';
 import {of} from 'folktale/concurrency/task';
 

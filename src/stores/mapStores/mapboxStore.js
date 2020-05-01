@@ -10,22 +10,21 @@
  */
 
 import * as R from 'ramda';
-import {makeMutationRequestContainer, makeQueryContainer, makeSettingsQueryContainer} from 'rescape-apollo';
+import {makeMutationRequestContainer, makeSettingsQueryContainer} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {of, waitAll} from 'folktale/concurrency/task';
-import Result from 'folktale/result';
 import {
-  reqStrPathThrowing,
-  resultToTaskNeedingResult,
-  reqStrPath,
-  strPathOr,
   composeWithChain,
-  resultsToResultObj
+  reqStrPath,
+  reqStrPathThrowing,
+  resultsToResultObj,
+  resultToTaskNeedingResult,
+  strPathOr
 } from 'rescape-ramda';
-import {makeRegionsQueryContainer} from '../scopeStores/regionStore';
-import {makeAdminUserStateQueryContainer, makeCurrentUserStateQueryContainer} from '../userStores/userStateStore';
-import {makeProjectsQueryContainer} from '../scopeStores/projectStore';
+import {makeRegionsQueryContainer} from '../scopeStores/region/regionStore';
+import {makeCurrentUserStateQueryContainer} from '../userStores/userStateStore';
+import {makeProjectsQueryContainer} from '../scopeStores/project/projectStore';
 
 
 /**

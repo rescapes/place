@@ -16,7 +16,7 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {expectKeysAtPath} from 'rescape-helpers-test';
-import {testAuthTask} from '../../helpers/testHelpers';
+import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {
   makeProjectMutationContainer,
@@ -26,9 +26,10 @@ import {
   readInputTypeMapper
 } from './projectStore';
 import {createSampleProjectsTask, createSampleProjectTask} from './projectStore.sample';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStateStore';
-import {queryVariationContainers} from '../helpers/variedRequestHelpers';
+import {makeCurrentUserQueryContainer, userOutputParams} from '../../userStores/userStateStore';
+import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 import {of} from 'folktale/concurrency/task';
+import {locationOutputParams} from '../location/locationOutputParams';
 
 const someProjectKeys = ['id', 'key', 'geojson'];
 describe('projectStore', () => {

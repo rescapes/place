@@ -21,7 +21,7 @@ import {
 } from 'rescape-ramda';
 import {of} from 'folktale/concurrency/task';
 import {makeQueryContainer} from 'rescape-apollo';
-import {mapQueryTaskToNamedResultAndInputs, containerForApolloType} from 'rescape-apollo';
+import {mapQueryContainerToNamedResultAndInputs, containerForApolloType} from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {makeUserStateMutationContainer} from '../userStateStore';
 
@@ -114,21 +114,22 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       // where scope names is 'Regions', 'Projects', etc
       // Result.Error prevents the next query from running
       () => {
-        return mapQueryTaskToNamedResultAndInputs(
-          makeQueryContainer(
-            apolloConfig,
-            {
-              name: 'userStates',
-              readInputTypeMapper,
-              outputParams: userStateOutputParamsCreator(
-                // If we have to query for scope objs separately then
-                // pass null to default to the id
-                R.when(hasScopeParams, R.always(null))(scopeOutputParams)
-              )
-            },
-            // The props that identify the user state. Either the user state id or user id
-            pickDeepPaths(['id', 'user.id'], userState)
-          ),
+        const container = makeQueryContainer(
+          apolloConfig,
+          {
+            name: 'userStates',
+            readInputTypeMapper,
+            outputParams: userStateOutputParamsCreator(
+              // If we have to query for scope objs separately then
+              // pass null to default to the id
+              R.when(hasScopeParams, R.always(null))(scopeOutputParams)
+            )
+          },
+          // The props that identify the user state. Either the user state id or user id
+          pickDeepPaths(['id', 'user.id'], userState)
+        );
+        return mapQueryContainerToNamedResultAndInputs(
+          container,
           // We only ever get 1 userState since we are querying by user
           `userStates.0.data.${userScopeNames}`,
           userScopeNames
@@ -154,7 +155,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
           ])
         })
       }).isRequired,
-      scope: PropTypes.shape().isRequired
+      scope: PropTypes.shape()
     })]
   ], 'makeUserStateScopeObjsQueryContainer');
 
@@ -285,7 +286,8 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
  * @param {Object} props.scope Arguments for the scope class query
  * @param {Object} props.userScopeObjs The userScopeObjs in the form {scopeName: {id: x}}
  * where scopeName is 'region', 'project', etc
- * @param {Object} props.scope The scope props for the queries, such as region, project, etc
+ * @param {Object} [props.scope] The scope props for the queries, such as region, project, etc.
+ * This can be null or {} to not filter by scope
  * @return {Task|Maybe} Task or Maybe.Just that returns the scope objs that match the scopeArguments
  */
 export const queryScopeObjsOfUserStateContainer = v(R.curry(
@@ -333,7 +335,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
         {outputParams: scopeOutputParams},
         R.merge(
           // Limit by an properties in the scope that aren't id
-          R.omit(['id'], scope), {
+          R.omit(['id'], scope || {}), {
             // Map each scope object to its id
             idIn: R.map(
               R.compose(
@@ -355,7 +357,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
   }).isRequired
   ],
   ['props', PropTypes.shape({
-    scope: PropTypes.shape().isRequired,
+    scope: PropTypes.shape(),
     userScopeObjs: PropTypes.array.isRequired
   })]
 ], 'queryScopeObjsOfUserStateContainer');

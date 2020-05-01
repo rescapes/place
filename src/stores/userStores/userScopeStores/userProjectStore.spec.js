@@ -40,6 +40,7 @@ import {
   mutateSampleUserStateWithProjectsAndRegions
 } from '../userStateStore.sample';
 import {testAuthTask} from '../../../helpers/testHelpers';
+import {locationOutputParams} from '../../scopeStores/location/locationOutputParams';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -89,11 +90,13 @@ describe('userProjectStore', () => {
     composeWithChainMDeep(1, [
       // Filter for projects where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Projects so we can filter by Project
-      ({apolloConfig, user}) => {
+      ({apolloConfig, user, projects}) => {
+        // Get the name since it will be Shrangrila29 or whatever
+        const projectNames = R.map(R.prop('name'), projects)
         return userStateProjectsQueryContainer(apolloConfig, {}, {
-          userState: {user: R.pick(['user'], user)},
+          userState: {user: R.pick(['id'], user)},
           // Limit by geojson (both pass this) and by name (1 passes this)
-          project: {geojson: {type: 'FeatureCollection'}, name: 'Pangea'}
+          project: {geojson: {type: 'FeatureCollection'}, name: projectNames[0]}
         });
       },
       // Set the UserState, returns previous values and {userState, projects, regions}
