@@ -48,7 +48,7 @@ const log = loggers.get('rescapeDefault');
  * such as properties embedded in json data
  * @param {Object} queryConfig.outputParams
  * @param {Object} [queryConfig.readInputTypeMapper] This should not be needed, it specifies the graphql input type.
- * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedFor{capitalize(typeName)}TypeMixinRelatedReadInputType`}
+ * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`}
  * Where objects are the paginated objects returned by the query and thus
  * `${capitalize(typeName)}TypeofPaginated{capitalize(typeName)}TypeMixinRelatedReadInputType` is the input type argument we can use for
  * filtering
@@ -71,7 +71,7 @@ export const queryUsingPaginationContainer = v(R.curry((
   const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
   const className = capitalize(typeName)
   const readInputTypeMapperOrDefault = R.defaultTo(
-    {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
+    {objects: `${className}TypeofPaginatedTypeMixinRelatedReadInputType`},
     readInputTypeMapper
   );
   log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
@@ -201,7 +201,7 @@ export const queryPageContainer = v(R.curry((
     const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
     const className = capitalize(typeName)
     const readInputTypeMapperOrDefault = R.defaultTo(
-      {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
+      {objects: `${className}TypeofPaginatedTypeMixinRelatedReadInputType`},
       readInputTypeMapper
     );
     log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
