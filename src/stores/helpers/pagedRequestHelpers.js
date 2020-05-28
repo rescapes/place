@@ -48,7 +48,7 @@ const log = loggers.get('rescapeDefault');
  * such as properties embedded in json data
  * @param {Object} queryConfig.outputParams
  * @param {Object} [queryConfig.readInputTypeMapper] This should not be needed, it specifies the graphql input type.
- * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`}
+ * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinFor(capitalize(typeName))TypeRelatedReadInputType`}
  * Where objects are the paginated objects returned by the query and thus
  * `${capitalize(typeName)}TypeofPaginated{capitalize(typeName)}TypeMixinRelatedReadInputType` is the input type argument we can use for
  * filtering
@@ -71,7 +71,7 @@ export const queryUsingPaginationContainer = v(R.curry((
   const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
   const className = capitalize(typeName)
   const readInputTypeMapperOrDefault = R.defaultTo(
-    {objects: `${className}TypeofPaginatedTypeMixinRelatedReadInputType`},
+    {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
     readInputTypeMapper
   );
   log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
@@ -172,9 +172,9 @@ export const queryUsingPaginationContainer = v(R.curry((
  * such as properties embedded in json data
  * @param {Object} queryConfig.outputParams
  * @param {Object} [queryConfig.readInputTypeMapper] This should not be needed, it specifies the graphql input type.
- * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType`}
+ * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeFor${capitalize(typeName)}TypeMixinRelatedReadInputType`}
  * Where objects are the paginated objects returned by the query and thus
- * `${capitalize(typeName)}TypeofPaginatedTypeMixinRelatedReadInputType` is the input type argument we can use for
+ * `${capitalize(typeName)}TypeofPaginatedTypeMixin${capitalize(typeName)}TypeRelatedReadInputType` is the input type argument we can use for
  * filtering
  * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
  * passed to the query. Defaults to passing all of them
@@ -201,7 +201,7 @@ export const queryPageContainer = v(R.curry((
     const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
     const className = capitalize(typeName)
     const readInputTypeMapperOrDefault = R.defaultTo(
-      {objects: `${className}TypeofPaginatedTypeMixinRelatedReadInputType`},
+      {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
       readInputTypeMapper
     );
     log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);

@@ -57,7 +57,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
     return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
       {
-        scopeQueryTask: makeProjectsQueryContainer,
+        scopeQueryContainer: makeProjectsQueryContainer,
         scopeName: 'project',
         readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: scopeOutputParams => {
@@ -102,18 +102,17 @@ export const userStateProjectsQueryContainer = v(R.curry((
  * @param {Object} propSets.userState Object matching the shape of a userState.
  * @param {Object} propSets.userState.data The data to mutate. For updates any array in data will replace that
  * on the server, but otherwise this data is deep merged with the existing data on the server
- * @param {Object} propSets.userProject Object matching the shape of the project to mutate in the user state
- * @param {Object} propSets.userProject.project Object matching the shape of the project to mutate in the user state
- * @param {Number} propSets.userProject.project.id Required id of the project to update or add in userState.data.userProjects
+ * @param {Object} propSets.scope Object matching the shape of userState.data[*}.userProject
+ * @param {Object} propSets.scope.project Object matching the shape of the project to mutate in the user state
+ * @param {Number} propSets.scope.project.id Required id of the project to update or add in userState.data.userProjects
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outputParams}, propSets) => {
-    const {userState, userProject} = propSets;
     return makeUserStateScopeObjsMutationContainer(
       apolloConfig,
       {
-        scopeQueryTask: makeProjectsQueryContainer,
+        scopeQueryContainer: makeProjectsQueryContainer,
         scopeName: 'project',
         readInputTypeMapper,
         userStateOutputParamsCreator: scopeOutputParams => userStateOutputParamsCreator(
@@ -121,7 +120,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outpu
         ),
         scopeOutputParams: outputParams
       },
-      {userState, scope: userProject}
+      propSets
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
@@ -130,7 +129,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outpu
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
-      userProject: PropTypes.shape({
+      scope: PropTypes.shape({
         project: PropTypes.shape({
           id: PropTypes.number.isRequired
         })

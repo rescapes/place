@@ -5,7 +5,7 @@ import * as R from 'ramda';
 import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs} from 'rescape-ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
 import {expectKeysAtPath} from 'rescape-helpers-test'
-import {mutateSampleUserStateWithProjectAndRegion} from '../userStores/userStateStore.sample';
+import {mutateSampleUserStateWithProjectAndRegionTask} from '../userStores/userStateStore.sample';
 import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
 import {expectKeys} from 'rescape-apollo';
 
@@ -38,7 +38,7 @@ describe('mapboxStore', () => {
       ),
 
       // Set the UserState
-      ({apolloConfig, user}) => mutateSampleUserStateWithProjectAndRegion({
+      ({apolloConfig, user}) => mutateSampleUserStateWithProjectAndRegionTask({
         apolloConfig,
         user,
         regionKey: 'antarctica',

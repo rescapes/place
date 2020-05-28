@@ -22,14 +22,10 @@ import {
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {regionOutputParams} from '../scopeStores/region/regionStore';
-import {
-  projectOutputParams as defaultProjectOutputParams,
-  projectOutputParams
-} from '../scopeStores/project/projectStore';
-import {mapboxOutputParamsFragment} from '../mapStores/mapboxOutputParams';
+import {projectOutputParams} from '../scopeStores/project/projectStore';
 import {composeWithChainMDeep, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
-import {locationOutputParams} from '../scopeStores/location/locationOutputParams';
+import {activityOutputParamsFragment} from './activityStore';
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -81,57 +77,51 @@ export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
  * is not to specify data. userProjects.project.data.locations
  * @return {{data: {userProjects: *, userRegions: *}, id: number, user: {id: number}}}
  */
-export const userStateOutputParamsFull = ({projectOutputParams}) => {return {
-  id: 1,
-  user: {id: 1},
-  data: {
-    userRegions: R.merge(
-      {
+export const userStateOutputParamsFull = ({}) => {
+  return {
+    id: 1,
+    user: {id: 1},
+    data: {
+      userRegions: {
         region: regionOutputParams
       },
-      mapboxOutputParamsFragment
-    ),
-    userProjects: R.mergeAll([
-      {
-        project: projectOutputParams || defaultProjectOutputParams,
+      userProjects: R.mergeAll([{
+        project: projectOutputParams
       },
-      mapboxOutputParamsFragment,
-      selectionOutputParamsFragment
-    ])
-  }
-};}
+        selectionOutputParamsFragment,
+        activityOutputParamsFragment
+      ])
+    }
+  };
+};
 
 /***
- * userRegions output params fragment when we only want the region ids.
+ * userRegions output params fragment when we only want the region ids or something custom..
  * The region property represents a single region and the other properties represent the relationship
  * between the user and the region. This can be properties that are stored on the server or only in cache.
  * @param {Object} [regionOutputParams] Defaults to {id: 1}
  */
 export const userRegionsOutputParamsFragmentDefaultOnlyIds = regionOutputParams => {
   return {
-    userRegions: R.merge({
-        region: regionOutputParams || ({id: 1})
-      },
-      mapboxOutputParamsFragment
-    )
+    userRegions: {
+      region: regionOutputParams || ({id: 1})
+    }
   };
 };
 
 /***
- * userProjects output params fragment when we only want the project ids
- * The region property represents a single region and the other properties represent the relationship
- * between the user and the region. This can be properties that are stored on the server or only in cache.
+ * userProjects output params fragment when we only want the project ids or something custom.
+ * The project property represents a single project and the other properties represent the relationship
+ * between the user and the project. This can be properties that are stored on the server or only in cache.
  * @param {Object} [projectOutputParams] Defaults to {id: 1}
  */
-export const userProjectsOutputParamsFragmentDefaultOnlyIds = projectOutputParams => ({
-  userProjects: R.mergeAll([
-    {
+export const userProjectsOutputParamsFragmentDefaultOnlyIds = projectOutputParams => {
+  return {
+    userProjects: {
       project: projectOutputParams || ({id: 1})
-    },
-    mapboxOutputParamsFragment,
-    selectionOutputParamsFragment
-  ])
-});
+    }
+  };
+};
 
 /**
  * User state output params with id-only scope output params. Should be used for mutations and common cases when
@@ -141,7 +131,6 @@ export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
   ...userRegionsOutputParamsFragmentDefaultOnlyIds(),
   ...userProjectsOutputParamsFragmentDefaultOnlyIds()
 });
-
 
 export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
 
@@ -167,21 +156,19 @@ const cacheIdProps = [
   'id',
   '__typename',
   'data.__typename',
-  'data.userProjects.__typename',
-  // Use project.id to identify the userProject.
-  'data.userProjects.*.project',
-  'data.userProjects.*.project.id',
-  'data.userProjects.*.project.__typename',
-  // Use region.id to identify the userProject.
+  // Use region.id to identify the userRegion
   'data.userRegions.*.region',
   'data.userRegions.*.region.id',
-  'data.userRegions.*.region.__typename'
+  'data.userRegions.*.region.__typename',
+  // Use project.id to identify the userProject
+  'data.userProjects.*.project',
+  'data.userProjects.*.project.id',
+  'data.userProjects.*.project.__typename'
 ];
 
 export const userStateDataTypeIdPathLookup = {
   // Merge userRegions by region. The two paths apply for non-ref and ref versions
   userRegions: ['region.id', 'region.__ref'],
-  // Merge UserPojects by project. The two paths apply for non-ref and ref versions
   userProjects: ['project.id', 'project.__ref']
 };
 
@@ -190,11 +177,11 @@ export const userStateStorePoliciesConfig = [
   {type: 'UserStateType', fields: ['data']},
   {
     type: 'UserStateDataType',
-    fields: ['userProjects', 'userRegions'],
+    fields: ['userRegions', 'userProjects'],
     idPathLookup: userStateDataTypeIdPathLookup
   },
-  {type: 'UserProjectDataType', fields: ['selection']},
-  {type: 'UserRegionDataType', fields: ['selection']}
+  {type: 'UserRegionDataType', fields: ['selection']},
+  {type: 'UserProjectDataType', fields: ['selection']}
 ];
 
 export const createCacheOnlyPropsForUserState = props => {
@@ -318,6 +305,7 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputPa
               const propsWithCacheOnlyItems = mergeCacheable({idPathLookup: userStateDataTypeIdPathLookup}, userState, props);
 
               // Mutate the cache to save settings to the database that are not stored on the server
+
               makeMutationWithClientDirectiveContainer(
                 apolloConfig,
                 {

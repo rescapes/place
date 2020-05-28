@@ -30,9 +30,9 @@ import {of} from 'folktale/concurrency/task';
  * @param user
  * @param regionKey
  * @param projectKey
- * @returns {Object} {project, region, userState}
+ * @returns {Task} {project, region, userState}
  */
-export const mutateSampleUserStateWithProjectAndRegion = ({apolloConfig, user, regionKey, projectKey}) => {
+export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, user, regionKey, projectKey}) => {
   return composeWithChain([
     // Set the user state of the given user to the region and project
     mapToNamedPathAndInputs('userState', 'data.mutate.userState',
@@ -134,10 +134,10 @@ export const createUserRegionWithDefaults = region => {
     mapbox: {
       viewport: {
         // Use the defaults from the region
-        latitude: region.data.mapbox.viewport.latitude,
-        longitude: region.data.mapbox.viewport.longitude,
+        latitude: reqStrPathThrowing('data.mapbox.viewport.latitude', region),
+        longitude: reqStrPathThrowing('data.mapbox.viewport.longitude', region),
         // Zoom in one from he region's zoom
-        zoom: region.data.mapbox.viewport.zoom + 1
+        zoom: reqStrPathThrowing('data.mapbox.viewport.zoom', region) + 1
       }
     }
   };
@@ -165,6 +165,9 @@ export const createUserProjectWithDefaults = project => {
     },
     selection: {
       isSelected: false
+    },
+    activity: {
+      isActive: false
     }
   };
 };

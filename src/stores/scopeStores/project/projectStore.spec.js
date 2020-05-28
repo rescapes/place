@@ -10,12 +10,11 @@
  */
 import {
   composeWithChain,
-  defaultRunConfig,
+  defaultRunConfig, expectKeysAtPath,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from 'rescape-ramda';
-import {expectKeysAtPath} from 'rescape-helpers-test';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {

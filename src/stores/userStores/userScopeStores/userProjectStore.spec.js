@@ -20,9 +20,9 @@ import {
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
-  strPathOr
+  strPathOr,
+  expectKeysAtPath
 } from 'rescape-ramda';
-import {expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
 import {
   makeCurrentUserQueryContainer,
@@ -36,11 +36,10 @@ import {makeProjectMutationContainer, projectOutputParams} from '../../..';
 import moment from 'moment';
 import {
   createUserProjectWithDefaults,
-  mutateSampleUserStateWithProjectAndRegion,
+  mutateSampleUserStateWithProjectAndRegionTask,
   mutateSampleUserStateWithProjectsAndRegions
 } from '../userStateStore.sample';
 import {testAuthTask} from '../../../helpers/testHelpers';
-import {locationOutputParams} from '../../scopeStores/location/locationOutputParams';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -61,7 +60,7 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegion({
+        return mutateSampleUserStateWithProjectAndRegionTask({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',
@@ -140,7 +139,7 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegion({
+        return mutateSampleUserStateWithProjectAndRegionTask({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',
@@ -181,7 +180,7 @@ describe('userProjectStore', () => {
             },
             {
               userState,
-              userProject: createUserProjectWithDefaults(
+              scope: createUserProjectWithDefaults(
                 project
               )
             }
@@ -222,7 +221,7 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegion({
+        return mutateSampleUserStateWithProjectAndRegionTask({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',

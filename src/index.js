@@ -105,6 +105,6 @@ export {
 export {
   createUserProjectWithDefaults,
   createUserRegionWithDefaults,
-  mutateSampleUserStateWithProjectAndRegion,
+  mutateSampleUserStateWithProjectAndRegionTask,
   mutateSampleUserStateWithProjectsAndRegions
 } from './stores/userStores/userStateStore.sample';

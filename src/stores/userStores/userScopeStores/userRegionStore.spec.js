@@ -14,13 +14,29 @@ import {
   composeWithChainMDeep,
   defaultRunConfig,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs
+  mapToNamedResponseAndInputs,
+  expectKeysAtPath, reqStrPathThrowing, strPathOr
 } from 'rescape-ramda';
 import {testAuthTask} from '../../../helpers/testHelpers';
-import {expectKeysAtPath} from 'rescape-helpers-test';
 import * as R from 'ramda';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../userStateStore';
-import {mutateSampleUserStateWithProjectAndRegion} from '../userStateStore.sample';
+import {
+  makeCurrentUserQueryContainer, makeCurrentUserStateQueryContainer,
+  makeUserStateMutationContainer,
+  userOutputParams,
+  userStateMutateOutputParams, userStateOutputParamsOnlyIds
+} from '../userStateStore';
+import {
+  createUserProjectWithDefaults,
+  createUserRegionWithDefaults,
+  mutateSampleUserStateWithProjectAndRegionTask
+} from '../userStateStore.sample';
+import {userStateProjectMutationContainer} from './userProjectStore';
+import {
+  makeProjectMutationContainer,
+  makeRegionMutationContainer,
+  projectOutputParams,
+  regionOutputParams
+} from '../../..';
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
@@ -43,7 +59,7 @@ describe('userRegionStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegion({
+        return mutateSampleUserStateWithProjectAndRegionTask({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',
@@ -90,7 +106,7 @@ describe('userRegionStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegion({
+        return mutateSampleUserStateWithProjectAndRegionTask({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',
@@ -119,15 +135,22 @@ describe('userRegionStore', () => {
     const errors = [];
     const someRegionKeys = ['id', 'key', 'name', 'data'];
     R.composeK(
-      ({apolloConfig, user}) => userRegionsQueryContainer(
-        apolloConfig,
-        {},
-        {userState: {user: R.pick(['id'], user)}, region: {}}
-      ),
+      ({apolloConfig, user}) => {
+        return userRegionsQueryContainer(
+          apolloConfig,
+          {},
+          {
+            userState: {
+              user: R.pick(['id'], user)
+            },
+            scope: {}
+          }
+        );
+      },
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegion({
+        return mutateSampleUserStateWithProjectAndRegionTask({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',
@@ -146,5 +169,85 @@ describe('userRegionStore', () => {
           expectKeysAtPath(someRegionKeys, 'data.userRegions.0.region', response);
         }
     }, errors, done));
-  });
+  }, 1000000);
+
+  test('userStateRegiontMutationContainer', done => {
+    const errors = [];
+    const regionKey = `testRegionKey${moment().format('HH-mm-SS')}`;
+    const regionName = `TestRegionName${moment().format('HH-mm-SS')}`;
+    R.composeK(
+      mapToNamedResponseAndInputs('userState',
+        ({apolloConfig, userState, region}) => {
+          return userStateProjectMutationContainer(
+            apolloConfig,
+            {
+              // We only need each region id back from userState.data.userProjects: [...]
+              outputParams: {id: 1}
+            },
+            {
+              userState,
+              scope: createUserRegionWithDefaults(
+                region
+              )
+            }
+          );
+        }
+      ),
+      // Save a test project
+      mapToNamedPathAndInputs('project', 'data.createProject.project',
+        ({apolloConfig, userState}) => {
+          return makeRegionMutationContainer(
+            apolloConfig,
+            {outputParams: regionOutputParams},
+            {
+              user: {id: reqStrPathThrowing('user.id', userState)},
+              key: regionKey,
+              name: regionName
+            }
+          );
+        }
+      ),
+      // Remove all the projects from the user state
+      // Resolve the user state
+      mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
+        ({apolloConfig, userState}) => {
+          return makeUserStateMutationContainer(
+            apolloConfig,
+            {outputParams: userStateMutateOutputParams},
+            R.over(R.lensPath(['data', 'userRegions']), () => [], userState)
+          );
+        }
+      ),
+      // Resolve the user state
+      mapToNamedPathAndInputs('userState', 'data.userStates.0',
+        ({apolloConfig}) => {
+          return makeCurrentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
+        }
+      ),
+      // Set the UserState, returns previous values and {userState, project, region}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectAndRegionTask({
+          apolloConfig,
+          user: R.pick(['id'], user),
+          regionKey: 'earth',
+          projectKey: 'shrangrila'
+        });
+      },
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => testAuthTask
+      )
+    )({}).run().listen(defaultRunConfig({
+      onResolved:
+        ({region, userState}) => {
+          expect(strPathOr(null, 'data.updateUserState.userState.data.userRegions.0.region.id', userState)).toEqual(region.id);
+          done();
+        }
+    }, errors, done));
+  }, 100000);
 });

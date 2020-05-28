@@ -19,7 +19,7 @@ import {
   pickDeepPaths,
   reqStrPathThrowing
 } from 'rescape-ramda';
-import {expectKeys, expectKeysAtPath} from 'rescape-helpers-test';
+import {expectKeys, expectKeysAtPath} from 'rescape-ramda';
 import * as R from 'ramda';
 import {
   makeAdminUserStateQueryContainer,
@@ -29,7 +29,7 @@ import {
   userOutputParams,
   userStateOutputParamsFull
 } from './userStateStore';
-import {mutateSampleUserStateWithProjectAndRegion} from './userStateStore.sample';
+import {mutateSampleUserStateWithProjectAndRegionTask} from './userStateStore.sample';
 import {testAuthTask} from '../../helpers/testHelpers';
 
 
@@ -67,7 +67,7 @@ describe('userStore', () => {
       // Mutate the UserState to get cache-only data stored
       mapMonadByConfig({},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegion({
+          return mutateSampleUserStateWithProjectAndRegionTask({
             apolloConfig,
             user,
             regionKey: 'earth',
@@ -106,7 +106,7 @@ describe('userStore', () => {
       // Mutate the UserState to get cache-only data stored
       mapMonadByConfig({},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegion({
+          return mutateSampleUserStateWithProjectAndRegionTask({
             apolloConfig,
             user,
             regionKey: 'earth',
@@ -153,7 +153,7 @@ describe('userStore', () => {
       // Set it again. This will wipe out the previous region and project ids
       mapMonadByConfig({name: 'mutatedUserStateSecond', strPath: 'userState'},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegion({
+          return mutateSampleUserStateWithProjectAndRegionTask({
             apolloConfig,
             user,
             regionKey: 'mars',
@@ -173,7 +173,7 @@ describe('userStore', () => {
       // Mutate the UserState
       mapMonadByConfig({name: 'mutatedUserStateFirst', strPath: 'userState'},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegion({
+          return mutateSampleUserStateWithProjectAndRegionTask({
             apolloConfig,
             user,
             regionKey: 'earth',
@@ -218,9 +218,11 @@ describe('userStore', () => {
         ({apolloConfig, userState}) => {
           const props = R.over(
             R.lensPath(['data', 'userProjects', 0, 'selection']),
-            selection => R.merge(selection, {
-              isSelected: true
-            }),
+            selection => {
+              return R.merge(selection, {
+                isSelected: true
+              });
+            },
             // Just include the id and the userProjects
             pickDeepPaths(['id', 'data.userProjects'], userState)
           );
@@ -234,7 +236,7 @@ describe('userStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegion({
+        return mutateSampleUserStateWithProjectAndRegionTask({
           apolloConfig,
           user,
           regionKey: 'earth',

@@ -13,7 +13,6 @@ import * as R from 'ramda';
 import {makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
-import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -51,13 +50,19 @@ export const regionOutputParams = {
     generator: 1,
     copyright: 1
   },
-  data: R.merge({
-      locations: {
-        params: 1
-      }
+  data: {
+    locations: {
+      params: 1
     },
-    mapboxOutputParamsFragment
-  )
+    mapbox: {
+      viewport: {
+        latitude: 1,
+        longitude: 1,
+        zoom: 1
+      }
+    }
+
+  }
 };
 
 
