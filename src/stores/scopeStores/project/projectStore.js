@@ -15,6 +15,7 @@ import {makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
 import {locationParamsOutputParams} from '../location/locationOutputParams';
+import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -126,3 +127,32 @@ export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputPara
   ],
   ['props', PropTypes.shape().isRequired]
 ], 'makeProjectMutationContainer');
+
+/**
+ * Returns and object with different versions of the project query container: 'minimized', 'paginated', 'paginatedAll'
+ * @param apolloConfig
+ * @return {Object} keyed by the variation, valued by the query container
+ */
+export const projectQueryVariationContainers = ({apolloConfig, regionConfig: {}}) => {
+  return queryVariationContainers(
+    {apolloConfig, regionConfig: {}},
+    {
+      name: 'project',
+      requestTypes: [
+        {},
+        {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},
+        // Note that we don't pass page and page size here because we want to be able to query for different pages
+        // We either pass page and page size here or in props instead
+        {type: 'paginated', args: {}},
+        // Note that we don't pass page size here because we want to be able to query for different pages
+        // We either pass page and page size here or in props instead
+        {type: 'paginatedAll', args: {}}
+      ],
+      queryConfig: {
+        outputParams: projectOutputParams,
+        readInputTypeMapper: readInputTypeMapper
+      },
+      queryContainer: makeProjectsQueryContainer
+    }
+  );
+};

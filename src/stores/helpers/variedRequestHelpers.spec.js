@@ -24,7 +24,7 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {testAuthTask} from '../../helpers/testHelpers';
-import {createSampleProjectsTask, createSampleProjectContainer} from '../scopeStores/project/projectStore.sample';
+import {createSampleProjectsContainer, createSampleProjectContainer} from '../scopeStores/project/projectStore.sample';
 import {readInputTypeMapper} from '../scopeStores/project/projectStore';
 import {of} from 'folktale/concurrency/task';
 import * as R from 'ramda';
@@ -86,7 +86,7 @@ describe('variedRequestHelpers', () => {
         }
       ),
       mapToNamedResponseAndInputs('projects',
-        ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, {user})
+        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {

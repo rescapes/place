@@ -8,11 +8,25 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import {defaultRunConfig, expectKeysAtPath, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
+import {
+  composeWithChain,
+  defaultRunConfig,
+  expectKeysAtPath,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs,
+  reqStrPathThrowing
+} from 'rescape-ramda';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
-import {makeRegionMutationContainer, makeRegionsQueryContainer, regionOutputParams} from './regionStore';
-import {createSampleRegionContainer} from './regionStore.sample';
+import {
+  makeRegionMutationContainer,
+  makeRegionsQueryContainer,
+  regionOutputParams,
+  regionQueryVariationContainers
+} from './regionStore';
+import {createSampleRegionContainer, createSampleRegionsContainer} from './regionStore.sample';
+import {makeCurrentUserQueryContainer, userOutputParams} from '../../userStores/userStateStore';
+import {of} from 'folktale/concurrency/task'
 
 const someRegionKeys = ['id', 'key', 'geojson', 'data'];
 describe('regionStore', () => {
@@ -53,4 +67,66 @@ describe('regionStore', () => {
         }
     }, errors, done));
   });
+
+  test('queryRegionVariationsContainers', done => {
+    expect.assertions(4);
+    const task = composeWithChain([
+      mapToNamedResponseAndInputs('regionsPagedAll',
+        ({regions, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
+          // Returns all 10 with 2 queries of pageSize 5
+          return reqStrPathThrowing('regionsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+        }
+      ),
+      mapToNamedResponseAndInputs('regionsPaged',
+        ({regions, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
+          // Returns 3 of the 10 regions on page 3
+          return reqStrPathThrowing('regionsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
+        }
+      ),
+      mapToNamedResponseAndInputs('regionsMinimized',
+        ({regions, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
+          return reqStrPathThrowing('regionsMinimized', variations)(props);
+        }
+      ),
+      mapToNamedResponseAndInputs('regionsFull',
+        ({regions, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
+          return reqStrPathThrowing('regions', variations)(props);
+        }
+      ),
+      mapToNamedResponseAndInputs('variations',
+        ({apolloConfig}) => {
+          return of(regionQueryVariationContainers({apolloConfig, regionConfig: {}}));
+        }
+      ),
+      mapToNamedResponseAndInputs('regions',
+        ({apolloConfig, user}) => {
+          return createSampleRegionsContainer(apolloConfig, {user});
+        }
+      ),
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => {
+          return testAuthTask;
+        }
+      )
+    ])({});
+    const errors = [];
+    task.run().listen(defaultRunConfig({
+      onResolved: ({regionsFull, regionsMinimized, regionsPaged, regionsPagedAll}) => {
+        expect(R.length(reqStrPathThrowing('data.regions', regionsFull))).toEqual(10);
+        expect(R.length(reqStrPathThrowing('data.regions', regionsMinimized))).toEqual(10);
+        expect(R.length(reqStrPathThrowing('objects', regionsPaged))).toEqual(3);
+        expect(R.length(regionsPagedAll)).toEqual(10);
+      }
+    }, errors, done));
+  }, 100000);
+
 });

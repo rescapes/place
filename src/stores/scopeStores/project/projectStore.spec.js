@@ -10,23 +10,17 @@
  */
 import {
   composeWithChain,
-  defaultRunConfig, expectKeysAtPath,
+  defaultRunConfig,
+  expectKeysAtPath,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
-import {
-  makeProjectMutationContainer,
-  makeProjectsQueryContainer,
-  projectOutputParams,
-  projectOutputParamsMinimized,
-  readInputTypeMapper
-} from './projectStore';
-import {createSampleProjectsTask, createSampleProjectContainer} from './projectStore.sample';
+import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore';
+import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../../userStores/userStateStore';
-import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 import {of} from 'folktale/concurrency/task';
 
 const someProjectKeys = ['id', 'key', 'geojson'];
@@ -82,31 +76,11 @@ describe('projectStore', () => {
       ),
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
-          return of(queryVariationContainers(
-            {apolloConfig, regionConfig: {}},
-            {
-              name: 'project',
-              requestTypes: [
-                {},
-                {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},
-                // Note that we don't pass page and page size here because we want to be able to query for different pages
-                // We either pass page and page size here or in props instead
-                {type: 'paginated', args: {}},
-                // Note that we don't pass page size here because we want to be able to query for different pages
-                // We either pass page and page size here or in props instead
-                {type: 'paginatedAll', args: {}}
-              ],
-              queryConfig: {
-                outputParams: projectOutputParams,
-                readInputTypeMapper: readInputTypeMapper
-              },
-              queryContainer: makeProjectsQueryContainer
-            }
-          ));
+          return of(projectQueryVariationContainers({apolloConfig, regionConfig: {}}));
         }
       ),
       mapToNamedResponseAndInputs('projects',
-        ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, {user})
+        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
@@ -128,5 +102,5 @@ describe('projectStore', () => {
         expect(R.length(projectsPagedAll)).toEqual(10);
       }
     }, errors, done));
-  },100000);
+  }, 100000);
 });

@@ -13,6 +13,7 @@ import * as R from 'ramda';
 import {makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
+import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -23,7 +24,7 @@ export const readInputTypeMapper = {
   'geojson': 'FeatureCollectionDataTypeofRegionTypeRelatedReadInputType'
 };
 
-export const regionOutputParamsMinimum = {
+export const regionOutputParamsMinimized = {
   id: 1,
   key: 1,
   name: 1
@@ -120,7 +121,8 @@ export const makeRegionMutationContainer = v(R.curry(
       outputParams
     },
     props
-  )), [
+  )
+), [
   ['apolloConfig', PropTypes.shape().isRequired],
   ['mutationStructure', PropTypes.shape({
     outputParams: PropTypes.shape().isRequired
@@ -128,3 +130,32 @@ export const makeRegionMutationContainer = v(R.curry(
   ],
   ['props', PropTypes.shape().isRequired]
 ], 'makeRegionMutationContainer');
+
+/**
+ * Returns and object with different versions of the region query container: 'minimized', 'paginated', 'paginatedAll'
+ * @param apolloConfig
+ * @return {Object} keyed by the variation, valued by the query container
+ */
+export const regionQueryVariationContainers = ({apolloConfig, regionConfig: {}}) => {
+  return queryVariationContainers(
+    {apolloConfig, regionConfig: {}},
+    {
+      name: 'region',
+      requestTypes: [
+        {},
+        {type: 'minimized', args: {outputParams: regionOutputParamsMinimized}},
+        // Note that we don't pass page and page size here because we want to be able to query for different pages
+        // We either pass page and page size here or in props instead
+        {type: 'paginated', args: {}},
+        // Note that we don't pass page size here because we want to be able to query for different pages
+        // We either pass page and page size here or in props instead
+        {type: 'paginatedAll', args: {}}
+      ],
+      queryConfig: {
+        outputParams: regionOutputParams,
+        readInputTypeMapper: readInputTypeMapper
+      },
+      queryContainer: makeRegionsQueryContainer
+    }
+  );
+};

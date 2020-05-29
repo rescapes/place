@@ -17,7 +17,7 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from 'rescape-ramda';
-import {createSampleProjectsTask} from '../scopeStores/project/projectStore.sample';
+import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStateStore';
 import * as R from 'ramda';
 import {projectOutputParams} from '../scopeStores/project/projectStore';
@@ -45,7 +45,7 @@ test('queryUsingPaginationContainer', done => {
       );
     },
     mapToNamedResponseAndInputs('projects',
-      ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, {user})
+      ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
     ),
     mapToNamedPathAndInputs('user', 'data.currentUser',
       ({apolloConfig}) => {
@@ -107,7 +107,7 @@ test('queryPageContainer', done => {
         );
       }),
     mapToNamedResponseAndInputs('projects',
-      ({apolloConfig, user}) => createSampleProjectsTask(apolloConfig, {user})
+      ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
     ),
     mapToNamedPathAndInputs('user', 'data.currentUser',
       ({apolloConfig}) => {

@@ -3,9 +3,8 @@ import {composeWithChain, mergeDeep, reqStrPathThrowing, traverseReduce} from 'r
 import * as R from 'ramda';
 import moment from 'moment';
 import {fromPromised, of} from 'folktale/concurrency/task';
-import {v} from 'rescape-validate'
-import PropTypes from 'prop-types'
-import {locationOutputParams} from '../location/locationOutputParams';
+import {v} from 'rescape-validate';
+import PropTypes from 'prop-types';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -76,7 +75,7 @@ export const createSampleProjectContainer = ({apolloClient}, props) => {
  * @param {Number} props.user.id
  * @return Task resolving to a list of 10 projects
  */
-export const createSampleProjectsTask = v((apolloConfig, props) => {
+export const createSampleProjectsContainer = v((apolloConfig, props) => {
   return traverseReduce(
     (projects, project) => {
       return R.concat(projects, [reqStrPathThrowing('data.createProject.project', project)]);
@@ -105,4 +104,4 @@ export const createSampleProjectsTask = v((apolloConfig, props) => {
       id: PropTypes.number.isRequired
     }).isRequired
   }).isRequired]
-], 'createSampleProjectsTask');
+], 'createSampleProjectsContainer');

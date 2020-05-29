@@ -60,7 +60,7 @@ export {
 } from './stores/scopeStores/project/projectStore';
 export {
   regionOutputParams,
-  regionOutputParamsMinimum,
+  regionOutputParamsMinimized,
   readInputTypeMapper,
   makeRegionMutationContainer,
   makeRegionsQueryContainer

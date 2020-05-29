@@ -1,5 +1,10 @@
 import {makeRegionMutationContainer, regionOutputParams} from './regionStore';
-import {mergeDeep} from 'rescape-ramda';
+import {composeWithChain, mergeDeep, reqStrPathThrowing, traverseReduce} from 'rescape-ramda';
+import {fromPromised, of} from 'folktale/concurrency/task';
+import moment from 'moment';
+import {v} from 'rescape-validate';
+import PropTypes from 'prop-types';
+import * as R from 'ramda';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -56,3 +61,38 @@ export const createSampleRegionContainer = ({apolloClient}, props = {}) => {
       props)
   );
 };
+
+/**
+ * Creates 10 regions for the given user
+ * @param {Object} apolloConfig
+ * @param {Object} props
+ * @param {Object} props.user
+ * @param {Number} props.user.id
+ * @return Task resolving to a list of 10 regions
+ */
+export const createSampleRegionsContainer = v((apolloConfig, props) => {
+  return traverseReduce(
+    (regions, region) => {
+      return R.concat(regions, [reqStrPathThrowing('data.createRegion.region', region)]);
+    },
+    of([]),
+    R.times(() => {
+      return composeWithChain([
+        () => {
+          return createSampleRegionContainer(apolloConfig, {
+              key: `test${moment().format('HH-mm-SS')}`
+            }
+          );
+        },
+        () => fromPromised(() => new Promise(r => setTimeout(r, 100)))()
+      ])();
+    }, 10)
+  );
+}, [
+  ['apolloConfig', PropTypes.shape({}).isRequired],
+  ['props', PropTypes.shape({
+    user: PropTypes.shape({
+      id: PropTypes.number.isRequired
+    }).isRequired
+  }).isRequired]
+], 'createSampleRegionsContainer');
