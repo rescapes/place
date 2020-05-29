@@ -28,7 +28,6 @@ import {createSampleProjectsTask, createSampleProjectContainer} from './projectS
 import {makeCurrentUserQueryContainer, userOutputParams} from '../../userStores/userStateStore';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 import {of} from 'folktale/concurrency/task';
-import {locationOutputParams} from '../location/locationOutputParams';
 
 const someProjectKeys = ['id', 'key', 'geojson'];
 describe('projectStore', () => {

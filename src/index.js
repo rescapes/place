@@ -45,12 +45,12 @@ export {
   projectMapboxOutputParamsCreator,
   regionMapboxOutputParamsCreator,
   scopeObjMapboxOutputParamsCreator,
-  userStateMapboxOutputParamsCreator,
+  userStateMapboxOutputParamsCreator
 } from './stores/mapStores/mapboxStore';
 
 export {
- mapboxOutputParamsFragment
-} from './stores/mapStores/mapboxOutputParams'
+  mapboxOutputParamsFragment
+} from './stores/mapStores/mapboxOutputParams';
 
 export {
   projectOutputParams,
@@ -108,3 +108,6 @@ export {
   mutateSampleUserStateWithProjectAndRegionTask,
   mutateSampleUserStateWithProjectsAndRegions
 } from './stores/userStores/userStateStore.sample';
+
+export {queryVariationContainers} from './stores/helpers/variedRequestHelpers';
+
