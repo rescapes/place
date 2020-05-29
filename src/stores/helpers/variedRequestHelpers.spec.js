@@ -24,7 +24,7 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {testAuthTask} from '../../helpers/testHelpers';
-import {createSampleProjectsTask, createSampleProjectTask} from '../scopeStores/project/projectStore.sample';
+import {createSampleProjectsTask, createSampleProjectContainer} from '../scopeStores/project/projectStore.sample';
 import {readInputTypeMapper} from '../scopeStores/project/projectStore';
 import {of} from 'folktale/concurrency/task';
 import * as R from 'ramda';

@@ -4,7 +4,6 @@ import {makeMapboxesQueryResultTask} from '../mapStores/mapboxStore';
 import * as R from 'ramda';
 import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs} from 'rescape-ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
-import {expectKeysAtPath} from 'rescape-helpers-test'
 import {mutateSampleUserStateWithProjectAndRegionTask} from '../userStores/userStateStore.sample';
 import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
 import {expectKeys} from 'rescape-apollo';
@@ -26,7 +25,7 @@ describe('mapboxStore', () => {
     expect.assertions(1);
     R.composeK(
       // Now that we have a user, region, and project, we query
-      ({apolloConfig, settings, user, region, project, userState}) => makeMapboxesQueryResultTask(
+      ({apolloConfig, user, region, project}) => makeMapboxesQueryResultTask(
         apolloConfig,
         mapboxOutputParamsFragment,
         {

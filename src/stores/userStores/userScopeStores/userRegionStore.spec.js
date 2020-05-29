@@ -9,34 +9,36 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {userRegionsQueryContainer, userStateOutputParamsCreator} from './userRegionStore';
 import {
+  userRegionsQueryContainer,
+  userStateOutputParamsCreator,
+  userStateRegionMutationContainer
+} from './userRegionStore';
+import {
+  capitalize,
   composeWithChainMDeep,
   defaultRunConfig,
+  expectKeysAtPath,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
-  expectKeysAtPath, reqStrPathThrowing, strPathOr
+  reqStrPathThrowing,
+  strPathOr
 } from 'rescape-ramda';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {
-  makeCurrentUserQueryContainer, makeCurrentUserStateQueryContainer,
+  makeCurrentUserQueryContainer,
+  makeCurrentUserStateQueryContainer,
   makeUserStateMutationContainer,
   userOutputParams,
-  userStateMutateOutputParams, userStateOutputParamsOnlyIds
+  userStateMutateOutputParams,
+  userStateOutputParamsOnlyIds
 } from '../userStateStore';
-import {
-  createUserProjectWithDefaults,
-  createUserRegionWithDefaults,
-  mutateSampleUserStateWithProjectAndRegionTask
-} from '../userStateStore.sample';
+import {createUserRegionWithDefaults, mutateSampleUserStateWithProjectAndRegionTask} from '../userStateStore.sample';
 import {userStateProjectMutationContainer} from './userProjectStore';
-import {
-  makeProjectMutationContainer,
-  makeRegionMutationContainer,
-  projectOutputParams,
-  regionOutputParams
-} from '../../..';
+import {makeRegionMutationContainer, regionOutputParams} from '../../scopeStores/region/regionStore';
+import moment from 'moment';
+import {createSampleRegionContainer} from '../../..';
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
@@ -178,10 +180,11 @@ describe('userRegionStore', () => {
     R.composeK(
       mapToNamedResponseAndInputs('userState',
         ({apolloConfig, userState, region}) => {
-          return userStateProjectMutationContainer(
+          // Add the new region to the UserState
+          return userStateRegionMutationContainer(
             apolloConfig,
             {
-              // We only need each region id back from userState.data.userProjects: [...]
+              // We only need each region id back from userState.data.userRegions: [...]
               outputParams: {id: 1}
             },
             {
@@ -193,21 +196,16 @@ describe('userRegionStore', () => {
           );
         }
       ),
-      // Save a test project
-      mapToNamedPathAndInputs('project', 'data.createProject.project',
-        ({apolloConfig, userState}) => {
-          return makeRegionMutationContainer(
-            apolloConfig,
-            {outputParams: regionOutputParams},
-            {
-              user: {id: reqStrPathThrowing('user.id', userState)},
-              key: regionKey,
-              name: regionName
-            }
-          );
+      // Save another test region
+      mapToNamedPathAndInputs('region', 'data.createRegion.region',
+        ({apolloConfig}) => {
+          return createSampleRegionContainer(apolloConfig, {
+            key: regionKey,
+            name: regionName
+          })
         }
       ),
-      // Remove all the projects from the user state
+      // Remove all the regions from the user state
       // Resolve the user state
       mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
         ({apolloConfig, userState}) => {

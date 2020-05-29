@@ -19,7 +19,7 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {makeUserStateMutationContainer, userStateMutateOutputParams} from './userStateStore';
-import {createSampleProjectTask} from '../scopeStores/project/projectStore.sample';
+import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample';
 import * as R from 'ramda';
 import {of} from 'folktale/concurrency/task';
@@ -46,7 +46,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
     ),
     // Create a sample project
     mapToNamedPathAndInputs('project', 'data.mutate.project',
-      ({apolloConfig, user}) => createSampleProjectTask(apolloConfig, {
+      ({apolloConfig, user}) => createSampleProjectContainer(apolloConfig, {
           key: projectKey,
           name: capitalize(projectKey),
           user: R.pick(['id'], user)
@@ -90,7 +90,7 @@ export const mutateSampleUserStateWithProjectsAndRegions = ({apolloConfig, user,
         return R.traverse(
           of,
           projectKey => mapWithArgToPath('data.mutate.project',
-            ({apolloConfig, user, projectKey}) => createSampleProjectTask(apolloConfig, {
+            ({apolloConfig, user, projectKey}) => createSampleProjectContainer(apolloConfig, {
                 key: projectKey,
                 name: capitalize(projectKey),
                 user: R.pick(['id'], user)

@@ -8,9 +8,8 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import {defaultRunConfig, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
+import {defaultRunConfig, expectKeysAtPath, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
 import {testAuthTask} from '../../../helpers/testHelpers';
-import {expectKeysAtPath} from 'rescape-helpers-test'
 import * as R from 'ramda';
 import {makeRegionMutationContainer, makeRegionsQueryContainer, regionOutputParams} from './regionStore';
 import {createSampleRegionContainer} from './regionStore.sample';
@@ -31,7 +30,7 @@ describe('regionStore', () => {
           expectKeysAtPath(someRegionKeys, 'region', response);
         }
     }, errors, done));
-  });
+  }, 100000);
 
   test('makeRegionsQueryContainer', done => {
     const errors = [];

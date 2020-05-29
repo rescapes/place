@@ -21,7 +21,7 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
   strPathOr,
-  expectKeysAtPath
+  expectKeysAtPath, capitalize
 } from 'rescape-ramda';
 import * as R from 'ramda';
 import {
@@ -40,6 +40,7 @@ import {
   mutateSampleUserStateWithProjectsAndRegions
 } from '../userStateStore.sample';
 import {testAuthTask} from '../../../helpers/testHelpers';
+import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -91,7 +92,7 @@ describe('userProjectStore', () => {
       // This forces a separate query on Projects so we can filter by Project
       ({apolloConfig, user, projects}) => {
         // Get the name since it will be Shrangrila29 or whatever
-        const projectNames = R.map(R.prop('name'), projects)
+        const projectNames = R.map(R.prop('name'), projects);
         return userStateProjectsQueryContainer(apolloConfig, {}, {
           userState: {user: R.pick(['id'], user)},
           // Limit by geojson (both pass this) and by name (1 passes this)
@@ -120,7 +121,7 @@ describe('userProjectStore', () => {
       onResolved:
         response => {
           expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
-          expect(R.length(reqStrPathThrowing('data.userProjects', response))).toEqual(1)
+          expect(R.length(reqStrPathThrowing('data.userProjects', response))).toEqual(1);
         }
     }, errors, done));
   });
@@ -170,6 +171,7 @@ describe('userProjectStore', () => {
     const projectKey = `testProjectKey${moment().format('HH-mm-SS')}`;
     const projectName = `TestProjectName${moment().format('HH-mm-SS')}`;
     R.composeK(
+      // Add the new project to the UserState
       mapToNamedResponseAndInputs('userState',
         ({apolloConfig, userState, project}) => {
           return userStateProjectMutationContainer(
@@ -187,16 +189,13 @@ describe('userProjectStore', () => {
           );
         }
       ),
-      // Save a test project
+      // Save another test project
       mapToNamedPathAndInputs('project', 'data.createProject.project',
         ({apolloConfig, userState}) => {
-          return makeProjectMutationContainer(
-            apolloConfig,
-            {outputParams: projectOutputParams},
-            {
-              user: {id: reqStrPathThrowing('user.id', userState)},
+          return createSampleProjectContainer(apolloConfig, {
               key: projectKey,
-              name: projectName
+              name: projectName,
+              user: {id: reqStrPathThrowing('user.id', userState)}
             }
           );
         }

@@ -26,7 +26,7 @@ import {locationOutputParams} from '../location/locationOutputParams';
  * @params {Number} props.user.id Required
  * @return {Object} {data: project: {...}}
  */
-export const createSampleProjectTask = ({apolloClient}, props) => {
+export const createSampleProjectContainer = ({apolloClient}, props) => {
   return makeProjectMutationContainer(
     {apolloClient},
     {outputParams: projectOutputParams},
@@ -85,7 +85,7 @@ export const createSampleProjectsTask = v((apolloConfig, props) => {
     R.times(() => {
       return composeWithChain([
         () => {
-          return createSampleProjectTask(apolloConfig, {
+          return createSampleProjectContainer(apolloConfig, {
               key: `test${moment().format('HH-mm-SS')}`,
               user: {
                 id: reqStrPathThrowing('user.id', props)

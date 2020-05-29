@@ -24,7 +24,7 @@ import {
   projectOutputParamsMinimized,
   readInputTypeMapper
 } from './projectStore';
-import {createSampleProjectsTask, createSampleProjectTask} from './projectStore.sample';
+import {createSampleProjectsTask, createSampleProjectContainer} from './projectStore.sample';
 import {makeCurrentUserQueryContainer, userOutputParams} from '../../userStores/userStateStore';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 import {of} from 'folktale/concurrency/task';
@@ -37,7 +37,7 @@ describe('projectStore', () => {
     expect.assertions(1);
     composeWithChain([
       mapToNamedPathAndInputs('project', 'data.createProject.project',
-        ({apolloClient, userId}) => createSampleProjectTask({apolloClient}, {user: {id: userId}})
+        ({apolloClient, userId}) => createSampleProjectContainer({apolloClient}, {user: {id: userId}})
       ),
       // Get the current user
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
