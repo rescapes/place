@@ -100,11 +100,13 @@ export const userStateOutputParamsFull = ({}) => {
  * The region property represents a single region and the other properties represent the relationship
  * between the user and the region. This can be properties that are stored on the server or only in cache.
  * @param {Object} [regionOutputParams] Defaults to {id: 1}
+ * @param {Object} [userRegionOutputParams] Default to {}
  */
-export const userRegionsOutputParamsFragmentDefaultOnlyIds = regionOutputParams => {
+export const userRegionsOutputParamsFragmentDefaultOnlyIds = (regionOutputParams, userRegionOutputParams={}) => {
   return {
     userRegions: {
-      region: regionOutputParams || ({id: 1})
+      region: regionOutputParams || ({id: 1}),
+      userRegionOutputParams
     }
   };
 };
