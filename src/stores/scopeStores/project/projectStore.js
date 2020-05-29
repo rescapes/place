@@ -56,7 +56,10 @@ export const projectOutputParams = {
     copyright: 1
   },
   data: R.merge({
-      locations: locationParamsOutputParams
+      locations: {
+        // unstructured json represent location search params
+        params: 1
+      }
     },
     mapboxOutputParamsFragment
   )
