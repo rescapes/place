@@ -54,7 +54,8 @@ const hasScopeParams = scope => {
  * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
  * and returning output parameters for each the scope class query. If don't have to query scope separately
  * then scopeOutputParams is passed to this. Otherwise we just was ['id'] since that's all the initial query needs
- * @param {[Object]} scopeOutputParams Output parameters for each the scope class query
+ * @param {[Object]} userScopeOutputParams Output parameters for each the user scope class query. For example
+ * {region: {id: 1, name: 1, key: 1}, activity: {isActive: 1}}
  * @param {Object} userStateArgumentsCreator arguments for the UserStates query. {user: {id: }} is required to limit
  * the query to one user
  * @param {Object} props Props to query with. userState is required and a scope property that can contain none
@@ -68,8 +69,9 @@ const hasScopeParams = scope => {
  */
 export const makeUserStateScopeObjsQueryContainer = v(R.curry(
   (apolloConfig,
-   {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams},
+   {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    props) => {
+    const scopeOutputParams = R.prop(scopeName, userScopeOutputParams)
     // Since we only store the id of the scope obj in the userState, if there are other queryParams
     // besides id we need to do a second query on the scope objs directly
     return composeWithComponentMaybeOrTaskChain([
@@ -84,7 +86,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
           scopeQueryContainer,
           scopeName,
           userScopeName,
-          scopeOutputParams
+          userScopeOutputParams
         }, R.merge(props, {userStatesResponse, userScopeObjs}));
       }),
 
@@ -100,7 +102,9 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
             outputParams: userStateOutputParamsCreator(
               // If we have to query for scope objs separately then
               // pass null to default to the id
-              R.when(hasScopeParams, R.always(null))(scopeOutputParams)
+              R.when(
+                scopeOutputParams => hasScopeParams(R.omit(['id'], scopeOutputParams)), R.always(null)
+              )(scopeOutputParams)
             )
           },
           // The props that identify the user state. Either the user state id or user id
@@ -119,7 +123,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       scopeName: PropTypes.string.isRequired,
       readInputTypeMapper: PropTypes.shape().isRequired,
       userStateOutputParamsCreator: PropTypes.func.isRequired,
-      scopeOutputParams: PropTypes.shape().isRequired
+      userScopeOutputParams: PropTypes.shape().isRequired
     }).isRequired],
     ['props', PropTypes.shape({
       userState: PropTypes.shape({
@@ -140,13 +144,14 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
  */
 const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
   (apolloConfig,
-   {scopeQueryContainer, scopeName, userScopeName, scopeOutputParams},
+   {scopeQueryContainer, scopeName, userScopeName, userScopeOutputParams},
    props
   ) => {
     const scope = R.prop('scope', props);
+    const scopeOutputParams = R.prop(scopeName, userScopeOutputParams);
     return R.ifElse(
       () => {
-        // If there are not scope params and scopeOutputParams is minimized, we're done
+        // If there are not scope params and userScopeOutputParams is minimized, we're done
         return R.and(
           R.complement(hasScopeParams)(scope),
           R.equals({id: 1}, scopeOutputParams)
@@ -181,14 +186,14 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
  * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
  * and returning output parameters for each the scope class query. If don't have to query scope seperately
  * then scopeOutputParams is passed to this. Otherwise we just was ['id'] since that's all the initial query needs
- * @param {[Object]} scopeOutputParams Output parameters for the user state mutation
+ * @param {[Object]} userScopeOutputParams Output parameters for the user state mutation
  * @param {Object} userStateArgumentsCreator arguments for the UserStates query. {user: {id: }} is required to limit
  * the query to one user
  * @param {Object} props Props to query with. userState is required and a scope property that can contain none
  * or more of region, project, etc. keys with their query values
  * @param {Object} props.userState props for the UserState
- * @param {Object} props.scope userRegion, userProject, etc. query to add/update in the userState.
- * @param {Number} props.scope.[region|project].id
+ * @param {Object} props.userScope userRegion, userProject, etc. query to add/update in the userState.
+ * @param {Number} props.userScope.[region|project].id
  * Required id of the scope instance to add or update within userState.data[scope]
  * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {
  * createUserState|updateUserState: {userState: {data: [userScopeName]: [...]}}}}
@@ -196,13 +201,13 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
  */
 export const makeUserStateScopeObjsMutationContainer = v(R.curry(
   (apolloConfig,
-   {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams},
-   {userState, scope}) => {
+   {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
+   {userState, userScope}) => {
     const userScopeName = _userScopeName(scopeName);
     return composeWithChainMDeep(1, [
       // If there is a match with what the caller is submitting, update it, else add it
       ({userStateOutputParamsCreator, userState, userScopeObjs}) => {
-        // We have 1 or 0 scope objects. 1 for update case, 0 for insert case
+        // We have 1 or 0 userScope objects. 1 for update case, 0 for insert case
         const userScopeObj = R.head(userScopeObjs);
         const userStateWithCreatedOrUpdatedScopeObj = R.over(
           R.lensPath(['data', userScopeName]),
@@ -221,48 +226,47 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
                 return R.over(
                   R.lensIndex(index),
                   scopeObj => {
-                    return R.merge(scopeObj, scope);
+                    return R.merge(scopeObj, userScope);
                   },
                   scopeObjs
                 );
               },
               // Otherwise insert it
               scopeObjs => {
-                return R.concat(scopeObjs, [scope]);
+                return R.concat(scopeObjs, [userScope]);
               }
             )(scopeObjs);
           }
         )(userState);
-        // Save the changes to the scope objs
+        // Save the changes to the userScope objs
         return makeUserStateMutationContainer(
           apolloConfig,
           {
             outputParams: userStateOutputParamsCreator(
-              // If we have to query for scope objs separately then just query for their ids here
-              R.when(s => hasScopeParams(s), R.always(['id']))(scopeOutputParams)
+             userScopeOutputParams
             )
           },
           userStateWithCreatedOrUpdatedScopeObj
         );
       },
-      // Query for userScopeObjs that match the scope
+      // Query for userScopeObjs that match the userScope
       mapToNamedPathAndInputs('userScopeObjs', `data.${userScopeName}`,
         ({
            apolloConfig,
-           scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams,
-           userState, scope
+           scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams,
+           userState, userScope
          }) => {
-          // Query for the scope instance by id
+          // Query for the userScope instance by id
           return makeUserStateScopeObjsQueryContainer(
             apolloConfig,
-            {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams},
-            {userState, scope: pickDeepPaths([`${scopeName}.id`], scope)}
+            {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
+            {userState, scope: pickDeepPaths([`${scopeName}.id`], userScope)}
           );
         })
     ])({
       apolloConfig,
-      scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, scopeOutputParams,
-      userState, scope
+      scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams,
+      userState, userScope
     });
   }),
   [
@@ -272,7 +276,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
       scopeName: PropTypes.string.isRequired,
       readInputTypeMapper: PropTypes.shape().isRequired,
       userStateOutputParamsCreator: PropTypes.func.isRequired,
-      scopeOutputParams: PropTypes.shape().isRequired
+      userScopeOutputParams: PropTypes.shape().isRequired
     }).isRequired
     ],
     ['props', PropTypes.shape({
@@ -284,7 +288,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           ])
         })
       }).isRequired,
-      scope: PropTypes.shape({}).isRequired
+      userScope: PropTypes.shape({}).isRequired
     })]
   ], 'makeUserStateScopeObjsMutationContainer');
 
@@ -369,6 +373,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
         )(userScopeObjs);
       }),
       nameComponent('scopeQuery', ({render, children, scope, userScopeObjs}) => {
+        const scopeProps = R.prop(scopeName, scope)
         return scopeQueryContainer(
           R.merge(
             {
@@ -383,7 +388,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
           },
           R.merge(
             // Limit by an properties in the scope that aren't id
-            R.omit(['id'], scope || {}),
+            R.omit(['id'], scopeProps || {}),
             {
               render,
               children,

@@ -9,26 +9,24 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import {queryVariationContainers} from './variedRequestHelpers';
-import {
-  makeCurrentUserQueryContainer,
-  userOutputParams
-} from '../userStores/userStateStore';
+import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStateStore';
 import {
   makeProjectsQueryContainer,
-  projectOutputParams, projectOutputParamsMinimized
+  projectOutputParams,
+  projectOutputParamsMinimized
 } from '../../stores/scopeStores/project/projectStore';
 import {
-  composeWithChain, defaultRunConfig,
+  composeWithChain,
+  defaultRunConfig,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {testAuthTask} from '../../helpers/testHelpers';
-import {createSampleProjectsContainer, createSampleProjectContainer} from '../scopeStores/project/projectStore.sample';
+import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample';
 import {readInputTypeMapper} from '../scopeStores/project/projectStore';
 import {of} from 'folktale/concurrency/task';
 import * as R from 'ramda';
-import {locationOutputParamsMinimized} from '../scopeStores/location/locationOutputParams';
 
 describe('variedRequestHelpers', () => {
   test('queryVariationContainers', done => {

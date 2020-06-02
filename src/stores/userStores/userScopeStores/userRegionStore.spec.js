@@ -9,19 +9,13 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import {userRegionOutputParams, userRegionsQueryContainer, userStateRegionMutationContainer} from './userRegionStore';
 import {
-  userRegionsQueryContainer,
-  userStateOutputParamsCreator,
-  userStateRegionMutationContainer
-} from './userRegionStore';
-import {
-  capitalize,
   composeWithChainMDeep,
   defaultRunConfig,
-  expectKeysAtPath,
+  expectKeysAtPath, mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
-  reqStrPathThrowing,
   strPathOr
 } from 'rescape-ramda';
 import {testAuthTask} from '../../../helpers/testHelpers';
@@ -34,11 +28,13 @@ import {
   userStateMutateOutputParams,
   userStateOutputParamsOnlyIds
 } from '../userStateStore';
-import {createUserRegionWithDefaults, mutateSampleUserStateWithProjectAndRegionTask} from '../userStateStore.sample';
-import {userStateProjectMutationContainer} from './userProjectStore';
-import {makeRegionMutationContainer, regionOutputParams} from '../../scopeStores/region/regionStore';
+import {
+  createUserRegionWithDefaults,
+  deleteSampleUserStateScopeObjectsTask,
+  mutateSampleUserStateWithProjectAndRegionTask
+} from '../userStateStore.sample';
 import moment from 'moment';
-import {createSampleRegionContainer} from '../../..';
+import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample';
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
@@ -50,7 +46,9 @@ describe('userRegionStore', () => {
       ({apolloConfig, user}) => {
         return userRegionsQueryContainer(
           apolloConfig,
+          // default output params
           {},
+          // props
           {
             userState: {user: R.pick(['id'], user)},
             // The sample user is already limited to certain regions. We don't need to limit further
@@ -184,12 +182,11 @@ describe('userRegionStore', () => {
           return userStateRegionMutationContainer(
             apolloConfig,
             {
-              // We only need each region id back from userState.data.userRegions: [...]
-              outputParams: {id: 1}
+              outputParams: userRegionOutputParams()
             },
             {
               userState,
-              scope: createUserRegionWithDefaults(
+              userScope: createUserRegionWithDefaults(
                 region
               )
             }
@@ -202,7 +199,7 @@ describe('userRegionStore', () => {
           return createSampleRegionContainer(apolloConfig, {
             key: regionKey,
             name: regionName
-          })
+          });
         }
       ),
       // Remove all the regions from the user state
@@ -216,12 +213,7 @@ describe('userRegionStore', () => {
           );
         }
       ),
-      // Resolve the user state
-      mapToNamedPathAndInputs('userState', 'data.userStates.0',
-        ({apolloConfig}) => {
-          return makeCurrentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
-        }
-      ),
+
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
@@ -232,6 +224,16 @@ describe('userRegionStore', () => {
           projectKey: 'shrangrila'
         });
       },
+      mapToMergedResponseAndInputs(
+      ({apolloConfig, userState}) => deleteSampleUserStateScopeObjectsTask(apolloConfig, userState),
+      ),
+
+      // Resolve the user state
+      mapToNamedPathAndInputs('userState', 'data.userStates.0',
+        ({apolloConfig}) => {
+          return makeCurrentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
+        }
+      ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
           return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});

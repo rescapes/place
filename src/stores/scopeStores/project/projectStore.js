@@ -14,7 +14,6 @@ import {v} from 'rescape-validate';
 import {makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
-import {locationParamsOutputParams} from '../location/locationOutputParams';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 
 // Every complex input type needs a type specified in graphql. Our type names are
@@ -95,7 +94,7 @@ export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams
  * Makes a project mutation
  * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
  * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
- * @param [String|Object] outputParams output parameters for the query in this style json format:
+ * @param [String|Object] [outputParams]. Default projectOutputParamsMinimized. output parameters for the query in this style json format:
  *  ['id',
  *   {
  *        data: [
@@ -113,7 +112,7 @@ export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams
  *  @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
+export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputParams=projectOutputParamsMinimized}, props) => {
   return makeMutationRequestContainer(
     apolloConfig,
     {
@@ -125,7 +124,7 @@ export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputPara
 }), [
   ['apolloConfig', PropTypes.shape().isRequired],
   ['mutationStructure', PropTypes.shape({
-    outputParams: PropTypes.shape().isRequired
+    outputParams: PropTypes.shape()
   })
   ],
   ['props', PropTypes.shape().isRequired]

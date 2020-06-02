@@ -14,7 +14,7 @@
  * @type {*{}}
  */
 export const activityOutputParamsFragment = {
-  'activity': {
+  activity: {
     isActive: 1
   }
 };

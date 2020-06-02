@@ -182,7 +182,7 @@ describe('userProjectStore', () => {
             },
             {
               userState,
-              scope: createUserProjectWithDefaults(
+              userScope: createUserProjectWithDefaults(
                 project
               )
             }

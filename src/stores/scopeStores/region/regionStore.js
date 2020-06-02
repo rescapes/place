@@ -95,26 +95,24 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams}
  * Makes a Region mutation
  * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo component
  * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
- * @param [String|Object] outputParams output parameters for the query in this style json format:
- *  ['id',
+ * @param [Object] [outputParams] Defaault regionOutputParamsMinimized output parameters for the query in this style json format:
+ *  {id: 1,
  *   {
- *        data: [
- *         'foo',
- *         {
- *            properties: [
- *             'type',
- *            ]
+ *        data: {
+ *         foo: 1,
+*          properties: {
+ *             type: 1,
  *         },
- *         'bar',
- *       ]
+ *         bar: 1,
+ *       }
  *    }
- *  ]
+ * }
  *  @param {Object} props Object matching the shape of a region. E.g. {id: 1, city: "Stavanger", data: {foo: 2}}
  *  @returns {Task|Object} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const makeRegionMutationContainer = v(R.curry(
-  (apolloConfig, {outputParams}, props) => makeMutationRequestContainer(
+  (apolloConfig, {outputParams=regionOutputParamsMinimized}, props) => makeMutationRequestContainer(
     apolloConfig,
     {
       name: 'region',
@@ -125,7 +123,7 @@ export const makeRegionMutationContainer = v(R.curry(
 ), [
   ['apolloConfig', PropTypes.shape().isRequired],
   ['mutationStructure', PropTypes.shape({
-    outputParams: PropTypes.shape().isRequired
+    outputParams: PropTypes.shape()
   })
   ],
   ['props', PropTypes.shape().isRequired]

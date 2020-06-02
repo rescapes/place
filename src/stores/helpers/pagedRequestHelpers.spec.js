@@ -22,7 +22,6 @@ import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/use
 import * as R from 'ramda';
 import {projectOutputParams} from '../scopeStores/project/projectStore';
 import {testAuthTask} from '../../helpers/testHelpers';
-import {locationOutputParams} from '../scopeStores/location/locationOutputParams';
 
 test('queryUsingPaginationContainer', done => {
   const task = composeWithChain([

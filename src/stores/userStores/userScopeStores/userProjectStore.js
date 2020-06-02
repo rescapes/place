@@ -12,19 +12,18 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
-import {
-  makeProjectsQueryContainer,
-  projectOutputParams as defaultProjectOutputParams
-} from '../../scopeStores/project/projectStore';
+import {makeProjectsQueryContainer} from '../../scopeStores/project/projectStore';
 import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
 import {
   makeUserStateMutationContainer,
-  userProjectsOutputParamsFragmentDefaultOnlyIds,
+  userProjectsOutputParamsFragmentDefaultOnlyIds, userRegionsOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore';
 import {reqStrPathThrowing} from 'rescape-ramda';
-import {locationOutputParams} from '../../scopeStores/location/locationOutputParams';
+import {projectOutputParams} from '../../../stores/scopeStores/project/projectStore';
+import {selectionOutputParamsFragment} from '../selectionStore';
+import {activityOutputParamsFragment} from '../activityStore';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -35,12 +34,27 @@ const readInputTypeMapper = {
   'user': 'UserTypeofUserStateTypeRelatedReadInputType'
 };
 
+export const userProjectOutputParams = (explicitProjectOutputParams = projectOutputParams) => R.mergeAll([
+  {
+    project: explicitProjectOutputParams,
+    mapbox: {
+      viewport: {
+        latitude: 1,
+        longitude: 1,
+        zoom: 1
+      }
+    }
+  },
+  selectionOutputParamsFragment,
+  activityOutputParamsFragment]
+);
+
 /**
  * Queries projects that are in the scope of the user and the values of that project
  * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
  * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
  * @param {Object} outputParamSets Optional outputParam sets to override the defaults
- * @param {Object} [outputParamSets.projectOutputParams] Optional project output params.
+ * @param {Object} [outputParamSets.userProjectOutputParams] Optional userProject output params.
  * Defaults to projectStore.projectOutputParams
  * @param {Object} propSets The props used for the query. userState and project objects are required
  * @param {Object} propSets.userState Props for the UserStates queries {user: {id: }} is required to limit
@@ -52,7 +66,7 @@ const readInputTypeMapper = {
  */
 export const userStateProjectsQueryContainer = v(R.curry((
   apolloConfig, {
-    projectOutputParams
+    userProjectOutputParams: explicitUserProjectOutputParams
   }, propSets) => {
     return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
@@ -61,11 +75,12 @@ export const userStateProjectsQueryContainer = v(R.curry((
         scopeName: 'project',
         readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: scopeOutputParams => {
-          return userStateOutputParamsCreator(
+          const params = userStateOutputParamsCreator(
             userProjectsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
           );
+          return params;
         },
-        scopeOutputParams: projectOutputParams || defaultProjectOutputParams
+        userScopeOutputParams: explicitUserProjectOutputParams || userProjectOutputParams()
       },
       {
         userState: reqStrPathThrowing('userState', propSets),
@@ -102,9 +117,9 @@ export const userStateProjectsQueryContainer = v(R.curry((
  * @param {Object} propSets.userState Object matching the shape of a userState.
  * @param {Object} propSets.userState.data The data to mutate. For updates any array in data will replace that
  * on the server, but otherwise this data is deep merged with the existing data on the server
- * @param {Object} propSets.scope Object matching the shape of userState.data[*}.userProject
- * @param {Object} propSets.scope.project Object matching the shape of the project to mutate in the user state
- * @param {Number} propSets.scope.project.id Required id of the project to update or add in userState.data.userProjects
+ * @param {Object} propSets.userScope Object matching the shape of userState.data[*}.userProject
+ * @param {Object} propSets.userScope.project Object matching the shape of the project to mutate in the user state
+ * @param {Number} propSets.userScope.project.id Required id of the project to update or add in userState.data.userProjects
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
@@ -118,7 +133,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outpu
         userStateOutputParamsCreator: scopeOutputParams => userStateOutputParamsCreator(
           userProjectsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
         ),
-        scopeOutputParams: outputParams
+        userScopeOutputParams: outputParams
       },
       propSets
     );
@@ -129,7 +144,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outpu
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
-      scope: PropTypes.shape({
+      userScope: PropTypes.shape({
         project: PropTypes.shape({
           id: PropTypes.number.isRequired
         })
