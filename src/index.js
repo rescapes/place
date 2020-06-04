@@ -75,8 +75,8 @@ export {
   userOutputParams,
   userStateOutputParamsFull,
   userStateOutputParamsOnlyIds,
-  makeCurrentUserStateQueryContainer
-
+  makeCurrentUserStateQueryContainer,
+  userScopeOutputParamsFragmentDefaultOnlyIds
 } from './stores/userStores/userStateStore';
 
 export {
