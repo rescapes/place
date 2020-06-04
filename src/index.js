@@ -72,9 +72,7 @@ export {
   makeAdminUserStateQueryContainer,
   userStateMutateOutputParams,
   userStateOutputParamsCreator,
-  userProjectsOutputParamsFragmentDefaultOnlyIds,
   userOutputParams,
-  userRegionsOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsFull,
   userStateOutputParamsOnlyIds,
   makeCurrentUserStateQueryContainer

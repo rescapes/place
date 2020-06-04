@@ -54,20 +54,24 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
     ),
     // Create a sample project
     mapToNamedPathAndInputs('project', 'data.mutate.project',
-      ({apolloConfig, user}) => createSampleProjectContainer(apolloConfig, {
-          key: projectKey,
-          name: capitalize(projectKey),
-          user: R.pick(['id'], user)
-        }
-      )
+      ({apolloConfig, user}) => {
+        return createSampleProjectContainer(apolloConfig, {
+            key: projectKey,
+            name: capitalize(projectKey),
+            user: R.pick(['id'], user)
+          }
+        );
+      }
     ),
 
     // Create a sample region
     mapToNamedPathAndInputs('region', 'data.mutate.region',
-      ({apolloConfig}) => createSampleRegionContainer(apolloConfig, {
-        key: regionKey,
-        name: capitalize(regionKey)
-      })
+      ({apolloConfig}) => {
+        return createSampleRegionContainer(apolloConfig, {
+          key: regionKey,
+          name: capitalize(regionKey)
+        });
+      }
     )
   ])({apolloConfig, user, regionKey, projectKey});
 };
@@ -85,13 +89,13 @@ export const deleteSampleUserStateScopeObjectsTask = (apolloConfig, userState) =
       // clearedScopeObjsUserState is the userState with the regions cleared
       ({apolloConfig, clearedScopeObjsUserState: userState}) => deleteScopeObjectsTask(
         apolloConfig,
-        {scopeName: 'projects'},
+        {scopeName: 'project'},
         userState)
     ),
     mapToMergedResponseAndInputs(
       ({apolloConfig, userState}) => deleteScopeObjectsTask(
         apolloConfig,
-        {scopeName: 'regions'},
+        {scopeName: 'region'},
         userState)
     )
   ])({apolloConfig, userState});
@@ -106,31 +110,33 @@ export const deleteSampleUserStateScopeObjectsTask = (apolloConfig, userState) =
  * @param userState
  * @return {*}
  */
-export const deleteScopeObjectsTask = (apolloConfig, {scopeName, }, userState) => {
+export const deleteScopeObjectsTask = (apolloConfig, {scopeName}, userState) => {
   const capitalized = capitalize(scopeName);
   return composeWithChain([
     // Delete those test regions
-    mapToNamedResponseAndInputs(`deleted${capitalized}`,
+    mapToNamedResponseAndInputs(`deleted${capitalized}s`,
       ({apolloConfig, scopeObjsToDelete}) => {
         return R.traverse(
           of,
-          scopeObj => makeMutationRequestContainer(
-            apolloConfig,
-            {
-              name: scopeName,
-              outputParams: {id: 1},
-            },
-            R.set(R.lensProp('deleted'), moment().toISOString(true), scopeObj)
-          ),
+          scopeObj => {
+            return makeMutationRequestContainer(
+              apolloConfig,
+              {
+                name: scopeName,
+                outputParams: {id: 1}
+              },
+              R.set(R.lensProp('deleted'), moment().toISOString(true), scopeObj)
+            );
+          },
           scopeObjsToDelete
         );
       }),
     // Get test regions to delete
-    mapToNamedPathAndInputs('scopeObjsToDelete', `data.${scopeName}`,
+    mapToNamedPathAndInputs('scopeObjsToDelete', `data.${scopeName}s`,
       ({apolloConfig}) => {
         return makeQueryContainer(
           apolloConfig,
-          {name: scopeName, outputParams: regionOutputParamsMinimized},
+          {name: `${scopeName}s`, outputParams: regionOutputParamsMinimized},
           {keyContains: 'test'}
         );
       }
@@ -138,7 +144,7 @@ export const deleteScopeObjectsTask = (apolloConfig, {scopeName, }, userState) =
     // Remove existing regions from the userState
     mapToNamedPathAndInputs('clearedScopeObjsUsersState', 'data.mutate.userState',
       ({apolloConfig, userState}) => {
-        const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}`]), [], userState);
+        const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
         return makeUserStateMutationContainer(
           apolloConfig,
           // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache

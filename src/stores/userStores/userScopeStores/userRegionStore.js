@@ -12,13 +12,10 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
-import {
-  makeRegionsQueryContainer,
-  regionOutputParams as defaultRegionOutputParams
-} from '../../scopeStores/region/regionStore';
+import {makeRegionsQueryContainer} from '../../scopeStores/region/regionStore';
 import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
 import {
-  userRegionsOutputParamsFragmentDefaultOnlyIds,
+  userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore';
@@ -67,15 +64,16 @@ export const userRegionOutputParams = (explicitRegionOuputParams = regionOutputP
  */
 export const userRegionsQueryContainer = v(R.curry(
   (apolloConfig, {userRegionOutputParams: explicitUserRegionOutputParams}, propSets) => {
+    const scopeName = 'region'
     return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
       {
         scopeQueryContainer: makeRegionsQueryContainer,
-        scopeName: 'region',
+        scopeName,
         readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: scopeOutputParams => {
           const params = userStateOutputParamsCreator(
-            userRegionsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
+            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, scopeOutputParams)
           );
           return params;
         },
@@ -118,15 +116,16 @@ export const userRegionsQueryContainer = v(R.curry(
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {outputParams}, propSets) => {
+    const scopeName = 'region';
     return makeUserStateScopeObjsMutationContainer(
       apolloConfig,
       {
         scopeQueryContainer: makeRegionsQueryContainer,
-        scopeName: 'region',
+        scopeName,
         readInputTypeMapper,
-        userStateOutputParamsCreator: scopeOutputParams => {
+        userStateOutputParamsCreator: userScopeOutputParams => {
           return userStateOutputParamsCreator(
-            userRegionsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
+            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
           );
         },
         userScopeOutputParams: outputParams
@@ -141,9 +140,7 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {output
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
       userScope: PropTypes.shape({
-        region: PropTypes.shape({
-          id: PropTypes.number.isRequired
-        })
+        region: PropTypes.shape()
       }).isRequired
     }).isRequired]
   ],

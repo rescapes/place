@@ -32,7 +32,7 @@ import {
   userStateMutateOutputParams,
   userStateOutputParamsOnlyIds
 } from '../userStateStore';
-import {makeProjectMutationContainer, projectOutputParams} from '../../..';
+import {createUserRegionWithDefaults, makeProjectMutationContainer, projectOutputParams} from '../../..';
 import moment from 'moment';
 import {
   createUserProjectWithDefaults,
@@ -54,7 +54,7 @@ describe('userProjectStore', () => {
           {
             userState: {user: R.pick(['id'], user)},
             // Don't limit the projects further
-            project: {}
+            userScope: {project: {}}
           }
         );
       },
@@ -96,7 +96,9 @@ describe('userProjectStore', () => {
         return userStateProjectsQueryContainer(apolloConfig, {}, {
           userState: {user: R.pick(['id'], user)},
           // Limit by geojson (both pass this) and by name (1 passes this)
-          project: {geojson: {type: 'FeatureCollection'}, name: projectNames[0]}
+          userScope: {
+            project: {geojson: {type: 'FeatureCollection'}, name: projectNames[0]}
+          }
         });
       },
       // Set the UserState, returns previous values and {userState, projects, regions}
@@ -134,7 +136,10 @@ describe('userProjectStore', () => {
         return userStateProjectsQueryContainer(
           apolloConfig,
           {},
-          {userState: {user: R.pick(['id'], user)}, project: {}}
+          {
+            userState: {user: R.pick(['id'], user)},
+            userScope: {project: {}}
+          }
         );
       },
       // Set the UserState, returns previous values and {userState, project, region}
@@ -178,7 +183,7 @@ describe('userProjectStore', () => {
             apolloConfig,
             {
               // We only need each project id back from userState.data.userProjects: [...]
-              outputParams: {id: 1}
+              userScopeOutputParams: {project: {id: 1}}
             },
             {
               userState,

@@ -15,12 +15,10 @@ import {v} from 'rescape-validate';
 import {makeProjectsQueryContainer} from '../../scopeStores/project/projectStore';
 import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
 import {
-  makeUserStateMutationContainer,
-  userProjectsOutputParamsFragmentDefaultOnlyIds, userRegionsOutputParamsFragmentDefaultOnlyIds,
+  userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore';
-import {reqStrPathThrowing} from 'rescape-ramda';
 import {projectOutputParams} from '../../../stores/scopeStores/project/projectStore';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
@@ -59,7 +57,9 @@ export const userProjectOutputParams = (explicitProjectOutputParams = projectOut
  * @param {Object} propSets The props used for the query. userState and project objects are required
  * @param {Object} propSets.userState Props for the UserStates queries {user: {id: }} is required to limit
  * the query to one user
- * @param {Object} propSets.project Props for the Projects query. This can be {} or null to not filter.
+ * @param {Object} propSets.userScope Object matching the shape of the userProject to mutate in the user state
+ * @param {Object} propSets.userScope.project Object matching the shape of the project to mutate in the user state
+ * @param {Number} propSets.userScope.project.id Required id of the project to update or add in userState.data.userProjec
  * Projects will be limited to those returned by the UserState query. These should not specify ids since
  * the UserState query selects the ids
  * @returns {Object} The resulting Projects in a Task in {data: usersProjects: [...]}}
@@ -68,24 +68,22 @@ export const userStateProjectsQueryContainer = v(R.curry((
   apolloConfig, {
     userProjectOutputParams: explicitUserProjectOutputParams
   }, propSets) => {
+    const scopeName = 'project';
     return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
       {
         scopeQueryContainer: makeProjectsQueryContainer,
-        scopeName: 'project',
+        scopeName,
         readInputTypeMapper: userStateReadInputTypeMapper,
-        userStateOutputParamsCreator: scopeOutputParams => {
+        userStateOutputParamsCreator: userScopeOutputParams => {
           const params = userStateOutputParamsCreator(
-            userProjectsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
+            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
           );
           return params;
         },
         userScopeOutputParams: explicitUserProjectOutputParams || userProjectOutputParams()
       },
-      {
-        userState: reqStrPathThrowing('userState', propSets),
-        scope: reqStrPathThrowing('project', propSets)
-      }
+      propSets
     );
   }),
   [
@@ -95,15 +93,10 @@ export const userStateProjectsQueryContainer = v(R.curry((
       locationOutputParams: PropTypes.shape()
     })],
     ['propSets', PropTypes.shape({
-      userState: PropTypes.shape({
-        user: PropTypes.shape({
-          id: PropTypes.oneOfType([
-            PropTypes.string,
-            PropTypes.number
-          ])
-        }).isRequired
-      }).isRequired,
-      project: PropTypes.shape().isRequired
+      userState: PropTypes.shape().isRequired,
+      userScope: PropTypes.shape({
+        project: PropTypes.shape()
+      }).isRequired
     })]
   ], 'userStateProjectsQueryContainer');
 
@@ -111,7 +104,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
  *  Mutates the given userState.data.userProjects with the given project
  * If a matching project is in userState.data.userProjects it is updated, otherwise it is added
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
- * @param [Object] outputParams outputParams Project output params that will be returned for the mutated project
+ * @param [Object] userScopeOutputParams Project output params that will be returned for the mutated project
  * within the user state
  * @param {Object} propSets Object matching the shape of a userState and project for the create or update
  * @param {Object} propSets.userState Object matching the shape of a userState.
@@ -123,24 +116,27 @@ export const userStateProjectsQueryContainer = v(R.curry((
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outputParams}, propSets) => {
+export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userScopeOutputParams}, propSets) => {
+    const scopeName = 'project';
     return makeUserStateScopeObjsMutationContainer(
       apolloConfig,
       {
+        scopeName,
         scopeQueryContainer: makeProjectsQueryContainer,
-        scopeName: 'project',
         readInputTypeMapper,
-        userStateOutputParamsCreator: scopeOutputParams => userStateOutputParamsCreator(
-          userProjectsOutputParamsFragmentDefaultOnlyIds(scopeOutputParams)
-        ),
-        userScopeOutputParams: outputParams
+        userStateOutputParamsCreator: scopeOutputParams => {
+          return userStateOutputParamsCreator(
+            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, scopeOutputParams)
+          );
+        },
+        userScopeOutputParams
       },
       propSets
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationStructure', PropTypes.shape({
-      outputParams: PropTypes.shape().isRequired
+      userScopeOutputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
@@ -151,5 +147,5 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {outpu
       }).isRequired
     }).isRequired]
   ],
-  'makeUserStateMutationContainer'
+  'userStateProjectMutationContainer'
 );

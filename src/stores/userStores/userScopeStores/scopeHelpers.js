@@ -71,7 +71,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
   (apolloConfig,
    {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    props) => {
-    const scopeOutputParams = R.prop(scopeName, userScopeOutputParams)
+    const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams)
     // Since we only store the id of the scope obj in the userState, if there are other queryParams
     // besides id we need to do a second query on the scope objs directly
     return composeWithComponentMaybeOrTaskChain([
@@ -103,8 +103,9 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
               // If we have to query for scope objs separately then
               // pass null to default to the id
               R.when(
-                scopeOutputParams => hasScopeParams(R.omit(['id'], scopeOutputParams)), R.always(null)
-              )(scopeOutputParams)
+                () => hasScopeParams(R.omit(['id'], scopeOutputParams)),
+                R.always(null)
+              )(userScopeOutputParams)
             )
           },
           // The props that identify the user state. Either the user state id or user id
@@ -148,10 +149,10 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
    props
   ) => {
     const scope = R.prop('scope', props);
-    const scopeOutputParams = R.prop(scopeName, userScopeOutputParams);
+    const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams)
     return R.ifElse(
       () => {
-        // If there are not scope params and userScopeOutputParams is minimized, we're done
+        // If there are not scope params and scopeOutputParams is minimized, we're done
         return R.and(
           R.complement(hasScopeParams)(scope),
           R.equals({id: 1}, scopeOutputParams)
@@ -243,7 +244,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           apolloConfig,
           {
             outputParams: userStateOutputParamsCreator(
-             userScopeOutputParams
+              userScopeOutputParams
             )
           },
           userStateWithCreatedOrUpdatedScopeObj
@@ -372,8 +373,8 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
           }
         )(userScopeObjs);
       }),
-      nameComponent('scopeQuery', ({render, children, scope, userScopeObjs}) => {
-        const scopeProps = R.prop(scopeName, scope)
+      nameComponent('scopeQuery', ({render, children, userScope, userScopeObjs}) => {
+        const scopeProps = R.prop(scopeName, userScope)
         return scopeQueryContainer(
           R.merge(
             {

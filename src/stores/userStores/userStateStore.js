@@ -23,7 +23,7 @@ import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {regionOutputParams} from '../scopeStores/region/regionStore';
 import {projectOutputParams} from '../scopeStores/project/projectStore';
-import {composeWithChainMDeep, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
+import {capitalize, composeWithChainMDeep, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
 import {activityOutputParamsFragment} from './activityStore';
 import {omitClientFields} from 'rescape-apollo';
@@ -97,33 +97,19 @@ export const userStateOutputParamsFull = () => {
 };
 
 /***
- * userRegions output params fragment when we only want the region ids or something custom..
- * The region property represents a single region and the other properties represent the relationship
- * between the user and the region. This can be properties that are stored on the server or only in cache.
- * @param {Object} [userRegionOutputParams] Default to {region: {id: 1}}
- */
-export const userRegionsOutputParamsFragmentDefaultOnlyIds = (userRegionOutputParams = {}) => {
-  return ({
-    userRegions: R.merge({
-        region: R.propOr({id: 1}, 'region', userRegionOutputParams)
-      },
-      R.omit(['region'], userRegionOutputParams)
-    )
-  });
-};
-
-/***
  * userProjects output params fragment when we only want the project ids or something custom.
  * The project property represents a single project and the other properties represent the relationship
  * between the user and the project. This can be properties that are stored on the server or only in cache.
- * @param {Object} [userProjectOutputParams] Defaults to {project: {id: 1}}
+ * @param {String} scopeName 'project' or 'region'
+ * @param {Object} [userScopeOutputParams] Defaults to {project: {id: 1}}
  */
-export const userProjectsOutputParamsFragmentDefaultOnlyIds = userProjectOutputParams => {
+export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScopeOutputParams = {}) => {
+  const capitalized = capitalize((scopeName));
   return {
-    userProjects: R.merge({
-        project: R.propOr({id: 1}, 'project', userProjectOutputParams)
+    [`user${capitalized}s`]: R.merge({
+        [scopeName]: R.propOr({id: 1}, scopeName, userScopeOutputParams)
       },
-      R.omit(['project'], userProjectOutputParams)
+      R.omit([scopeName], userScopeOutputParams)
     )
   };
 };
@@ -133,8 +119,8 @@ export const userProjectsOutputParamsFragmentDefaultOnlyIds = userProjectOutputP
  * only the scope ids of the user state are needed (because scope instances are already loaded, for instance)
  */
 export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
-  ...userRegionsOutputParamsFragmentDefaultOnlyIds(),
-  ...userProjectsOutputParamsFragmentDefaultOnlyIds()
+  ...userScopeOutputParamsFragmentDefaultOnlyIds('region'),
+  ...userScopeOutputParamsFragmentDefaultOnlyIds('project')
 });
 
 export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
@@ -302,14 +288,6 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputPa
         {
           options: {
             update: (store, response) => {
-
-              // Don't do a supplmenental cache update unless we have client directives in the output params
-              // which need to be saved
-              const outputParamsWithOmittedClientFields = omitClientFields(outputParams);
-              if (R.equals(outputParams, outputParamsWithOmittedClientFields)) {
-                return;
-              }
-
               // Add mutate to response.data so we dont' have to guess if it's a create or udpate
               const userState = reqStrPathThrowing(
                 'data.mutate.userState',
@@ -327,7 +305,8 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputPa
                 apolloConfig,
                 {
                   name: 'userState',
-                  outputParams,
+                  // Always pass the full params so can pick out the cache only props
+                  outputParams: userStateOutputParamsFull(),
                   // For merging cached array items of userState.data.userRegions|userProjedts
                   idPathLookup: userStateDataTypeIdPathLookup
                 },
