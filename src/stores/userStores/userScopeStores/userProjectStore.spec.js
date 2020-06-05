@@ -17,11 +17,11 @@ import {
 import {
   composeWithChainMDeep,
   defaultRunConfig,
+  expectKeysAtPath,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
-  strPathOr,
-  expectKeysAtPath, capitalize
+  strPathOr
 } from 'rescape-ramda';
 import * as R from 'ramda';
 import {
@@ -32,7 +32,6 @@ import {
   userStateMutateOutputParams,
   userStateOutputParamsOnlyIds
 } from '../userStateStore';
-import {createUserRegionWithDefaults, makeProjectMutationContainer, projectOutputParams} from '../../..';
 import moment from 'moment';
 import {
   createUserProjectWithDefaults,
