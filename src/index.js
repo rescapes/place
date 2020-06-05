@@ -61,7 +61,7 @@ export {
 export {
   regionOutputParams,
   regionOutputParamsMinimized,
-  readInputTypeMapper,
+  regionReadInputTypeMapper,
   makeRegionMutationContainer,
   makeRegionsQueryContainer
 } from './stores/scopeStores/region/regionStore';
@@ -76,9 +76,9 @@ export {
   userStateOutputParamsFull,
   userStateOutputParamsOnlyIds,
   makeCurrentUserStateQueryContainer,
-  userScopeOutputParamsFragmentDefaultOnlyIds
+  userScopeOutputParamsFragmentDefaultOnlyIds,
+  deleteSampleUserStateScopeObjectsTask
 } from './stores/userStores/userStateStore';
-
 
 export {
   userRegionsQueryContainer

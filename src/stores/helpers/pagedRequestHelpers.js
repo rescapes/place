@@ -47,7 +47,7 @@ const log = loggers.get('rescapeDefault');
  * This is used to filter out objects that can't easily be filtered out using direct props on the pagination query,
  * such as properties embedded in json data
  * @param {Object} queryConfig.outputParams
- * @param {Object} [queryConfig.readInputTypeMapper] This should not be needed, it specifies the graphql input type.
+ * @param {Object} [queryConfig.regionReadInputTypeMapper] This should not be needed, it specifies the graphql input type.
  * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinFor(capitalize(typeName))TypeRelatedReadInputType`}
  * Where objects are the paginated objects returned by the query and thus
  * `${capitalize(typeName)}TypeofPaginated{capitalize(typeName)}TypeMixinRelatedReadInputType` is the input type argument we can use for
@@ -171,7 +171,7 @@ export const queryUsingPaginationContainer = v(R.curry((
  * This is used to filter out objects that can't easily be filtered out using direct props on the pagination query,
  * such as properties embedded in json data
  * @param {Object} queryConfig.outputParams
- * @param {Object} [queryConfig.readInputTypeMapper] This should not be needed, it specifies the graphql input type.
+ * @param {Object} [queryConfig.regionReadInputTypeMapper] This should not be needed, it specifies the graphql input type.
  * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeFor${capitalize(typeName)}TypeMixinRelatedReadInputType`}
  * Where objects are the paginated objects returned by the query and thus
  * `${capitalize(typeName)}TypeofPaginatedTypeMixin${capitalize(typeName)}TypeRelatedReadInputType` is the input type argument we can use for

@@ -21,6 +21,7 @@ import {
 import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {
+  deleteSampleUserStateScopeObjectsTask,
   makeCurrentUserQueryContainer,
   makeCurrentUserStateQueryContainer,
   makeUserStateMutationContainer,
@@ -30,7 +31,6 @@ import {
 } from '../userStateStore';
 import {
   createUserRegionWithDefaults,
-  deleteSampleUserStateScopeObjectsTask,
   mutateSampleUserStateWithProjectAndRegionTask
 } from '../userStateStore.sample';
 import moment from 'moment';
@@ -225,7 +225,18 @@ describe('userRegionStore', () => {
         });
       },
       mapToMergedResponseAndInputs(
-      ({apolloConfig, userState}) => deleteSampleUserStateScopeObjectsTask(apolloConfig, userState),
+        ({apolloConfig, userState}) => deleteSampleUserStateScopeObjectsTask(
+          apolloConfig,
+          userState,
+          {
+            region: {
+              keyContains: 'test'
+            },
+            project: {
+              keyContains: 'test'
+            }
+          }
+        )
       ),
 
       // Resolve the user state

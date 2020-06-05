@@ -13,24 +13,26 @@
 import moment from 'moment';
 import {
   capitalize,
-  composeWithChain, mapToMergedResponseAndInputs,
+  composeWithChain,
+  mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   mapWithArgToPath,
   reqStrPathThrowing
 } from 'rescape-ramda';
-import {makeUserStateMutationContainer, userStateMutateOutputParams, userStateOutputParamsFull} from './userStateStore';
+import {
+  makeUserStateMutationContainer,
+  userStateMutateOutputParams,
+  userStateOutputParamsFull,
+  userStateReadInputTypeMapper
+} from './userStateStore';
 import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample';
 import * as R from 'ramda';
 import {of} from 'folktale/concurrency/task';
-import {
-  makeProjectMutationContainer,
-  makeRegionMutationContainer,
-  makeRegionsQueryContainer,
-  regionOutputParamsMinimized
-} from '../..';
+import {projectOutputParamsMinimized, regionOutputParamsMinimized, regionReadInputTypeMapper} from '../..';
 import {makeMutationRequestContainer, makeQueryContainer, omitClientFields} from 'rescape-apollo';
+import {projectReadInputTypeMapper} from '../scopeStores/project/projectStore';
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -76,85 +78,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
   ])({apolloConfig, user, regionKey, projectKey});
 };
 
-/***
- * Deletes the scope instances created by mutateSampleUserStateWithProjectAndRegionTask,
- * both the references in userState and the instances themselves
- * @param apolloConfig
- * @param userState
- * @return {*}
- */
-export const deleteSampleUserStateScopeObjectsTask = (apolloConfig, userState) => {
-  return composeWithChain([
-    mapToMergedResponseAndInputs(
-      // clearedScopeObjsUserState is the userState with the regions cleared
-      ({apolloConfig, clearedScopeObjsUserState: userState}) => deleteScopeObjectsTask(
-        apolloConfig,
-        {scopeName: 'project'},
-        userState)
-    ),
-    mapToMergedResponseAndInputs(
-      ({apolloConfig, userState}) => deleteScopeObjectsTask(
-        apolloConfig,
-        {scopeName: 'region'},
-        userState)
-    )
-  ])({apolloConfig, userState});
-};
 
-/**
- * Delete scope instances and the refereces to them in the user state that were created for tests
- * @param {Object} apolloConfig The Apollo config
- * @param {Object} scopeConfig
- * @param {Object} scopeConfig.scopeName e.g. 'projects' or 'regions'
- * @param {Oject} scopeConfig.scopeMutationContainer
- * @param userState
- * @return {*}
- */
-export const deleteScopeObjectsTask = (apolloConfig, {scopeName}, userState) => {
-  const capitalized = capitalize(scopeName);
-  return composeWithChain([
-    // Delete those test regions
-    mapToNamedResponseAndInputs(`deleted${capitalized}s`,
-      ({apolloConfig, scopeObjsToDelete}) => {
-        return R.traverse(
-          of,
-          scopeObj => {
-            return makeMutationRequestContainer(
-              apolloConfig,
-              {
-                name: scopeName,
-                outputParams: {id: 1}
-              },
-              R.set(R.lensProp('deleted'), moment().toISOString(true), scopeObj)
-            );
-          },
-          scopeObjsToDelete
-        );
-      }),
-    // Get test regions to delete
-    mapToNamedPathAndInputs('scopeObjsToDelete', `data.${scopeName}s`,
-      ({apolloConfig}) => {
-        return makeQueryContainer(
-          apolloConfig,
-          {name: `${scopeName}s`, outputParams: regionOutputParamsMinimized},
-          {keyContains: 'test'}
-        );
-      }
-    ),
-    // Remove existing regions from the userState
-    mapToNamedPathAndInputs('clearedScopeObjsUsersState', 'data.mutate.userState',
-      ({apolloConfig, userState}) => {
-        const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
-        return makeUserStateMutationContainer(
-          apolloConfig,
-          // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
-          {outputParams: omitClientFields(userStateOutputParamsFull())},
-          modifiedUserState
-        );
-      }
-    )
-  ])(({apolloConfig, userState}));
-};
 /***
  * Helper to create scope objects and set the user state to them
  * @param apolloClient

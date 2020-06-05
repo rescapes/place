@@ -21,9 +21,23 @@ import {
 } from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
-import {regionOutputParams} from '../scopeStores/region/regionStore';
-import {projectOutputParams} from '../scopeStores/project/projectStore';
-import {capitalize, composeWithChainMDeep, mapToNamedPathAndInputs, reqStrPathThrowing} from 'rescape-ramda';
+import {
+  regionOutputParams,
+  regionOutputParamsMinimized,
+  regionReadInputTypeMapper
+} from '../scopeStores/region/regionStore';
+import {
+  projectOutputParams,
+  projectOutputParamsMinimized,
+  projectReadInputTypeMapper
+} from '../scopeStores/project/projectStore';
+import {
+  capitalize,
+  composeWithChain,
+  composeWithChainMDeep, mapToMergedResponseAndInputs,
+  mapToNamedPathAndInputs, mapToNamedResponseAndInputs,
+  reqStrPathThrowing
+} from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
 import {activityOutputParamsFragment} from './activityStore';
 import {omitClientFields} from 'rescape-apollo';
@@ -273,7 +287,9 @@ export const makeAdminUserStateQueryContainer = v(R.curry(
   ], 'makeAdminUserStateQueryContainer');
 
 /**
- * Makes a UserState mutation container;
+ * Soft delete scope instances and the references to them in the user state
+ * TODO: There is currently no way to prevent deleting regions that do not belong to the user
+ * This will be fixed when Region ownership permissions are set up
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
  * @param {Object} mutationConfig
  * @param [Object] mutationConfig.outputParams OutputParams for the query of the mutation
@@ -332,3 +348,118 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputPa
   ],
   'makeUserStateMutationContainer'
 );
+
+/***
+ * Deletes the scope instances created by mutateSampleUserStateWithProjectAndRegionTask,
+ * both the references in userState and the instances themselves
+ * @param apolloConfig
+ * @param userState
+ * @param {Object} scopeProps Keyed by 'region' and 'project'. Values are search props for
+ * regions and projects of the userState to remove.
+ * E.g. {region: {keyContains: 'test'}, project: {keyContains: 'test'}}
+ * @return {*}
+ */
+export const deleteSampleUserStateScopeObjectsTask = (apolloConfig, userState, scopeProps) => {
+  return composeWithChain([
+    mapToMergedResponseAndInputs(
+      // clearedScopeObjsUserState is the userState with the regions cleared
+      ({apolloConfig, clearedScopeObjsUserState}) => {
+        return deleteScopeObjectsTask(
+          apolloConfig,
+          {
+            outputParams: projectOutputParamsMinimized,
+            readInputTypeMapper: projectReadInputTypeMapper,
+            scopeName: 'project',
+            scopeProps: R.merge(
+              reqStrPathThrowing('project', scopeProps),
+              // Only allow deleting projects owned by this user
+              {user: R.pick(['id'], reqStrPathThrowing('user', clearedScopeObjsUserState))}
+            )
+          },
+          clearedScopeObjsUserState
+        );
+      }
+    ),
+    mapToMergedResponseAndInputs(
+      ({apolloConfig, userState}) => {
+        return deleteScopeObjectsTask(
+          apolloConfig,
+          {
+            outputParams: regionOutputParamsMinimized,
+            readInputTypeMapper: regionReadInputTypeMapper,
+            scopeName: 'region',
+            scopeProps: reqStrPathThrowing('region', scopeProps)
+          },
+          userState
+        );
+      }
+    )
+  ])({apolloConfig, userState});
+};
+
+/**
+ * Soft delete scope instances and the references to them in the user state
+ * TODO: There is currently no way to prevent deleting regions that do not belong to the user
+ * This will be fixed when Region ownership permissions are set up
+ * @param {Object} apolloConfig The Apollo config
+ * @param {Object} scopeConfig
+ * @param {Object} scopeConfig.outputParams
+ * @param {Object} scopeConfig.readInputTypeMapper
+ * @param {Object} scopeConfig.scopeName e.g. 'project' or 'region'
+ * @param {Object} scopeConfig.scopeProps The scope props to match test the scope, such as {keyContains: 'test'}
+ * @param {Object} userState The user state for which to delete scope objects
+ * @return {Object} {deleted[scope name]s: deleted objects, clearedScopeObjsUserState: The user state post clearing}
+ */
+export const deleteScopeObjectsTask = (
+  apolloConfig,
+  {outputParams, readInputTypeMapper, scopeName, scopeProps},
+  userState
+) => {
+  const capitalized = capitalize(scopeName);
+  return composeWithChain([
+    // Delete those test scope objects
+    mapToNamedResponseAndInputs(`deleted${capitalized}s`,
+      ({apolloConfig, scopeObjsToDelete}) => {
+        return R.traverse(
+          of,
+          scopeObj => {
+            return makeMutationRequestContainer(
+              apolloConfig,
+              {
+                name: scopeName,
+                outputParams: {id: 1}
+              },
+              R.set(R.lensProp('deleted'), moment().toISOString(true), scopeObj)
+            );
+          },
+          scopeObjsToDelete
+        );
+      }),
+    // Get test scope objects to delete
+    mapToNamedPathAndInputs('scopeObjsToDelete', `data.${scopeName}s`,
+      ({apolloConfig}) => {
+        return makeQueryContainer(
+          apolloConfig,
+          {
+            name: `${scopeName}s`,
+            outputParams: outputParams,
+            readInputTypeMapper,
+          },
+          scopeProps
+        );
+      }
+    ),
+    // Remove existing scope objects from the userState
+    mapToNamedPathAndInputs('clearedScopeObjsUserState', 'data.mutate.userState',
+      ({apolloConfig, userState}) => {
+        const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
+        return makeUserStateMutationContainer(
+          apolloConfig,
+          // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
+          {outputParams: omitClientFields(userStateOutputParamsFull())},
+          modifiedUserState
+        );
+      }
+    )
+  ])(({apolloConfig, userState}));
+};

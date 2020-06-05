@@ -24,7 +24,7 @@ import {
 } from 'rescape-ramda';
 import {testAuthTask} from '../../helpers/testHelpers';
 import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample';
-import {readInputTypeMapper} from '../scopeStores/project/projectStore';
+import {projectReadInputTypeMapper} from '../scopeStores/project/projectStore';
 import {of} from 'folktale/concurrency/task';
 import * as R from 'ramda';
 
@@ -76,7 +76,7 @@ describe('variedRequestHelpers', () => {
               ],
               queryConfig: {
                 outputParams: projectOutputParams,
-                readInputTypeMapper: readInputTypeMapper
+                readInputTypeMapper: projectReadInputTypeMapper
               },
               queryContainer: makeProjectsQueryContainer
             }

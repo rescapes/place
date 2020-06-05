@@ -19,7 +19,7 @@ import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
 // Following this location.data is represented as follows:
 // TODO These value should be derived from the schema
-export const readInputTypeMapper = {
+export const regionReadInputTypeMapper = {
   //'data': 'DataTypeofLocationTypeRelatedReadInputType'
   'geojson': 'FeatureCollectionDataTypeofRegionTypeRelatedReadInputType'
 };
@@ -77,7 +77,7 @@ export const regionOutputParams = {
 export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeQueryContainer(
       apolloConfig,
-      {name: 'regions', readInputTypeMapper, outputParams},
+      {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams},
       props
     );
   }),
@@ -151,7 +151,7 @@ export const regionQueryVariationContainers = ({apolloConfig, regionConfig: {}})
       ],
       queryConfig: {
         outputParams: regionOutputParams,
-        readInputTypeMapper: readInputTypeMapper
+        readInputTypeMapper: regionReadInputTypeMapper
       },
       queryContainer: makeRegionsQueryContainer
     }
