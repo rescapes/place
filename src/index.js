@@ -81,11 +81,13 @@ export {
 } from './stores/userStores/userStateStore';
 
 export {
-  userRegionsQueryContainer
+  userRegionsQueryContainer,
+  userStateRegionMutationContainer
 } from './stores/userStores/userScopeStores/userRegionStore';
 
 export {
-  userStateProjectsQueryContainer, userStateProjectMutationContainer
+  userStateProjectsQueryContainer,
+  userStateProjectMutationContainer
 } from './stores/userStores/userScopeStores/userProjectStore';
 
 export {
