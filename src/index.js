@@ -82,7 +82,8 @@ export {
 
 export {
   userRegionsQueryContainer,
-  userStateRegionMutationContainer
+  userStateRegionMutationContainer,
+  userRegionOutputParams
 } from './stores/userStores/userScopeStores/userRegionStore';
 
 export {

@@ -22,6 +22,7 @@ import {
 import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
+import {renameKey} from 'rescape-ramda';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -109,9 +110,9 @@ export const userRegionsQueryContainer = v(R.curry(
  * @param {Object} propSets.userState Object matching the shape of a userState.
  * @param {Object} propSets.userState.data The data to mutate. For updates any array in data will replace that
  * on the server, but otherwise this data is deep merged with the existing data on the server
- * @param {Object} propSets.userScope Object matching the shape of the userRegion to mutate in the user state
- * @param {Object} propSets.userScope.region Object matching the shape of the region to mutate in the user state
- * @param {Number} propSets.userScope.region.id Required id of the region to update or add in userState.data.userRegions
+ * @param {Object} propSets.userRegion Object matching the shape of the userRegion to mutate in the user state
+ * @param {Object} propSets.userRegion.region Object matching the shape of the region to mutate in the user state
+ * @param {Number} propSets.userRegion.region.id Required id of the region to update or add in userState.data.userRegions
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
@@ -130,7 +131,7 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {output
         },
         userScopeOutputParams: outputParams
       },
-      propSets
+      renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
@@ -139,7 +140,7 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {output
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
-      userScope: PropTypes.shape({
+      userRegion: PropTypes.shape({
         region: PropTypes.shape()
       }).isRequired
     }).isRequired]

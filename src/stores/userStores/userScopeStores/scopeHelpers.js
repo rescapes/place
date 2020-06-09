@@ -203,7 +203,7 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
 export const makeUserStateScopeObjsMutationContainer = v(R.curry(
   (apolloConfig,
    {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
-   {userState, userScope}) => {
+   {userState, userScope, render}) => {
     const userScopeName = _userScopeName(scopeName);
     return composeWithChainMDeep(1, [
       // If there is a match with what the caller is submitting, update it, else add it
@@ -247,7 +247,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
               userScopeOutputParams
             )
           },
-          userStateWithCreatedOrUpdatedScopeObj
+          R.merge(userStateWithCreatedOrUpdatedScopeObj, {render})
         );
       },
       // Query for userScopeObjs that match the userScope
@@ -261,7 +261,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           return makeUserStateScopeObjsQueryContainer(
             apolloConfig,
             {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
-            {userState, scope: pickDeepPaths([`${scopeName}.id`], userScope)}
+            {userState, scope: pickDeepPaths([`${scopeName}.id`], userScope), render}
           );
         })
     ])({

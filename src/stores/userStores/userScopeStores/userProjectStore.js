@@ -22,6 +22,7 @@ import {
 import {projectOutputParams} from '../../../stores/scopeStores/project/projectStore';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
+import {renameKey} from 'rescape-ramda';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -110,9 +111,9 @@ export const userStateProjectsQueryContainer = v(R.curry((
  * @param {Object} propSets.userState Object matching the shape of a userState.
  * @param {Object} propSets.userState.data The data to mutate. For updates any array in data will replace that
  * on the server, but otherwise this data is deep merged with the existing data on the server
- * @param {Object} propSets.userScope Object matching the shape of userState.data[*}.userProject
- * @param {Object} propSets.userScope.project Object matching the shape of the project to mutate in the user state
- * @param {Number} propSets.userScope.project.id Required id of the project to update or add in userState.data.userProjects
+ * @param {Object} propSets.userProject Object matching the shape of userState.data[*}.userProject
+ * @param {Object} propSets.userProject.project Object matching the shape of the project to mutate in the user state
+ * @param {Number} propSets.userProject.project.id Required id of the project to update or add in userState.data.userProjects
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
@@ -131,7 +132,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userS
         },
         userScopeOutputParams
       },
-      propSets
+      renameKey(R.lensPath([]), 'userProject', 'userScope', propSets)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
@@ -140,7 +141,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userS
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
-      userScope: PropTypes.shape({
+      userProject: PropTypes.shape({
         project: PropTypes.shape({
           id: PropTypes.number.isRequired
         })

@@ -186,7 +186,7 @@ describe('userRegionStore', () => {
             },
             {
               userState,
-              userScope: createUserRegionWithDefaults(
+              userRegion: createUserRegionWithDefaults(
                 region
               )
             }
