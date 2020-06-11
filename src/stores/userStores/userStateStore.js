@@ -81,8 +81,8 @@ export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
     id: 1,
     user: {id: 1},
     data: userScopeFragmentOutputParams,
-    created: 1,
-    updated: 1
+    createdAt: 1,
+    updatedAt: 1
   });
 };
 
