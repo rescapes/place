@@ -71,7 +71,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
   (apolloConfig,
    {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    props) => {
-    const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams)
+    const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams);
     // Since we only store the id of the scope obj in the userState, if there are other queryParams
     // besides id we need to do a second query on the scope objs directly
     return composeWithComponentMaybeOrTaskChain([
@@ -149,7 +149,7 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
    props
   ) => {
     const scope = R.prop('scope', props);
-    const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams)
+    const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams);
     return R.ifElse(
       () => {
         // If there are not scope params and scopeOutputParams is minimized, we're done
@@ -205,9 +205,10 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
    {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    {userState, userScope, render}) => {
     const userScopeName = _userScopeName(scopeName);
-    return composeWithChainMDeep(1, [
+    return composeWithComponentMaybeOrTaskChain([
       // If there is a match with what the caller is submitting, update it, else add it
-      ({userStateOutputParamsCreator, userState, userScopeObjs}) => {
+      nameComponent('userStateMutation', userScopeObjsResponse => {
+        const userScopeObjs = strPathOr(null, `data.${userScopeName}`, userScopeObjsResponse);
         // We have 1 or 0 userScope objects. 1 for update case, 0 for insert case
         const userScopeObj = R.head(userScopeObjs);
         const userStateWithCreatedOrUpdatedScopeObj = R.over(
@@ -249,9 +250,9 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           },
           R.merge(userStateWithCreatedOrUpdatedScopeObj, {render})
         );
-      },
+      }),
       // Query for userScopeObjs that match the userScope
-      mapToNamedPathAndInputs('userScopeObjs', `data.${userScopeName}`,
+      nameComponent('userScopeObjs',
         ({
            apolloConfig,
            scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams,
@@ -262,8 +263,9 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
             apolloConfig,
             {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
             {userState, scope: pickDeepPaths([`${scopeName}.id`], userScope), render}
-          );
-        })
+          )
+        }
+      )
     ])({
       apolloConfig,
       scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams,
@@ -374,7 +376,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
         )(userScopeObjs);
       }),
       nameComponent('scopeQuery', ({render, children, userScope, userScopeObjs}) => {
-        const scopeProps = R.prop(scopeName, userScope)
+        const scopeProps = R.prop(scopeName, userScope);
         return scopeQueryContainer(
           R.merge(
             {

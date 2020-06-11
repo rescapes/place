@@ -80,7 +80,9 @@ export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
   return ({
     id: 1,
     user: {id: 1},
-    data: userScopeFragmentOutputParams
+    data: userScopeFragmentOutputParams,
+    created: 1,
+    updated: 1
   });
 };
 
