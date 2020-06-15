@@ -21,7 +21,7 @@ import {
   strPathOr
 } from 'rescape-ramda';
 import {
-  composeWithComponentMaybeOrTaskChain,
+  composeWithComponentMaybeOrTaskChain, composeWithComponentMaybeOrTaskChainWithOptionalComplete,
   containerForApolloType,
   getRenderPropFunction,
   makeQueryContainer,
@@ -49,6 +49,9 @@ const hasScopeParams = scope => {
  * Queries scope objects (Region, Project, etc) that are in the scope of the given user. If scopeArguments are
  * specified the returned scope objects are queried by the scopeArguments to possibly reduce those matching
  * @param {Object} apolloClient The Apollo Client
+ * @param {Object} requestConfig
+ * @param {Object} [requestConfig.completeWithRenderProp] Default true, set false if this is being
+ * used within another call to composeWithComponentMaybeOrTaskChain
  * @param {Function} scopeQueryContainer Task querying the scope class, such as makeRegionsQueryContainer
  * @param {String} scopeName The name of the scope, such as 'region' or 'project'
  * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
@@ -69,12 +72,16 @@ const hasScopeParams = scope => {
  */
 export const makeUserStateScopeObjsQueryContainer = v(R.curry(
   (apolloConfig,
-   {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
+   {completeWithRenderProp, scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    props) => {
     const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams);
     // Since we only store the id of the scope obj in the userState, if there are other queryParams
     // besides id we need to do a second query on the scope objs directly
-    return composeWithComponentMaybeOrTaskChain([
+
+    // Use composeWithComponentMaybeOrTaskChainWithOptionalComplete so that we can leave the
+    // composition incomplete if this is being combined with another call to
+    // composeWithComponentMaybeOrTaskChain
+    return composeWithComponentMaybeOrTaskChainWithOptionalComplete({completeWithRenderProp}, [
       // If we got Result.Ok and there are scope props, query for the user's scope objs
       // Result Object -> Task Object
       nameComponent('queryScopeObjsOfUserStateContainerIfUserScope', userStatesResponse => {
@@ -252,7 +259,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
         );
       }),
       // Query for userScopeObjs that match the userScope
-      nameComponent('userScopeObjs',
+      nameComponent('queryUserScopeObjs',
         ({
            apolloConfig,
            scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams,
@@ -261,9 +268,12 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           // Query for the userScope instance by id
           return makeUserStateScopeObjsQueryContainer(
             apolloConfig,
-            {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
+            {
+              // Set false to get back a function still expecting the render prop
+              completeWithRenderProp: false,
+              scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
             {userState, scope: pickDeepPaths([`${scopeName}.id`], userScope), render}
-          )
+          );
         }
       )
     ])({

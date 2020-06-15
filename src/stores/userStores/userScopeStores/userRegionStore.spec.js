@@ -171,7 +171,7 @@ describe('userRegionStore', () => {
     }, errors, done));
   }, 1000000);
 
-  test('userStateRegiontMutationContainer', done => {
+  test('userStateRegionMutationContainer', done => {
     const errors = [];
     const regionKey = `testRegionKey${moment().format('HH-mm-SS')}`;
     const regionName = `TestRegionName${moment().format('HH-mm-SS')}`;
