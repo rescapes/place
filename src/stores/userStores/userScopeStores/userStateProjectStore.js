@@ -12,14 +12,14 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
-import {makeRegionsQueryContainer} from '../../scopeStores/region/regionStore';
+import {makeProjectsQueryContainer} from '../../scopeStores/project/projectStore';
 import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore';
-import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore';
+import {projectOutputParams} from '../../../stores/scopeStores/project/projectStore';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
 import {renameKey} from 'rescape-ramda';
@@ -33,9 +33,9 @@ const readInputTypeMapper = {
   'user': 'UserTypeofUserStateTypeRelatedReadInputType'
 };
 
-export const userRegionOutputParams = (explicitRegionOuputParams = regionOutputParams) => R.mergeAll([
+export const userStateProjectOutputParams = (explicitProjectOutputParams = projectOutputParams) => R.mergeAll([
   {
-    region: explicitRegionOuputParams,
+    project: explicitProjectOutputParams,
     mapbox: {
       viewport: {
         latitude: 1,
@@ -45,105 +45,108 @@ export const userRegionOutputParams = (explicitRegionOuputParams = regionOutputP
     }
   },
   selectionOutputParamsFragment,
-  activityOutputParamsFragment
-]);
+  activityOutputParamsFragment]
+);
 
 /**
- * Queries regions that are in the scope of the user and the values of that region
+ * Queries projects that are in the scope of the user and the values of that project
  * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
  * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
  * @param {Object} outputParamSets Optional outputParam sets to override the defaults
- * @param {Object} [outputParamSets.userRegionOutputParams] Optional userRegion output params.
- * Defaults to regionStore.regionOutputParams
- * @param {Object} userStateArguments arguments for the UserStates query. {user: {id: }} is required to limit
+ * @param {Object} [outputParamSets.userStateProjectOutputParams] Optional userProject output params.
+ * Defaults to projectStore.projectOutputParams
+ * @param {Object} propSets The props used for the query. userState and project objects are required
+ * @param {Object} propSets.userState Props for the UserStates queries {user: {id: }} is required to limit
  * the query to one user
- * @param {Object} propSets The props used for the query. userState objects are required
- * @param {Object} propSets.userState Props for the UserStates query. {user: {id: }} is required to limit
- * the query to one user
- * @param {Object} propSets.userRegion Props for the Regions query. This can be {} or null to not filter.
- * @returns {Object} The resulting User Regions in a Task in {data: usersRegions: [...]}}
+ * @param {Object} propSets.userScope Object matching the shape of the userProject to mutate in the user state
+ * @param {Object} propSets.userScope.project Object matching the shape of the project to mutate in the user state
+ * @param {Number} propSets.userScope.project.id Required id of the project to update or add in userState.data.userProjec
+ * Projects will be limited to those returned by the UserState query. These should not specify ids since
+ * the UserState query selects the ids
+ * @returns {Object} The resulting Projects in a Task in {data: usersProjects: [...]}}
  */
-export const userRegionsQueryContainer = v(R.curry(
-  (apolloConfig, {userRegionOutputParams: explicitUserRegionOutputParams}, propSets) => {
-    const scopeName = 'region'
+export const userStateProjectsQueryContainer = v(R.curry((
+  apolloConfig, {
+    userProjectOutputParams: explicitUserProjectOutputParams
+  }, propSets) => {
+    const scopeName = 'project';
     return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
       {
-        scopeQueryContainer: makeRegionsQueryContainer,
+        scopeQueryContainer: makeProjectsQueryContainer,
         scopeName,
         readInputTypeMapper: userStateReadInputTypeMapper,
-        userStateOutputParamsCreator: scopeOutputParams => {
+        userStateOutputParamsCreator: userScopeOutputParams => {
           const params = userStateOutputParamsCreator(
-            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, scopeOutputParams)
+            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
           );
           return params;
         },
-        userScopeOutputParams: explicitUserRegionOutputParams || userRegionOutputParams()
+        userScopeOutputParams: explicitUserProjectOutputParams || userStateProjectOutputParams()
       },
-      renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
+      renameKey(R.lensPath([]), 'userProject', 'userScope', propSets)
     );
   }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['outputParamSets', PropTypes.shape({
-      regionOutputParams: PropTypes.shape()
+      projectOutputParams: PropTypes.shape(),
+      locationOutputParams: PropTypes.shape()
     })],
     ['propSets', PropTypes.shape({
-      userState: PropTypes.shape({
-        user: PropTypes.shape({
-          id: PropTypes.oneOfType([
-            PropTypes.string,
-            PropTypes.number
-          ])
-        }).isRequired
-      }).isRequired,
-      region: PropTypes.shape()
+      userState: PropTypes.shape().isRequired,
+      userProject: PropTypes.shape({
+        project: PropTypes.shape()
+      }).isRequired
     })]
-  ], 'userRegionsQueryContainer');
+  ], 'userStateProjectsQueryContainer');
 
 /**
- *  Mutates the given userState.data.userRegions with the given region
- * If a matching region is in userState.data.userRegions it is updated, otherwise it is added
+ *  Mutates the given userState.data.userProjects with the given project
+ * If a matching project is in userState.data.userProjects it is updated, otherwise it is added
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
- * @param [Object] outputParams outputParams Region output params for UserRegion
- * @param {Object} propSets Object matching the shape of a userState and region for the create or update
+ * @param [Object] userScopeOutputParams Project output params that will be returned for the mutated project
+ * within the user state
+ * @param {Object} propSets Object matching the shape of a userState and project for the create or update
  * @param {Object} propSets.userState Object matching the shape of a userState.
  * @param {Object} propSets.userState.data The data to mutate. For updates any array in data will replace that
  * on the server, but otherwise this data is deep merged with the existing data on the server
- * @param {Object} propSets.userRegion Object matching the shape of the userRegion to mutate in the user state
- * @param {Object} propSets.userRegion.region Object matching the shape of the region to mutate in the user state
- * @param {Number} propSets.userRegion.region.id Required id of the region to update or add in userState.data.userRegions
+ * @param {Object} propSets.userProject Object matching the shape of userState.data[*}.userProject
+ * @param {Object} propSets.userProject.project Object matching the shape of the project to mutate in the user state
+ * @param {Number} propSets.userProject.project.id Required id of the project to update or add in userState.data.userProjects
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {outputParams}, propSets) => {
-    const scopeName = 'region';
+export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userScopeOutputParams}, propSets) => {
+    const scopeName = 'project';
     return makeUserStateScopeObjsMutationContainer(
       apolloConfig,
       {
-        scopeQueryContainer: makeRegionsQueryContainer,
         scopeName,
+        scopeQueryContainer: makeProjectsQueryContainer,
         readInputTypeMapper,
-        userStateOutputParamsCreator: userScopeOutputParams => {
+        userStateOutputParamsCreator: scopeOutputParams => {
           return userStateOutputParamsCreator(
-            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, scopeOutputParams)
           );
         },
-        userScopeOutputParams: outputParams
+        userScopeOutputParams
       },
-      renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
+      renameKey(R.lensPath([]), 'userProject', 'userScope', propSets)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationStructure', PropTypes.shape({
-      outputParams: PropTypes.shape().isRequired
+      userScopeOutputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
-      userRegion: PropTypes.shape({
-        region: PropTypes.shape()
+      userProject: PropTypes.shape({
+        project: PropTypes.shape({
+          id: PropTypes.number.isRequired
+        })
       }).isRequired
     }).isRequired]
   ],
-  'userStateRegionMutationContainer'
+  'userStateProjectMutationContainer'
 );

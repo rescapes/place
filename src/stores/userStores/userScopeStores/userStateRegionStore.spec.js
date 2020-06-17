@@ -9,7 +9,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {userRegionOutputParams, userRegionsQueryContainer, userStateRegionMutationContainer} from './userRegionStore';
+import {userStateRegionOutputParams, userStateRegionsQueryContainer, userStateRegionMutationContainer} from './userRegionStore';
 import {
   composeWithChainMDeep,
   defaultRunConfig,
@@ -44,7 +44,7 @@ describe('userRegionStore', () => {
     R.composeK(
       // Get the authenticated user
       ({apolloConfig, user}) => {
-        return userRegionsQueryContainer(
+        return userStateRegionsQueryContainer(
           apolloConfig,
           // default output params
           {},
@@ -94,7 +94,7 @@ describe('userRegionStore', () => {
       // Filter for regions where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Regions so we can filter by Region
       ({apolloConfig, user}) => {
-        return userRegionsQueryContainer(
+        return userStateRegionsQueryContainer(
           apolloConfig,
           {},
           {
@@ -136,7 +136,7 @@ describe('userRegionStore', () => {
     const someRegionKeys = ['id', 'key', 'name', 'data'];
     R.composeK(
       ({apolloConfig, user}) => {
-        return userRegionsQueryContainer(
+        return userStateRegionsQueryContainer(
           apolloConfig,
           {},
           {
@@ -182,7 +182,7 @@ describe('userRegionStore', () => {
           return userStateRegionMutationContainer(
             apolloConfig,
             {
-              outputParams: userRegionOutputParams()
+              outputParams: userStateRegionOutputParams()
             },
             {
               userState,
