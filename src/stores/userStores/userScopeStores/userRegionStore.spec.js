@@ -51,8 +51,8 @@ describe('userRegionStore', () => {
           // props
           {
             userState: {user: R.pick(['id'], user)},
-            // The sample user is already limited to certain regions. We don't need to limit further
-            region: {}
+            // The sample user is already limited to certain user regions. We don't need to limit further
+            userRegion: {}
           }
         );
       },
@@ -99,7 +99,7 @@ describe('userRegionStore', () => {
           {},
           {
             userState: {user: R.pick(['id'], user)},
-            region: {geojson: {type: 'FeatureCollection'}}
+            userRegion: {region: {geojson: {type: 'FeatureCollection'}}}
           }
         );
       },
@@ -143,7 +143,7 @@ describe('userRegionStore', () => {
             userState: {
               user: R.pick(['id'], user)
             },
-            scope: {}
+            userRegion: {}
           }
         );
       },

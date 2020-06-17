@@ -84,7 +84,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
         },
         userScopeOutputParams: explicitUserProjectOutputParams || userProjectOutputParams()
       },
-      propSets
+      renameKey(R.lensPath([]), 'userProject', 'userScope', propSets)
     );
   }),
   [
@@ -95,7 +95,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
     })],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
-      userScope: PropTypes.shape({
+      userProject: PropTypes.shape({
         project: PropTypes.shape()
       }).isRequired
     })]

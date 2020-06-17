@@ -295,16 +295,20 @@ export const makeAdminUserStateQueryContainer = v(R.curry(
  * This will be fixed when Region ownership permissions are set up
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
  * @param {Object} mutationConfig
+ * @param {Boolean} [mutationConfig.skip] Default false, For components, if true the mutation isn't ready to run.
+ * Neuter the mutation function that is produced and warn if it's run. Also return skip=true to
+ * along with the mutation and result object in the component
  * @param [Object] mutationConfig.outputParams OutputParams for the query of the mutation
  * @param {Object} props Object matching the shape of a userState for the create or update
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
+export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip=false, outputParams}, props) => {
     return makeMutationRequestContainer(
       R.merge(
         apolloConfig,
         {
+          skip,
           options: {
             update: (store, response) => {
               // Add mutate to response.data so we dont' have to guess if it's a create or udpate
@@ -321,7 +325,7 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {outputPa
 
               // Mutate the cache to save settings to the database that are not stored on the server
               makeMutationWithClientDirectiveContainer(
-                apolloConfig,
+                R.merge(apolloConfig, {store}),
                 {
                   name: 'userState',
                   // Always pass the full params so can pick out the cache only props

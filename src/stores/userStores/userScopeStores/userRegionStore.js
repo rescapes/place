@@ -60,7 +60,7 @@ export const userRegionOutputParams = (explicitRegionOuputParams = regionOutputP
  * @param {Object} propSets The props used for the query. userState objects are required
  * @param {Object} propSets.userState Props for the UserStates query. {user: {id: }} is required to limit
  * the query to one user
- * @param {Object} propSets.scope Props for the Regions query. This can be {} or null to not filter.
+ * @param {Object} propSets.userRegion Props for the Regions query. This can be {} or null to not filter.
  * @returns {Object} The resulting User Regions in a Task in {data: usersRegions: [...]}}
  */
 export const userRegionsQueryContainer = v(R.curry(
@@ -80,7 +80,7 @@ export const userRegionsQueryContainer = v(R.curry(
         },
         userScopeOutputParams: explicitUserRegionOutputParams || userRegionOutputParams()
       },
-      propSets
+      renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
     );
   }),
   [

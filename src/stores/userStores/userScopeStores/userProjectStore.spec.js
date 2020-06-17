@@ -53,7 +53,7 @@ describe('userProjectStore', () => {
           {
             userState: {user: R.pick(['id'], user)},
             // Don't limit the projects further
-            userScope: {project: {}}
+            userProject: {project: {}}
           }
         );
       },
@@ -95,7 +95,7 @@ describe('userProjectStore', () => {
         return userStateProjectsQueryContainer(apolloConfig, {}, {
           userState: {user: R.pick(['id'], user)},
           // Limit by geojson (both pass this) and by name (1 passes this)
-          userScope: {
+          userProject: {
             project: {geojson: {type: 'FeatureCollection'}, name: projectNames[0]}
           }
         });
@@ -137,7 +137,7 @@ describe('userProjectStore', () => {
           {},
           {
             userState: {user: R.pick(['id'], user)},
-            userScope: {project: {}}
+            userProject: {project: {}}
           }
         );
       },

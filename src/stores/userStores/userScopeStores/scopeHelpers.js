@@ -11,17 +11,9 @@
 
 import * as R from 'ramda';
 import {v} from 'rescape-validate';
+import {capitalize, compact, mergeDeep, pickDeepPaths, reqPathThrowing, strPathOr} from 'rescape-ramda';
 import {
-  capitalize,
-  compact,
-  composeWithChainMDeep,
-  mapToNamedPathAndInputs,
-  pickDeepPaths,
-  reqPathThrowing,
-  strPathOr
-} from 'rescape-ramda';
-import {
-  composeWithComponentMaybeOrTaskChain, composeWithComponentMaybeOrTaskChainWithOptionalComplete,
+  composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   getRenderPropFunction,
   makeQueryContainer,
@@ -72,16 +64,12 @@ const hasScopeParams = scope => {
  */
 export const makeUserStateScopeObjsQueryContainer = v(R.curry(
   (apolloConfig,
-   {completeWithRenderProp, scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
+   {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    props) => {
     const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams);
     // Since we only store the id of the scope obj in the userState, if there are other queryParams
     // besides id we need to do a second query on the scope objs directly
-
-    // Use composeWithComponentMaybeOrTaskChainWithOptionalComplete so that we can leave the
-    // composition incomplete if this is being combined with another call to
-    // composeWithComponentMaybeOrTaskChain
-    return composeWithComponentMaybeOrTaskChainWithOptionalComplete({completeWithRenderProp}, [
+    return composeWithComponentMaybeOrTaskChain([
       // If we got Result.Ok and there are scope props, query for the user's scope objs
       // Result Object -> Task Object
       nameComponent('queryScopeObjsOfUserStateContainerIfUserScope', userStatesResponse => {
@@ -102,7 +90,11 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       // where scope names is 'Regions', 'Projects', etc
       nameComponent('queryUserStates', ({render, children, userState}) => {
         return makeQueryContainer(
-          apolloConfig,
+          mergeDeep(
+            apolloConfig,
+            // Keep all props
+            {options: {variables: R.identity}}
+          ),
           {
             name: 'userStates',
             readInputTypeMapper,
@@ -217,8 +209,8 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
       nameComponent('userStateMutation', userScopeObjsResponse => {
         const userScopeObjs = strPathOr(null, `data.${userScopeName}`, userScopeObjsResponse);
         // We have 1 or 0 userScope objects. 1 for update case, 0 for insert case
-        const userScopeObj = R.head(userScopeObjs);
-        const userStateWithCreatedOrUpdatedScopeObj = R.over(
+        const userScopeObj = R.head(userScopeObjs || []);
+        const userStateWithCreatedOrUpdatedScopeObj = userScopeObjs && R.over(
           R.lensPath(['data', userScopeName]),
           _scopeObjs => {
             const scopeObjs = R.defaultTo([], _scopeObjs);
@@ -251,6 +243,8 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
         return makeUserStateMutationContainer(
           apolloConfig,
           {
+            // Skip if we don't have the variable ready
+            skip: !userStateWithCreatedOrUpdatedScopeObj,
             outputParams: userStateOutputParamsCreator(
               userScopeOutputParams
             )
@@ -263,15 +257,12 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
         ({
            apolloConfig,
            scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams,
-           userState, userScope
+           userState, userScope, render
          }) => {
           // Query for the userScope instance by id
           return makeUserStateScopeObjsQueryContainer(
             apolloConfig,
-            {
-              // Set false to get back a function still expecting the render prop
-              completeWithRenderProp: false,
-              scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
+            {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
             {userState, scope: pickDeepPaths([`${scopeName}.id`], userScope), render}
           );
         }
@@ -279,7 +270,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
     ])({
       apolloConfig,
       scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams,
-      userState, userScope
+      userState, userScope, render
     });
   }),
   [
@@ -389,12 +380,12 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
         const scopeProps = R.prop(scopeName, userScope);
         return scopeQueryContainer(
           R.merge(
+            apolloConfig,
             {
               options: {
                 skip: !R.length(userScopeObjs || [])
               }
-            },
-            apolloConfig
+            }
           ),
           {
             outputParams: scopeOutputParams
