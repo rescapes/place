@@ -13,7 +13,7 @@ import {
   userStateOutputParamsCreator,
   userStateProjectMutationContainer,
   userStateProjectsQueryContainer
-} from './userProjectStore';
+} from './userStateProjectStore';
 import {
   composeWithChainMDeep,
   defaultRunConfig,

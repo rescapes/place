@@ -86,7 +86,7 @@ export const userStateRegionsQueryContainer = v(R.curry(
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['outputParamSets', PropTypes.shape({
-      regionOutputParams: PropTypes.shape()
+      userRegionOutputParams: PropTypes.shape()
     })],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape({
@@ -97,7 +97,9 @@ export const userStateRegionsQueryContainer = v(R.curry(
           ])
         }).isRequired
       }).isRequired,
-      region: PropTypes.shape()
+      userRegion: PropTypes.shape({
+        userRegion: PropTypes.shape
+      })
     })]
   ], 'userStateRegionsQueryContainer');
 
@@ -116,7 +118,7 @@ export const userStateRegionsQueryContainer = v(R.curry(
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {outputParams}, propSets) => {
+export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRegionOutputParams}, propSets) => {
     const scopeName = 'region';
     return makeUserStateScopeObjsMutationContainer(
       apolloConfig,
@@ -129,14 +131,14 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {output
             userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
           );
         },
-        userScopeOutputParams: outputParams
+        userScopeOutputParams: userRegionOutputParams
       },
       renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationStructure', PropTypes.shape({
-      outputParams: PropTypes.shape().isRequired
+      userRegionOutputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,

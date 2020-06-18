@@ -90,14 +90,13 @@ export const userStateProjectsQueryContainer = v(R.curry((
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['outputParamSets', PropTypes.shape({
-      projectOutputParams: PropTypes.shape(),
-      locationOutputParams: PropTypes.shape()
+      projectOutputParams: PropTypes.shape()
     })],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
       userProject: PropTypes.shape({
         project: PropTypes.shape()
-      }).isRequired
+      })
     })]
   ], 'userStateProjectsQueryContainer');
 
@@ -117,7 +116,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userScopeOutputParams}, propSets) => {
+export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userProjectOutputParams}, propSets) => {
     const scopeName = 'project';
     return makeUserStateScopeObjsMutationContainer(
       apolloConfig,
@@ -130,14 +129,14 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userS
             userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, scopeOutputParams)
           );
         },
-        userScopeOutputParams
+        userScopeOutputParams: userScopeOutputParams
       },
       renameKey(R.lensPath([]), 'userProject', 'userScope', propSets)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationStructure', PropTypes.shape({
-      userScopeOutputParams: PropTypes.shape().isRequired
+      userProjectOutputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape().isRequired,
