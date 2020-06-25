@@ -11,7 +11,7 @@
 
 import * as R from 'ramda';
 import {v} from 'rescape-validate';
-import {makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
+import {filterOutReadOnlyVersionProps, makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
@@ -120,7 +120,7 @@ export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputPara
       name: 'project',
       outputParams
     },
-    props
+    filterOutReadOnlyVersionProps(props)
   );
 }), [
   ['apolloConfig', PropTypes.shape().isRequired],

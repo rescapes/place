@@ -10,7 +10,7 @@
  */
 
 import * as R from 'ramda';
-import {makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
+import {filterOutReadOnlyVersionProps, makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
@@ -118,7 +118,7 @@ export const makeRegionMutationContainer = v(R.curry(
       name: 'region',
       outputParams
     },
-    props
+    filterOutReadOnlyVersionProps(props)
   )
 ), [
   ['apolloConfig', PropTypes.shape().isRequired],

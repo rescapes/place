@@ -182,7 +182,7 @@ describe('userProjectStore', () => {
             apolloConfig,
             {
               // We only need each project id back from userState.data.userProjects: [...]
-              userScopeOutputParams: {project: {id: 1}}
+              userProjectOutputParams: {project: {id: 1}}
             },
             {
               userState,

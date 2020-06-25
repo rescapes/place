@@ -5,6 +5,7 @@ import moment from 'moment';
 import {fromPromised, of} from 'folktale/concurrency/task';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
+import {filterOutReadOnlyVersionProps} from 'rescape-apollo';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -63,7 +64,8 @@ export const createSampleProjectContainer = ({apolloClient}, props) => {
         // This would the locations selected for the project within the confines of the query above
         locations: []
       },
-      props)
+      props
+    )
   );
 };
 
@@ -97,8 +99,7 @@ export const createSampleProjectsContainer = v((apolloConfig, props) => {
     }, 10)
   );
 }, [
-  ['apolloConfig', PropTypes.shape({
-  }).isRequired],
+  ['apolloConfig', PropTypes.shape({}).isRequired],
   ['props', PropTypes.shape({
     user: PropTypes.shape({
       id: PropTypes.number.isRequired

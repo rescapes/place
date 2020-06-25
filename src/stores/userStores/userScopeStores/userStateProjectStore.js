@@ -129,7 +129,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userP
             userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, scopeOutputParams)
           );
         },
-        userScopeOutputParams: userScopeOutputParams
+        userScopeOutputParams: userProjectOutputParams
       },
       renameKey(R.lensPath([]), 'userProject', 'userScope', propSets)
     );

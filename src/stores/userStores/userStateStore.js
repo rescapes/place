@@ -12,11 +12,11 @@
 import * as R from 'ramda';
 import {
   addMutateKeyToMutationResponse,
-  createCacheOnlyProps,
+  createCacheOnlyProps, filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
   makeMutationWithClientDirectiveContainer,
   makeQueryContainer,
-  mergeCacheable
+  mergeCacheable, VERSION_PROPS
 } from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
@@ -33,7 +33,7 @@ import {
 import {
   capitalize,
   composeWithChain,
-  composeWithChainMDeep, mapToMergedResponseAndInputs,
+  composeWithChainMDeep, filterWithKeys, mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs, mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from 'rescape-ramda';
@@ -141,6 +141,7 @@ export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
 });
 
 export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
+
 
 // Paths to prop values that we don't store in the database, but only in the cache
 // The prop paths are marked with a client directive when querying (see settingsOutputParams)
@@ -344,7 +345,7 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip=fal
         outputParams
       },
       // Remove client-side only values
-      filterOutCacheOnlyObjs(props)
+      R.compose(filterOutReadOnlyVersionProps, filterOutCacheOnlyObjs)(props)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
@@ -436,7 +437,12 @@ export const deleteScopeObjectsTask = (
                 name: scopeName,
                 outputParams: {id: 1}
               },
-              R.set(R.lensProp('deleted'), moment().toISOString(true), scopeObj)
+              R.compose(
+                // And the deleted datetime
+                R.set(R.lensProp('deleted'), moment().toISOString(true)),
+                // Just pass the id
+                R.pick(['id']),
+              )(scopeObj)
             );
           },
           scopeObjsToDelete
