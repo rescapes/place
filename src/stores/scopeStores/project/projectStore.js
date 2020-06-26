@@ -71,8 +71,8 @@ export const projectOutputParams = {
  * @param {Object} apolloClient An authorized Apollo Client
  * @params {Object} queryConfig
  * @params {Object} queryConfig.outputParams OutputParams for the query such as projectOutputParams
- * @params {Object} props Arguments for the Regions query. This can be {} or null to not filter.
- * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
+ * @params {Object} props Arguments for the Projects query. This can be {} or null to not filter.
+ * @returns {Task} A Task containing the Projects in an object with obj.data.projects or errors in obj.errors
  */
 export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeQueryContainer(
@@ -109,7 +109,15 @@ export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams
  *       ]
  *    }
  *  ]
- *  @param {Object} props Object matching the shape of a region. E.g. {id: 1, city: "Stavanger", data: {foo: 2}}
+ *  @param {Object} props Object matching the shape of a project. E.g. {id: 1, city: "Stavanger", data: {foo: 2}}
+ *  Optionally specify the project props at props.project in order to pass other props through the container
+ *  @param {Object} [props.project] Optional to use as the project to save if passing other props through the container.
+ *  If you use this option you must specify in apolloConfig
+ *  {
+ *     variables: (props) => {
+ *      return R.propOr({}, 'project', props);
+ *    },
+ *  }
  *  @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
@@ -120,7 +128,10 @@ export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputPara
       name: 'project',
       outputParams
     },
-    filterOutReadOnlyVersionProps(props)
+    filterOutReadOnlyVersionProps(R.when(
+      R.propOr(false, 'project'),
+      R.prop('project')
+    )(props))
   );
 }), [
   ['apolloConfig', PropTypes.shape().isRequired],

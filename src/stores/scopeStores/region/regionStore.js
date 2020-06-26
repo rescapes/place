@@ -95,7 +95,7 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams}
  * Makes a Region mutation
  * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo component
  * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
- * @param [Object] [outputParams] Defaault regionOutputParamsMinimized output parameters for the query in this style json format:
+ * @param [Object] [outputParams] Default regionOutputParamsMinimized output parameters for the query in this style json format:
  *  {id: 1,
  *   {
  *        data: {
@@ -107,8 +107,16 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams}
  *       }
  *    }
  * }
- *  @param {Object} props Object matching the shape of a region. E.g. {id: 1, city: "Stavanger", data: {foo: 2}}
- *  @returns {Task|Object} A container. For ApolloClient mutations we get a Task back. For Apollo components
+ *  @param {Object} props Object matching the shape of a region. E.g. {id: 1, key: 'canada', name: 'Canada', data: {foo: 2}}
+ *  Optionally specify the region props at props.region in order to pass other props through the container
+ *  @param {Object} [props.region] Optional to use as the region to save if passing other props through the container.
+ *  If you use this option you must specify in apolloConfig
+ *  {
+ *     variables: (props) => {
+ *      return R.propOr({}, 'region', props);
+ *    }
+ *  }
+ *  @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const makeRegionMutationContainer = v(R.curry(
@@ -118,7 +126,10 @@ export const makeRegionMutationContainer = v(R.curry(
       name: 'region',
       outputParams
     },
-    filterOutReadOnlyVersionProps(props)
+    filterOutReadOnlyVersionProps(R.when(
+      R.propOr(false, 'region'),
+      R.prop('region')
+    )(props))
   )
 ), [
   ['apolloConfig', PropTypes.shape().isRequired],
