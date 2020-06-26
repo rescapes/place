@@ -128,10 +128,13 @@ export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputPara
       name: 'project',
       outputParams
     },
-    filterOutReadOnlyVersionProps(R.when(
-      R.propOr(false, 'project'),
-      R.prop('project')
-    )(props))
+    R.over(
+      R.ifElse(R.propOr(false, 'project'), R.lensProp('project'), R.lensPath([])),
+      project => {
+        return filterOutReadOnlyVersionProps(project);
+      },
+      props
+    )
   );
 }), [
   ['apolloConfig', PropTypes.shape().isRequired],

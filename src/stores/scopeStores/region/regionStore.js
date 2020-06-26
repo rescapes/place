@@ -100,7 +100,7 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams}
  *   {
  *        data: {
  *         foo: 1,
-*          properties: {
+ *          properties: {
  *             type: 1,
  *         },
  *         bar: 1,
@@ -120,16 +120,19 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig, {outputParams}
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const makeRegionMutationContainer = v(R.curry(
-  (apolloConfig, {outputParams=regionOutputParamsMinimized}, props) => makeMutationRequestContainer(
+  (apolloConfig, {outputParams = regionOutputParamsMinimized}, props) => makeMutationRequestContainer(
     apolloConfig,
     {
       name: 'region',
       outputParams
     },
-    filterOutReadOnlyVersionProps(R.when(
-      R.propOr(false, 'region'),
-      R.prop('region')
-    )(props))
+    R.over(
+      R.ifElse(R.propOr(false, 'region'), R.lensProp('region'), R.lensPath([])),
+      region => {
+        return filterOutReadOnlyVersionProps(region);
+      },
+      props
+    )
   )
 ), [
   ['apolloConfig', PropTypes.shape().isRequired],
