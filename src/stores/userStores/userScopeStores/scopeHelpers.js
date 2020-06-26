@@ -11,10 +11,19 @@
 
 import * as R from 'ramda';
 import {v} from 'rescape-validate';
-import {capitalize, compact, mergeDeep, pickDeepPaths, reqPathThrowing, strPathOr} from 'rescape-ramda';
+import {
+  capitalize,
+  compact,
+  mergeDeep, mergeDeepAll,
+  pickDeepPaths,
+  renameKey,
+  reqPathThrowing,
+  strPath,
+  strPathOr
+} from 'rescape-ramda';
 import {
   composeWithComponentMaybeOrTaskChain,
-  containerForApolloType,
+  containerForApolloType, filterOutReadOnlyVersionProps,
   getRenderPropFunction,
   makeQueryContainer,
   nameComponent
@@ -207,36 +216,47 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
     return composeWithComponentMaybeOrTaskChain([
       // If there is a match with what the caller is submitting, update it, else add it
       nameComponent('userStateMutation', userScopeObjsResponse => {
-        const userScopeObjs = strPathOr(null, `data.${userScopeName}`, userScopeObjsResponse);
-        // We have 1 or 0 userScope objects. 1 for update case, 0 for insert case
-        const userScopeObj = R.head(userScopeObjs || []);
-        const userStateWithCreatedOrUpdatedScopeObj = userScopeObjs && R.over(
+        // Find the userScopeObjs that we just queried for
+        // There might be none if nothing in our userState exists yet
+        const existingUserScopeObjs = strPathOr(null, `data.${userScopeName}`, userScopeObjsResponse);
+
+        // Operate on the userScope instances in useState
+        const userStateWithCreatedOrUpdatedScopeObj = R.over(
           R.lensPath(['data', userScopeName]),
-          _scopeObjs => {
-            const scopeObjs = R.defaultTo([], _scopeObjs);
-            const matchingScopeInstance = R.find(
-              // Find the matching project if there is one
-              scopeObj => R.propEq('id', R.propOr(null, 'id', userScopeObj))(scopeObj),
-              scopeObjs
-            );
-            const index = R.indexOf(matchingScopeInstance, scopeObjs);
-            return R.ifElse(
-              () => R.lte(0, index),
-              // If we are updated merge in the matching obj
-              scopeObjs => {
-                return R.over(
-                  R.lensIndex(index),
-                  scopeObj => {
-                    return R.merge(scopeObj, userScope);
-                  },
-                  scopeObjs
-                );
+          (userScopeObjs = []) => {
+            // First merge userScope with what's in the given userState
+            const [existingUserScopeObjsById, userScopeObjsById, userScopeById] = R.map(
+              userScopeObjs => {
+                return R.compose(
+                  userScopeObjs => R.indexBy(
+                    userScopeObj => {
+                      return reqPathThrowing(
+                        [scopeName, 'id'],
+                        userScopeObj
+                      );
+                    },
+                    userScopeObjs
+                  ),
+                  R.map(
+                    userScopeObj => {
+                      // Filter out values of the userScopeObjs that are read-only
+                      // This is the best place to filter out these embedded values
+                      return filterOutReadOnlyVersionProps(userScopeObj);
+                    }
+                  )
+                )(userScopeObjs);
               },
-              // Otherwise insert it
-              scopeObjs => {
-                return R.concat(scopeObjs, [userScope]);
-              }
-            )(scopeObjs);
+              [existingUserScopeObjs, userScopeObjs, [userScope]]
+            );
+            // Merge deep all userScopeObjs. When matches exist prefer those in userState over existing,
+            // and prefer userScope over all.
+            const merged = mergeDeepAll([
+              existingUserScopeObjsById,
+              userScopeObjsById,
+              userScopeById
+            ]);
+            // Return the merged values
+            return R.values(merged);
           }
         )(userState);
         // Save the changes to the userScope objs
@@ -244,7 +264,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           apolloConfig,
           {
             // Skip if we don't have the variable ready
-            skip: !userStateWithCreatedOrUpdatedScopeObj,
+            skip: R.propOr(false, 'loading', userScopeObjsResponse),
             outputParams: userStateOutputParamsCreator(
               userScopeOutputParams
             )
@@ -263,7 +283,11 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           return makeUserStateScopeObjsQueryContainer(
             apolloConfig,
             {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
-            {userState, scope: pickDeepPaths([`${scopeName}.id`], userScope), render}
+            {
+              // We can only query userState by id or user.id
+              userState: R.pick(['id', 'user'], userState),
+              scope: pickDeepPaths([`${scopeName}.id`], userScope), render
+            }
           );
         }
       )
@@ -398,10 +422,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
               children,
               // Map each scope object to its id
               idIn: R.map(
-                R.compose(
-                  s => parseInt(s),
-                  userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj)
-                ),
+                userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj),
                 // If we don't have any we'll skip the query above
                 userScopeObjs || []
               )

@@ -334,7 +334,7 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip=fal
                   // For merging cached array items of userState.data.userRegions|userProjedts
                   idPathLookup: userStateDataTypeIdPathLookup
                 },
-                propsWithCacheOnlyItems
+                filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
               );
             }
           }
@@ -344,8 +344,11 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip=fal
         name: 'userState',
         outputParams
       },
-      // Remove client-side only values
-      R.compose(filterOutReadOnlyVersionProps, filterOutCacheOnlyObjs)(props)
+      // Remove client-side only values from userState
+      R.compose(
+        filterOutReadOnlyVersionProps,
+        filterOutCacheOnlyObjs
+      )(props)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],

@@ -23,6 +23,7 @@ import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
 import {renameKey} from 'rescape-ramda';
+import {filterOutReadOnlyVersionProps} from 'rescape-apollo';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -133,7 +134,12 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRe
         },
         userScopeOutputParams: userRegionOutputParams
       },
-      renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
+      R.compose(
+        propSets => renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets),
+        propSets => R.over(R.lensPath(['userRegion', 'region']), region => {
+          return filterOutReadOnlyVersionProps(region)
+        }, propSets)
+      )(propSets)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],

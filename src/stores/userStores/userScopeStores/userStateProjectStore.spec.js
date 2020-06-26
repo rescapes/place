@@ -40,6 +40,8 @@ import {
 } from '../userStateStore.sample';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample';
+import {selectionOutputParamsFragment} from '../selectionStore';
+import {activityOutputParamsFragment} from '../activityStore';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -175,14 +177,48 @@ describe('userProjectStore', () => {
     const projectKey = `testProjectKey${moment().format('HH-mm-SS')}`;
     const projectName = `TestProjectName${moment().format('HH-mm-SS')}`;
     R.composeK(
-      // Add the new project to the UserState
-      mapToNamedResponseAndInputs('userState',
+      // Modify the new project in the UserState
+      mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
         ({apolloConfig, userState, project}) => {
           return userStateProjectMutationContainer(
             apolloConfig,
             {
               // We only need each project id back from userState.data.userProjects: [...]
-              userProjectOutputParams: {project: {id: 1}}
+              // and anything we want to merge with the updates
+              userProjectOutputParams: {
+                project: {id: 1},
+                // The output of the existing (isSelected: false) will be overwritten by our new value
+                // It doesn't matter if we query for this or not since it will be overwritten
+                ...selectionOutputParamsFragment,
+                // By outputting this we ensure it survives the update (since we don't set it below)
+                // If we didn't put this here, {selection: {isSelected: true}} would be the only thing
+                // written to the updated userProject
+                ...activityOutputParamsFragment
+              }
+            },
+            {
+              userState,
+              userProject: R.merge(
+                createUserProjectWithDefaults(
+                  project
+                ), {selection: {isSelected: true}}
+              )
+            }
+          );
+        }
+      ),
+      // Add the new project to the UserState
+      mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
+        ({apolloConfig, userState, project}) => {
+          return userStateProjectMutationContainer(
+            apolloConfig,
+            {
+              // We only need each project id back from userState.data.userProjects: [...]
+              userProjectOutputParams: {
+                project: {id: 1},
+                ...selectionOutputParamsFragment,
+                ...activityOutputParamsFragment
+              }
             },
             {
               userState,
@@ -242,7 +278,7 @@ describe('userProjectStore', () => {
     )({}).run().listen(defaultRunConfig({
       onResolved:
         ({project, userState}) => {
-          expect(strPathOr(null, 'data.updateUserState.userState.data.userProjects.0.project.id', userState)).toEqual(project.id);
+          expect(strPathOr(null, 'data.userProjects.0.project.id', userState)).toEqual(project.id);
           done();
         }
     }, errors, done));

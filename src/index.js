@@ -115,3 +115,6 @@ export {
 
 export {queryVariationContainers} from './stores/helpers/variedRequestHelpers';
 
+export {
+  makeUserStateScopeObjsQueryContainer
+} from './stores/userStores/userScopeStores/scopeHelpers'
