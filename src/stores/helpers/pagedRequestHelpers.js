@@ -61,27 +61,30 @@ export const queryUsingPaginationContainer = v(R.curry((
   {apolloConfig, regionConfig},
   {
     pageSize,
-    typeName, name, filterObjsByConfig, outputParams, readInputTypeMapper, normalizeProps
+    typeName,
+    name,
+    outputParams,
+    readInputTypeMapper,
+    normalizeProps = R.identity,
+    postProcessObjsByConfig = (config, objs) => objs
   },
   {pageSize: propsPageSize, ...props}
 ) => {
   // Prefer the props page size and then page size and defult to 100
   const pageSizeOrDefault = propsPageSize || pageSize || 100;
-  const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
-  const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
-  const className = capitalize(typeName)
+  const className = capitalize(typeName);
   const readInputTypeMapperOrDefault = R.defaultTo(
     {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
     readInputTypeMapper
   );
-  log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
+  log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizeProps(props))}`);
 
-  return composeWithChainMDeep(1, [
+  return composeWithChain([
     // Extract the paginated objects, removing those that don't pass regionConfig's feature property filters
     objs => {
       return containerForApolloType(apolloConfig,
         R.when(R.identity, objs => {
-            return filterObjsByConfigOrDefault({regionConfig}, objs);
+            return postProcessObjsByConfig({regionConfig}, objs);
           }
         )(objs)
       );
@@ -125,7 +128,7 @@ export const queryUsingPaginationContainer = v(R.curry((
           pageSize: pageSizeOrDefault,
           page,
           readInputTypeMapper: readInputTypeMapperOrDefault,
-          normalizeProps: normalizePropsOrDefault
+          normalizeProps
         },
         props
       );
@@ -199,7 +202,7 @@ export const queryPageContainer = v(R.curry((
     }
     const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
     const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
-    const className = capitalize(typeName)
+    const className = capitalize(typeName);
     const readInputTypeMapperOrDefault = R.defaultTo(
       {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
       readInputTypeMapper

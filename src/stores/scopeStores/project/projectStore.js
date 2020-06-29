@@ -11,7 +11,12 @@
 
 import * as R from 'ramda';
 import {v} from 'rescape-validate';
-import {filterOutReadOnlyVersionProps, makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
+import {
+  filterOutReadOnlyVersionProps,
+  makeMutationRequestContainer,
+  makeQueryContainer,
+  versionOutputParamsMixin
+} from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
@@ -21,7 +26,6 @@ import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 // Following this location.data is represented as follows:
 // TODO These value should be derived from the schema
 export const projectReadInputTypeMapper = {
-  //'data': 'DataTypeofLocationTypeRelatedReadInputType'
   'geojson': 'FeatureCollectionDataTypeofProjectTypeRelatedReadInputType',
   'user': 'UserTypeofProjectTypeRelatedReadInputType'
 };
@@ -38,9 +42,6 @@ export const projectOutputParams = {
   id: 1,
   key: 1,
   name: 1,
-  createdAt: 1,
-  updatedAt: 1,
-
   geojson: {
     type: 1,
     features: {
@@ -62,7 +63,8 @@ export const projectOutputParams = {
       }
     },
     mapboxOutputParamsFragment
-  )
+  ),
+  ...versionOutputParamsMixin
 };
 
 /**
@@ -121,7 +123,7 @@ export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams
  *  @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputParams=projectOutputParamsMinimized}, props) => {
+export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputParams = projectOutputParamsMinimized}, props) => {
   return makeMutationRequestContainer(
     apolloConfig,
     {
@@ -129,7 +131,7 @@ export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputPara
       outputParams
     },
     R.over(
-      R.ifElse(R.propOr(false, 'project'), R.lensProp('project'), R.lensPath([])),
+      R.propOr(false, 'project', props) ? R.lensProp('project') : R.lensPath([]),
       project => {
         return filterOutReadOnlyVersionProps(project);
       },

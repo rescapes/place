@@ -239,14 +239,17 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
                   ),
                   R.map(
                     userScopeObj => {
-                      // Filter out values of the userScopeObjs that are read-only
-                      // This is the best place to filter out these embedded values
-                      return filterOutReadOnlyVersionProps(userScopeObj);
+                      // Modify the scope instance to only contain the id. We can't submit any changes to the scope instance
+                      return R.over(
+                        R.lensProp(scopeName),
+                        scopeInstance => R.pick(['id'], scopeInstance),
+                        userScopeObj
+                      )
                     }
                   )
                 )(userScopeObjs);
               },
-              [existingUserScopeObjs, userScopeObjs, [userScope]]
+              [existingUserScopeObjs || [], userScopeObjs || [], [userScope]]
             );
             // Merge deep all userScopeObjs. When matches exist prefer those in userState over existing,
             // and prefer userScope over all.

@@ -9,30 +9,19 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-import moment from 'moment';
 import {
   capitalize,
   composeWithChain,
-  mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   mapWithArgToPath,
   reqStrPathThrowing
 } from 'rescape-ramda';
-import {
-  makeUserStateMutationContainer,
-  userStateMutateOutputParams,
-  userStateOutputParamsFull,
-  userStateReadInputTypeMapper
-} from './userStateStore';
+import {makeUserStateMutationContainer, userStateMutateOutputParams} from './userStateStore';
 import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample';
 import * as R from 'ramda';
 import {of} from 'folktale/concurrency/task';
-import {projectOutputParamsMinimized, regionOutputParamsMinimized, regionReadInputTypeMapper} from '../..';
-import {makeMutationRequestContainer, makeQueryContainer, omitClientFields} from 'rescape-apollo';
-import {projectReadInputTypeMapper} from '../scopeStores/project/projectStore';
 
 /***
  * Helper to create scope objects and set the user state to them

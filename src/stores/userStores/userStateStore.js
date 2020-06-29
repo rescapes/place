@@ -16,7 +16,7 @@ import {
   makeMutationRequestContainer,
   makeMutationWithClientDirectiveContainer,
   makeQueryContainer,
-  mergeCacheable, VERSION_PROPS
+  mergeCacheable, VERSION_PROPS, versionOutputParamsMixin
 } from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
@@ -65,7 +65,8 @@ export const userOutputParams = {
   email: 1,
   isStaff: 1,
   isActive: 1,
-  dateJoined: 1
+  dateJoined: 1,
+  ...versionOutputParamsMixin
 };
 
 
@@ -81,8 +82,7 @@ export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
     id: 1,
     user: {id: 1},
     data: userScopeFragmentOutputParams,
-    createdAt: 1,
-    updatedAt: 1
+    ...versionOutputParamsMixin
   });
 };
 

@@ -10,7 +10,12 @@
  */
 
 import * as R from 'ramda';
-import {filterOutReadOnlyVersionProps, makeMutationRequestContainer, makeQueryContainer} from 'rescape-apollo';
+import {
+  filterOutReadOnlyVersionProps,
+  makeMutationRequestContainer,
+  makeQueryContainer,
+  versionOutputParamsMixin
+} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
@@ -35,8 +40,6 @@ export const regionOutputParams = {
   deleted: 1,
   key: 1,
   name: 1,
-  createdAt: 1,
-  updatedAt: 1,
   geojson: {
     type: 1,
     features: {
@@ -62,8 +65,8 @@ export const regionOutputParams = {
         zoom: 1
       }
     }
-
-  }
+  },
+  ...versionOutputParamsMixin
 };
 
 
@@ -127,7 +130,7 @@ export const makeRegionMutationContainer = v(R.curry(
       outputParams
     },
     R.over(
-      R.ifElse(R.propOr(false, 'region'), R.lensProp('region'), R.lensPath([])),
+      R.propOr(false, 'region', props) ? R.lensProp('region') : R.lensPath([]),
       region => {
         return filterOutReadOnlyVersionProps(region);
       },
