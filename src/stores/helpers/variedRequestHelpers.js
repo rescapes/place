@@ -121,7 +121,7 @@ export const queryVariationContainers = R.curry((
                   ({apolloConfig, queryConfig, args, props, normalizeProps}) => {
                     // Perform the normal query
                     return queryContainer(
-                      apolloConfig,
+                      {apolloConfig, regionConfig},
                       R.mergeAll([queryConfig, args]),
                       normalizeProps(props)
                     );

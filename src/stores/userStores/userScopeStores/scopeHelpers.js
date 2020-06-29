@@ -244,7 +244,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
                         R.lensProp(scopeName),
                         scopeInstance => R.pick(['id'], scopeInstance),
                         userScopeObj
-                      )
+                      );
                     }
                   )
                 )(userScopeObjs);
@@ -406,14 +406,15 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
       nameComponent('scopeQuery', ({render, children, userScope, userScopeObjs}) => {
         const scopeProps = R.prop(scopeName, userScope);
         return scopeQueryContainer(
-          R.merge(
-            apolloConfig,
-            {
-              options: {
-                skip: !R.length(userScopeObjs || [])
+          {
+            apolloConfig: R.merge(apolloConfig,
+              {
+                options: {
+                  skip: !R.length(userScopeObjs || [])
+                }
               }
-            }
-          ),
+            )
+          },
           {
             outputParams: scopeOutputParams
           },

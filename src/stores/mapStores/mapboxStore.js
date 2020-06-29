@@ -251,7 +251,7 @@ const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
       return reqStrPathThrowing('data.projects.0.data.mapbox', value);
     },
     makeProjectsQueryContainer(
-      apolloConfig,
+      {apolloConfig},
       {
         name: 'projects',
         readInputTypeMapper,
@@ -268,7 +268,7 @@ const _makeRegionsQueryResolveMapboxContainer = (apolloConfig, outputParams, pro
       return reqStrPathThrowing('data.regions.0.data.mapbox', value);
     },
     makeRegionsQueryContainer(
-      apolloConfig,
+      {apolloConfig},
       {name: 'regions', readInputTypeMapper, outputParams: regionMapboxOutputParamsCreator(outputParams)},
       props
     )

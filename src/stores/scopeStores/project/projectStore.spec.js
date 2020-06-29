@@ -25,9 +25,9 @@ import {of} from 'folktale/concurrency/task';
 
 const someProjectKeys = ['id', 'key', 'geojson'];
 describe('projectStore', () => {
-  const errors = [];
   test('makeProjectMutationContainer', done => {
     expect.assertions(1);
+    const errors = [];
     composeWithChain([
       mapToNamedPathAndInputs('project', 'data.createProject.project',
         ({apolloClient, userId}) => createSampleProjectContainer({apolloClient}, {user: {id: userId}})
@@ -47,6 +47,7 @@ describe('projectStore', () => {
 
   test('queryProjectVariationsContainers', done => {
     expect.assertions(4);
+    const errors = [];
     const task = composeWithChain([
       mapToNamedResponseAndInputs('projectsPagedAll',
         ({projects, variations}) => {
@@ -93,7 +94,6 @@ describe('projectStore', () => {
         }
       )
     ])({});
-    const errors = [];
     task.run().listen(defaultRunConfig({
       onResolved: ({projectsFull, projectsMinimized, projectsPaged, projectsPagedAll}) => {
         expect(R.length(reqStrPathThrowing('data.projects', projectsFull))).toEqual(10);

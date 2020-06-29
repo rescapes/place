@@ -198,7 +198,7 @@ export const queryPageContainer = v(R.curry((
     const pageSizeOrDefault = propsPageSize || pageSize || 100;
     const pageOrDefault = propsPage || page;
     if (!pageOrDefault) {
-      throw new Error(`Neither props.page queryConfig.page was specified. Props: ${JSON.stringify(props)}`);
+      throw new Error(`Neither props.page nor queryConfig.page was specified. Props: ${JSON.stringify(props)}`);
     }
     const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
     const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);

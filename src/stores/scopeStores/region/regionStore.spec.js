@@ -49,15 +49,15 @@ describe('regionStore', () => {
   test('makeRegionsQueryContainer', done => {
     const errors = [];
     R.composeK(
-      ({apolloClient, region}) => makeRegionsQueryContainer(
-        {apolloClient},
+      ({apolloConfig, region}) => makeRegionsQueryContainer(
+        {apolloConfig},
         {outputParams: regionOutputParams},
         {key: reqStrPathThrowing('key', region)}
       ),
       mapToNamedPathAndInputs('region', 'data.createRegion.region',
-        ({apolloClient}) => createSampleRegionContainer({apolloClient})
+        ({apolloConfig}) => createSampleRegionContainer(apolloConfig)
       ),
-      mapToNamedPathAndInputs('apolloClient', 'apolloClient',
+      mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask
       )
     )().run().listen(defaultRunConfig({

@@ -69,14 +69,16 @@ export const projectOutputParams = {
 
 /**
  * Queries projects
- * @params {Object} apolloConfig The Apollo config. See makeQueryContainer for options
+ * @params {Object} config
+ * @params {Object} config.apolloConfig The Apollo config. See makeQueryContainer for options
+ * @params {Object} config.regionConfig. Currently unused
  * @param {Object} apolloClient An authorized Apollo Client
  * @params {Object} queryConfig
  * @params {Object} queryConfig.outputParams OutputParams for the query such as projectOutputParams
  * @params {Object} props Arguments for the Projects query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Projects in an object with obj.data.projects or errors in obj.errors
  */
-export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
+export const makeProjectsQueryContainer = v(R.curry(({apolloConfig, regionConfig}, {outputParams}, props) => {
     return makeQueryContainer(
       apolloConfig,
       {name: 'projects', readInputTypeMapper: projectReadInputTypeMapper, outputParams},
