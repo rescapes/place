@@ -18,7 +18,7 @@ import {
   composeWithMapMDeep,
   mapToNamedResponseAndInputs,
   reqPathThrowing,
-  reqStrPathThrowing,
+  reqStrPathThrowing, toArrayIfNot,
   traverseReduceWhile
 } from 'rescape-ramda';
 import PropTypes from 'prop-types';
@@ -54,7 +54,8 @@ const log = loggers.get('rescapeDefault');
  * filtering
  * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
  * passed to the query. Defaults to passing all of them
- * @param {Object} props
+ * @param {Object|{[Object]}} props The props for querying the object. This can also be an array of filter objects
+ * that are or'd, since the objects parameter is a toMany the api expects an array of arguments
  * @returns {Task|Object} Object or Task resolving to the all the matching objects of all pages
  */
 export const queryUsingPaginationContainer = v(R.curry((
@@ -77,6 +78,9 @@ export const queryUsingPaginationContainer = v(R.curry((
     {objects: `[${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType]`},
     readInputTypeMapper
   );
+  // Make object props and array if not.
+  const propsAsArray = toArrayIfNot(props)
+
   log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizeProps(props))}`);
 
   return composeWithChain([
@@ -109,7 +113,7 @@ export const queryUsingPaginationContainer = v(R.curry((
               page
             },
             {previousResults, firstPageLocations: firstPageObjs},
-            props
+            propsAsArray
           );
         },
         of([]),
@@ -130,7 +134,7 @@ export const queryUsingPaginationContainer = v(R.curry((
           readInputTypeMapper: readInputTypeMapperOrDefault,
           normalizeProps
         },
-        props
+        propsAsArray
       );
     }
   ])(1);
