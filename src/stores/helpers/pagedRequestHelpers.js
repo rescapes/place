@@ -74,7 +74,7 @@ export const queryUsingPaginationContainer = v(R.curry((
   const pageSizeOrDefault = propsPageSize || pageSize || 100;
   const className = capitalize(typeName);
   const readInputTypeMapperOrDefault = R.defaultTo(
-    {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
+    {objects: `[${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType]`},
     readInputTypeMapper
   );
   log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizeProps(props))}`);

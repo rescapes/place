@@ -152,7 +152,8 @@ export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputPara
 /**
  * Returns and object with different versions of the project query container: 'minimized', 'paginated', 'paginatedAll'
  * @param apolloConfig
- * @return {Object} keyed by the variation, valued by the query container
+ * @return {Object} keyed by the variation: 'projects', 'projectsMinimized', 'projectsPaginated', 'projectsPaginatedAll',
+ * valued by the query container
  */
 export const projectQueryVariationContainers = ({apolloConfig, regionConfig: {}}) => {
   return queryVariationContainers(
