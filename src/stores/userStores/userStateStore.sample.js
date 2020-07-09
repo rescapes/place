@@ -74,9 +74,9 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
  * @param user
  * @param regionKeys
  * @param projectKeys
- * @returns {Object} {projects, regions, userState}
+ * @returns {Task<Object>} Task resolving to {projects, regions, userState}
  */
-export const mutateSampleUserStateWithProjectsAndRegions = ({apolloConfig, user, regionKeys, projectKeys}) => {
+export const mutateSampleUserStateWithProjectsAndRegionsContainer = ({apolloConfig, user, regionKeys, projectKeys}) => {
   return composeWithChain([
     // Set the user state of the given user to the region and project
     mapToNamedPathAndInputs('userState', 'data.mutate.userState',

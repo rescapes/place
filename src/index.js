@@ -110,7 +110,7 @@ export {
   createUserProjectWithDefaults,
   createUserRegionWithDefaults,
   mutateSampleUserStateWithProjectAndRegionTask,
-  mutateSampleUserStateWithProjectsAndRegions
+  mutateSampleUserStateWithProjectsAndRegionsContainer
 } from './stores/userStores/userStateStore.sample';
 
 export {queryVariationContainers} from './stores/helpers/variedRequestHelpers';

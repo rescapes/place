@@ -36,7 +36,7 @@ import moment from 'moment';
 import {
   createUserProjectWithDefaults,
   mutateSampleUserStateWithProjectAndRegionTask,
-  mutateSampleUserStateWithProjectsAndRegions
+  mutateSampleUserStateWithProjectsAndRegionsContainer
 } from '../userStateStore.sample';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample';
@@ -105,7 +105,7 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, projects, regions}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectsAndRegions({
+        return mutateSampleUserStateWithProjectsAndRegionsContainer({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKeys: ['earth'],
