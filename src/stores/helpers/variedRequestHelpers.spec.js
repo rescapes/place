@@ -32,6 +32,13 @@ describe('variedRequestHelpers', () => {
   test('queryVariationContainers', done => {
     expect.assertions(4);
     const task = composeWithChain([
+      mapToNamedResponseAndInputs('projectsPagedAllMinimized',
+        ({projects, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          // Returns all 10 with 2 queries of pageSize 5
+          return reqStrPathThrowing('projectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+        }
+      ),
       mapToNamedResponseAndInputs('projectsPagedAll',
         ({projects, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
@@ -72,7 +79,8 @@ describe('variedRequestHelpers', () => {
                 {type: 'paginated', args: {}},
                 // Note that we don't pass page size here because we want to be able to query for different pages
                 // We either pass page and page size here or in props instead
-                {type: 'paginatedAll', args: {}}
+                {type: 'paginatedAll', args: {}},
+                {type:'paginatedAll', name: 'paginatedAllMinimized', args: {outputParams: projectOutputParamsMinimized}}
               ],
               queryConfig: {
                 outputParams: projectOutputParams,
@@ -99,11 +107,12 @@ describe('variedRequestHelpers', () => {
     ])({});
     const errors = [];
     task.run().listen(defaultRunConfig({
-      onResolved: ({projectsFull, projectsMinimized, projectsPaged, projectsPagedAll}) => {
+      onResolved: ({projectsFull, projectsMinimized, projectsPaged, projectsPagedAll, projectsPagedAllMinimized}) => {
         expect(R.length(reqStrPathThrowing('data.projects', projectsFull))).toEqual(10);
         expect(R.length(reqStrPathThrowing('data.projects', projectsMinimized))).toEqual(10);
         expect(R.length(reqStrPathThrowing('objects', projectsPaged))).toEqual(3);
         expect(R.length(projectsPagedAll)).toEqual(10);
+        expect(R.length(projectsPagedAllMinimized)).toEqual(10);
       }
     }, errors, done));
   });

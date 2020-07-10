@@ -20,15 +20,15 @@ import {
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
+import {createReadInputTypeMapper} from 'rescape-apollo'
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
 // Following this location.data is represented as follows:
 // TODO These value should be derived from the schema
-export const projectReadInputTypeMapper = {
-  'geojson': 'FeatureCollectionDataTypeofProjectTypeRelatedReadInputType',
-  'user': 'UserTypeofProjectTypeRelatedReadInputType'
-};
+export const projectReadInputTypeMapper =  createReadInputTypeMapper(
+  'project', ['geojson', 'user']
+);
 
 export const projectOutputParamsMinimized = {
   id: 1,

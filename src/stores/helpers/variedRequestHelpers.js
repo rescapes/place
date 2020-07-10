@@ -24,12 +24,14 @@ import {containerForApolloType} from 'rescape-apollo';
  * Returns the queryContainer using the given outputParams. The name of the query is name + capitalized(type)
  * {
  *   type: string or null or undefined
+ *   name: Use as the name instead of teh type
  *   args: arguments to pass to the container
  *   outputParams
  * }
  * A paged version of queryContainer
  * {
  *   type: 'paged'
+ *   name: 'someNameOtherThanType'
  *   outputParams
  * }
  * @param {Function} [queryConfig.postProcessObjsByConfig] Optional function expecting ({regionConfig}, objs)
@@ -52,9 +54,9 @@ export const queryVariationContainers = R.curry((
   }
 ) => {
   return R.fromPairs(R.map(
-    ({type, args}) => {
+    ({type, name: typeName, args}) => {
       const pluralName = `${name}s`;
-      const key = `${pluralName}${capitalize(type || '')}`;
+      const key = `${pluralName}${capitalize(typeName || type || '')}`;
       return [
         key,
         props => {
