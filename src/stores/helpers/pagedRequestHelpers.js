@@ -208,7 +208,7 @@ export const queryPageContainer = v(R.curry((
     const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
     const className = capitalize(typeName);
     const readInputTypeMapperOrDefault = R.defaultTo(
-      {objects: `${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType`},
+      {objects: `[${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType]`},
       readInputTypeMapper
     );
     log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
