@@ -332,7 +332,7 @@ export const queryObjectsPaginatedContainer = v(R.curry(
  * @param {Object} queryConfig.readInputTypeMapper Maps complex input types
  * @param {Function} [queryConfig.normalizeProps] Optionally takes props and limits what is passed to the query.
  * Default to passing everything
- * @param {Object} props
+ * @param {Object|[Object]} props Props to resolve the instance. This can also be a list of prop sets
  * @return {Task | Maybe} resolving to the page of location results
  * @private
  */
@@ -351,13 +351,14 @@ export const _paginatedQueryContainer = (
         pages: 1,
         hasNext: 1,
         hasPrev: 1,
-        // Pagination objects are arrays. This allows passing list of prop sets, but normally we just need one
-        objects: toArrayIfNot(outputParams)
+        objects: outputParams
       },
       readInputTypeMapper,
       normalizeProps
     },
-    {pageSize, page, objects: props}
+    // put the props in objects as an array. Pagination queries always accept plural objects, since it's
+    // a many-to-many relationship. But normally we only pass one set of props
+    {pageSize, page, objects: toArrayIfNot(props)}
   );
 };
 
