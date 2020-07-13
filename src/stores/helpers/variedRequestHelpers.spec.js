@@ -80,7 +80,7 @@ describe('variedRequestHelpers', () => {
                 // Note that we don't pass page size here because we want to be able to query for different pages
                 // We either pass page and page size here or in props instead
                 {type: 'paginatedAll', args: {}},
-                {type:'paginatedAll', name: 'paginatedAllMinimized', args: {outputParams: projectOutputParamsMinimized}}
+                {name: 'paginatedAllMinimized', type:'paginatedAll', args: {outputParams: projectOutputParamsMinimized}}
               ],
               queryConfig: {
                 outputParams: projectOutputParams,
