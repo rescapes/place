@@ -157,7 +157,7 @@ export const queryUsingPaginationContainer = v(R.curry((
     readInputTypeMapper: PropTypes.shape()
   })
   ],
-  ['props', PropTypes.shape().isRequired]
+  ['props', PropTypes.arrayOf(PropTypes.shape().isRequired).isRequired]
 ], 'queryUsingPaginationContainer');
 
 /**
@@ -345,7 +345,15 @@ export const _paginatedQueryContainer = (
     apolloConfig,
     {
       name,
-      outputParams: {pageSize: 1, page: 1, pages: 1, hasNext: 1, hasPrev: 1, objects: outputParams},
+      outputParams: {
+        pageSize: 1,
+        page: 1,
+        pages: 1,
+        hasNext: 1,
+        hasPrev: 1,
+        // Pagination objects are arrays. This allows passing list of prop sets, but normally we just need one
+        objects: toArrayIfNot(outputParams)
+      },
       readInputTypeMapper,
       normalizeProps
     },
