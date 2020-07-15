@@ -30,7 +30,7 @@ import * as R from 'ramda';
 
 describe('variedRequestHelpers', () => {
   test('queryVariationContainers', done => {
-    expect.assertions(4);
+    expect.assertions(5);
     const task = composeWithChain([
       mapToNamedResponseAndInputs('projectsPagedAllMinimized',
         ({projects, variations}) => {
@@ -110,7 +110,7 @@ describe('variedRequestHelpers', () => {
       onResolved: ({projectsFull, projectsMinimized, projectsPaged, projectsPagedAll, projectsPagedAllMinimized}) => {
         expect(R.length(reqStrPathThrowing('data.projects', projectsFull))).toEqual(10);
         expect(R.length(reqStrPathThrowing('data.projects', projectsMinimized))).toEqual(10);
-        expect(R.length(reqStrPathThrowing('objects', projectsPaged))).toEqual(3);
+        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged))).toEqual(3);
         expect(R.length(projectsPagedAll)).toEqual(10);
         expect(R.length(projectsPagedAllMinimized)).toEqual(10);
       }

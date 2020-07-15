@@ -122,10 +122,10 @@ test('queryPageContainer', done => {
   const errors = [];
   task.run().listen(defaultRunConfig({
     onResolved: ({projectsPaged1, projectsPaged10}) => {
-      expect(R.length(reqStrPathThrowing('objects', projectsPaged1))).toEqual(1);
-      expect(reqStrPathThrowing('pages', projectsPaged1)).toEqual(10);
-      expect(R.length(reqStrPathThrowing('objects', projectsPaged10))).toEqual(1);
-      expect(reqStrPathThrowing('hasNext', projectsPaged10)).toEqual(false);
+      expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged1))).toEqual(1);
+      expect(reqStrPathThrowing('data.projectsPaginated.pages', projectsPaged1)).toEqual(10);
+      expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged10))).toEqual(1);
+      expect(reqStrPathThrowing('data.projectsPaginated.hasNext', projectsPaged10)).toEqual(false);
     }
   }, errors, done));
 }, 100000);

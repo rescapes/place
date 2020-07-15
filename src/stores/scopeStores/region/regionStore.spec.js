@@ -123,7 +123,7 @@ describe('regionStore', () => {
       onResolved: ({regionsFull, regionsMinimized, regionsPaged, regionsPagedAll}) => {
         expect(R.length(reqStrPathThrowing('data.regions', regionsFull))).toEqual(10);
         expect(R.length(reqStrPathThrowing('data.regions', regionsMinimized))).toEqual(10);
-        expect(R.length(reqStrPathThrowing('objects', regionsPaged))).toEqual(3);
+        expect(R.length(reqStrPathThrowing('data.regionsPaginated.objects', regionsPaged))).toEqual(3);
         expect(R.length(regionsPagedAll)).toEqual(10);
       }
     }, errors, done));

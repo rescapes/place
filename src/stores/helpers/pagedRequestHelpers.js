@@ -157,7 +157,7 @@ export const queryUsingPaginationContainer = v(R.curry((
     readInputTypeMapper: PropTypes.shape()
   })
   ],
-  ['props', PropTypes.arrayOf(PropTypes.shape().isRequired).isRequired]
+  ['props', PropTypes.oneOfType([PropTypes.shape(), PropTypes.arrayOf(PropTypes.shape())]).isRequired]
 ], 'queryUsingPaginationContainer');
 
 /**
@@ -220,10 +220,16 @@ export const queryPageContainer = v(R.curry((
           R.when(
             R.identity,
             objs => {
-              return filterObjsByConfigOrDefault(
-                {regionConfig},
-                reqPathThrowing(['data', name], objs)
-              );
+              // Filter if needed. Note that we don't mess with the pagination numbers even if
+              // we filter stuff out, so this probably isn't sustainable
+              return R.over(
+                R.lensPath(['data', name, 'objects']),
+                objects => filterObjsByConfigOrDefault(
+                  {regionConfig},
+                  objects
+                ),
+                objs
+              )
             }
           )(objs)
         );
