@@ -34,10 +34,6 @@ import {containerForApolloType} from 'rescape-apollo';
  *   name: 'someNameOtherThanType'
  *   outputParams
  * }
- * @param {Function} [queryConfig.postProcessObjsByConfig] Optional function expecting ({regionConfig}, objs)
- * to filter or maps objects returned by pagination based on the regionConfig, where objs are all objects returned by pagination.
- * This is used to filter out objects that can't easily be filtered out using direct props on the pagination query,
- * such as properties embedded in json data. I can be also used to add derived data to results
  * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
  * passed to the query. Defaults to passing all of them
  * @param {Object} props
@@ -49,7 +45,6 @@ export const queryVariationContainers = R.curry((
     requestTypes,
     queryConfig,
     queryContainer,
-    postProcessObjsByConfig = (config, objs) => objs,
     normalizeProps = R.identity
   }
 ) => {
@@ -73,7 +68,6 @@ export const queryVariationContainers = R.curry((
                         typeName: name,
                         name: `${pluralName}Paginated`
                       },
-                      postProcessObjsByConfig,
                       normalizeProps,
                       args
                     ])
@@ -94,7 +88,6 @@ export const queryVariationContainers = R.curry((
                           typeName: name,
                           name: `${pluralName}Paginated`
                         },
-                        postProcessObjsByConfig,
                         normalizeProps,
                         args
                       ]
@@ -108,27 +101,12 @@ export const queryVariationContainers = R.curry((
             // Type is optional here
             [R.T,
               () => {
-                return composeWithChain([
-                  objs => {
-                    // postProcessObjsByConfig (defaults to R.identity)
-                    return containerForApolloType(apolloConfig,
-                      R.when(
-                        R.identity,
-                        objs => {
-                          return postProcessObjsByConfig({regionConfig}, objs);
-                        }
-                      )(objs)
-                    );
-                  },
-                  ({apolloConfig, queryConfig, args, props, normalizeProps}) => {
-                    // Perform the normal query
-                    return queryContainer(
-                      {apolloConfig, regionConfig},
-                      R.mergeAll([queryConfig, args]),
-                      normalizeProps(props)
-                    );
-                  }
-                ])({apolloConfig, regionConfig, queryConfig, args, normalizeProps, props});
+                // Perform the normal query
+                return queryContainer(
+                  {apolloConfig, regionConfig},
+                  R.mergeAll([queryConfig, args]),
+                  normalizeProps(props)
+                );
               }
             ]
           ])(type);
