@@ -27,7 +27,7 @@ import {createReadInputTypeMapper} from 'rescape-apollo'
 // Following this location.data is represented as follows:
 // TODO These value should be derived from the schema
 export const projectReadInputTypeMapper =  createReadInputTypeMapper(
-  'project', ['geojson', 'user']
+  'project', ['geojson', 'user', 'locations']
 );
 
 export const projectOutputParamsMinimized = {

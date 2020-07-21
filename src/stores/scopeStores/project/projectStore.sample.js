@@ -1,11 +1,19 @@
-import {makeProjectMutationContainer, projectOutputParams} from './projectStore';
-import {composeWithChain, mergeDeep, reqStrPathThrowing, traverseReduce} from 'rescape-ramda';
+import {makeProjectMutationContainer, makeProjectsQueryContainer, projectOutputParams} from './projectStore';
+import {
+  composeWithChain,
+  mapToNamedResponseAndInputs,
+  mapToResponseAndInputs,
+  mergeDeep,
+  reqStrPathThrowing,
+  traverseReduce
+} from 'rescape-ramda';
 import * as R from 'ramda';
 import moment from 'moment';
 import {fromPromised, of} from 'folktale/concurrency/task';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {filterOutReadOnlyVersionProps} from 'rescape-apollo';
+import {queryAndDeleteIfFoundContainer} from '../../userStores/userScopeStores/scopeHelpers';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -19,54 +27,71 @@ import {filterOutReadOnlyVersionProps} from 'rescape-apollo';
  */
 
 /**
- * Creates a sample project
- * @params apolloClient
+ * Creates a sample project. first if it exists
+ * @params apolloConfig
  * @params {Object} props Overrides the defauls. {user: {id}} is required
  * @params {Object} props.user
  * @params {Number} props.user.id Required
  * @return {Object} {data: project: {...}}
  */
-export const createSampleProjectContainer = ({apolloClient}, props) => {
-  return makeProjectMutationContainer(
-    {apolloClient},
-    {outputParams: projectOutputParams},
-    mergeDeep(
-      {
-        key: 'downtownPincher',
-        name: 'Downtown Pincher Creek',
-        geojson: {
-          'type': 'FeatureCollection',
-          'features': [{
-            "type": "Feature",
-            "geometry": {
-              "type": "Polygon",
-              "coordinates": [[[49.54147, -114.17439], [49.42996, -114.17439], [49.42996, -113.72635], [49.54147, -113.72635], [49.54147, -114.174390]]]
-            }
-          }]
-        },
-        data: {
-          // Limits the possible locations by query
-          locations: {
-            params: {
-              city: 'Pincher Creek',
-              state: 'Alberta',
-              country: 'Canada'
+export const createSampleProjectContainer = (apolloConfig, props) => {
+  return composeWithChain([
+    ({props}) => makeProjectMutationContainer(
+      apolloConfig,
+      {outputParams: projectOutputParams},
+      mergeDeep(
+        {
+          key: 'downtownPincher',
+          name: 'Downtown Pincher Creek',
+          geojson: {
+            'type': 'FeatureCollection',
+            'features': [{
+              "type": "Feature",
+              "geometry": {
+                "type": "Polygon",
+                "coordinates": [[[49.54147, -114.17439], [49.42996, -114.17439], [49.42996, -113.72635], [49.54147, -113.72635], [49.54147, -114.174390]]]
+              }
+            }]
+          },
+          data: {
+            // Limits the possible locations by query
+            locations: {
+              params: {
+                city: 'Pincher Creek',
+                state: 'Alberta',
+                country: 'Canada'
+              }
+            },
+            mapbox: {
+              viewport: {
+                latitude: 49.54147,
+                longitude: -114.17439,
+                zoom: 7
+              }
             }
           },
-          mapbox: {
-            viewport: {
-              latitude: 49.54147,
-              longitude: -114.17439,
-              zoom: 7
-            }
-          }
+          // This would the locations selected for the project within the confines of the query above
+          locations: []
         },
-        // This would the locations selected for the project within the confines of the query above
-        locations: []
-      },
-      props
+        props
+      )
+    ),
+    mapToNamedResponseAndInputs('deletedSamples',
+      ({props}) => {
+        return queryAndDeleteIfFoundContainer(
+          {
+            queryName: 'projects',
+            queryContainer: makeProjectsQueryContainer(
+              {apolloConfig},
+              {outputParams: projectOutputParams}
+            ),
+            mutateContainer: makeProjectMutationContainer(apolloConfig, {})
+          },
+          props
+        );
+      }
     )
-  );
+  ])({props});
 };
 
 /**
@@ -78,26 +103,50 @@ export const createSampleProjectContainer = ({apolloClient}, props) => {
  * @return Task resolving to a list of 10 projects
  */
 export const createSampleProjectsContainer = v((apolloConfig, props) => {
-  return traverseReduce(
-    (projects, project) => {
-      return R.concat(projects, [reqStrPathThrowing('data.createProject.project', project)]);
-    },
-    of([]),
-    R.times(() => {
-      return composeWithChain([
-        () => {
-          return createSampleProjectContainer(apolloConfig, {
-              key: `test${moment().format('HH-mm-SS')}`,
+  return composeWithChain([
+      ({props}) => traverseReduce(
+        (projects, project) => {
+          return R.concat(projects, [reqStrPathThrowing('data.createProject.project', project)]);
+        },
+        of([]),
+        R.times(() => {
+          return composeWithChain([
+            () => {
+              return createSampleProjectContainer(apolloConfig, {
+                  key: `test${moment().format('HH-mm-ss-SSS')}`,
+                  user: {
+                    id: reqStrPathThrowing('user.id', props)
+                  }
+                }
+              );
+            },
+            () => fromPromised(() => new Promise(r => setTimeout(r, 100)))()
+          ])();
+        }, 10)
+      ),
+      mapToNamedResponseAndInputs('deleted',
+        ({props}) => {
+          // Delete existing test projects for the test user
+          return queryAndDeleteIfFoundContainer(
+            {
+              queryName: 'projects',
+              queryContainer: makeProjectsQueryContainer(
+                {apolloConfig},
+                {outputParams: projectOutputParams}
+              ),
+              mutateContainer: makeProjectMutationContainer(apolloConfig, {})
+            },
+            {
+              keyContains: 'test',
               user: {
                 id: reqStrPathThrowing('user.id', props)
               }
             }
           );
-        },
-        () => fromPromised(() => new Promise(r => setTimeout(r, 100)))()
-      ])();
-    }, 10)
-  );
+        }
+      )
+    ]
+  )({props});
 }, [
   ['apolloConfig', PropTypes.shape({}).isRequired],
   ['props', PropTypes.shape({

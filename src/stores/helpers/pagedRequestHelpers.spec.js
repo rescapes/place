@@ -60,7 +60,7 @@ test('queryUsingPaginationContainer', done => {
   const errors = [];
   task.run().listen(defaultRunConfig({
     onResolved: projects => {
-      expect(R.length(projects)).toEqual(10);
+      expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projects))).toEqual(10);
     }
   }, errors, done));
 }, 100000);

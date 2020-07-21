@@ -9,8 +9,14 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import {inspect} from 'util';
 import * as R from 'ramda';
-import {containerForApolloType, makeQueryContainer} from 'rescape-apollo';
+import {
+  composeWithComponentMaybeOrTaskChain,
+  containerForApolloType,
+  getRenderPropFunction,
+  makeQueryContainer
+} from 'rescape-apollo';
 import {
   capitalize,
   composeWithChain,
@@ -79,47 +85,43 @@ export const queryUsingPaginationContainer = v(R.curry((
     readInputTypeMapper
   );
   // Make object props and array if not.
-  const propsAsArray = toArrayIfNot(props)
+  const propsAsArray = toArrayIfNot(props);
 
-  log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizeProps(props))}`);
+  log.debug(`Checking for existence of objects with props ${inspect(normalizeProps(props))}`);
 
-  return composeWithChain([
-    // Extract the paginated objects, removing those that don't pass regionConfig's feature property filters
-    objs => {
-      return containerForApolloType(apolloConfig,
-        R.when(R.identity, objs => {
-            return postProcessObjsByConfig({regionConfig}, objs);
-          }
-        )(objs)
-      );
-    },
-
-    firstPageObjs => {
+  return composeWithComponentMaybeOrTaskChain([
+    // Take the first page response and use it to make the remaining queries
+    // Each call to accumulatedSinglePageQueryContainer receives the accumulated results from previous
+    // pages and concats the new response to them
+    firstPage => {
       // Get the number of pages so we can query for the remaining pages if there are any
-      const pageInfo = R.omit(['objects'], reqPathThrowing(['data', name], firstPageObjs));
+      const pageCount = reqPathThrowing(['data', name, 'pages'], firstPage);
       // Run a query for each page (based on the result of the first query)
-      // TODO Should be traverseReduceBucketedWhile but there is a weird bug that causes it to resolve to a task
-      return traverseReduceWhile({predicate: () => true, mappingFunction: R.chain},
-        // Query for the page and extract the objects, since we don't need intermediate page info
-        (previousResults, page) => {
-          return singlePageQueryContainer(
-            {apolloConfig, regionConfig},
-            {
-              name,
-              outputParams,
-              readInputTypeMapper: readInputTypeMapperOrDefault,
-              normalizeProps,
-              pageSize: pageSizeOrDefault,
-              page
-            },
-            {previousResults, firstPageLocations: firstPageObjs},
-            propsAsArray
-          );
-        },
-        of([]),
-        // Iterate the pages, 1-based index
-        R.times(R.compose(of, R.add(1)), reqStrPathThrowing('pages', pageInfo))
-      );
+      return composeWithComponentMaybeOrTaskChain(
+        R.reverse(R.times(page => {
+            // Query for the page and extract the objects, since we don't need intermediate page info
+            return previousPages => {
+              return accumulatedSinglePageQueryContainer(
+                {apolloConfig, regionConfig},
+                {
+                  name,
+                  outputParams,
+                  readInputTypeMapper: readInputTypeMapperOrDefault,
+                  normalizeProps,
+                  pageSize: pageSizeOrDefault,
+                  // Skip the first page + 1-based index
+                  page: page + 2
+                },
+                // Pass the compbined previous results
+                {previousPages},
+                propsAsArray
+              );
+            };
+          },
+          // Skip the first page, we already have it
+          pageCount - 1
+        ))
+      )(firstPage);
     },
 
     // Initial query determines tells us the number of pages
@@ -141,9 +143,7 @@ export const queryUsingPaginationContainer = v(R.curry((
 }), [
   ['config', PropTypes.shape(
     {
-      apolloConfig: PropTypes.shape({
-        apolloClient: PropTypes.shape().isRequired
-      }).isRequired
+      apolloConfig: PropTypes.shape().isRequired
     },
     {
       regionConfig: PropTypes.shape().isRequired
@@ -202,64 +202,34 @@ export const queryPageContainer = v(R.curry((
     const pageSizeOrDefault = propsPageSize || pageSize || 100;
     const pageOrDefault = propsPage || page;
     if (!pageOrDefault) {
-      throw new Error(`Neither props.page nor queryConfig.page was specified. Props: ${JSON.stringify(props)}`);
+      throw new Error(`Neither props.page nor queryConfig.page was specified. Props: ${inspect(props)}`);
     }
     const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
-    const filterObjsByConfigOrDefault = R.defaultTo((config, objs) => objs, filterObjsByConfig);
     const className = capitalize(typeName);
     const readInputTypeMapperOrDefault = R.defaultTo(
       {objects: `[${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType]`},
       readInputTypeMapper
     );
-    log.debug(`Checking for existence of objects with props ${JSON.stringify(normalizePropsOrDefault(props))}`);
+    log.debug(`Checking for existence of objects with props ${inspect(normalizePropsOrDefault(props))}`);
 
-    return composeWithChain([
-      // Extract the paginated objects, removing those that don't pass regionConfig's feature property filters
-      ({objs}) => {
-        return containerForApolloType(apolloConfig,
-          R.when(
-            R.identity,
-            objs => {
-              // Filter if needed. Note that we don't mess with the pagination numbers even if
-              // we filter stuff out, so this probably isn't sustainable
-              return R.over(
-                R.lensPath(['data', name, 'objects']),
-                objects => filterObjsByConfigOrDefault(
-                  {regionConfig},
-                  objects
-                ),
-                objs
-              )
-            }
-          )(objs)
-        );
+    // Run a query for each page (based on the result of the first query)
+    return _paginatedQueryContainer(
+      {apolloConfig, regionConfig},
+      {
+        name,
+        outputParams,
+        readInputTypeMapper: readInputTypeMapperOrDefault,
+        normalizeProps: normalizePropsOrDefault,
+        pageSize: pageSizeOrDefault,
+        page: pageOrDefault
       },
-      mapToNamedResponseAndInputs('objs',
-        ({}) => {
-          // Run a query for each page (based on the result of the first query)
-          // TODO Should be traverseReduceBucketedWhile but there is a weird bug that causes it to resolve to a task
-          return _paginatedQueryContainer(
-            {apolloConfig, regionConfig},
-            {
-              name,
-              outputParams,
-              readInputTypeMapper: readInputTypeMapperOrDefault,
-              normalizeProps: normalizePropsOrDefault,
-              pageSize: pageSizeOrDefault,
-              page: pageOrDefault
-            },
-            props
-          );
-        }
-      )
-    ])({});
+      props
+    );
   }),
   [
     ['config', PropTypes.shape(
       {
-        apolloConfig: PropTypes.shape({
-          apolloClient: PropTypes.shape().isRequired
-        }).isRequired
+        apolloConfig: PropTypes.shape().isRequired
       },
       {
         regionConfig: PropTypes.shape().isRequired
@@ -330,6 +300,9 @@ export const queryObjectsPaginatedContainer = v(R.curry(
  * Paginated query for locations
  * @param {Object} config
  * @param {Object} config.apolloConfig
+ * @param {Object} [config.apolloConfig.options]
+ * @param {Booleen} [config.apolloConfig.options.skip] Only relevant for component queries. Skips the query
+ * if the dependent data isn't ready
  * @param {Object} config.regionConfig
  * @param {Object} queryConfig
  * @param {Object} queryConfig.outputParams Location outputParams (not the page)
@@ -339,6 +312,7 @@ export const queryObjectsPaginatedContainer = v(R.curry(
  * @param {Function} [queryConfig.normalizeProps] Optionally takes props and limits what is passed to the query.
  * Default to passing everything
  * @param {Object|[Object]} props Props to resolve the instance. This can also be a list of prop sets
+ * @param {Boolean} skip Skip the query if dependent props aren't ready (Only relevent for component queries)
  * @return {Task | Maybe} resolving to the page of location results
  * @private
  */
@@ -347,6 +321,7 @@ export const _paginatedQueryContainer = (
   {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
   props
 ) => {
+  const propSets = toArrayIfNot(props);
   return queryObjectsPaginatedContainer(
     apolloConfig,
     {
@@ -364,7 +339,18 @@ export const _paginatedQueryContainer = (
     },
     // put the props in objects as an array. Pagination queries always accept plural objects, since it's
     // a many-to-many relationship. But normally we only pass one set of props
-    {pageSize, page, objects: toArrayIfNot(props)}
+    // We also need to keep props.render at the top level if defined
+    R.merge(
+      {
+        pageSize,
+        page,
+        // Omit render from each propSet. It would only be here for the single propSet case anyway
+        objects: R.map(R.omit(['render']), propSets)
+      },
+      // If we have a render method, then we a single propset.
+      // We'd never pass multiple propsSets
+      R.pick(['render'], R.head(propSets))
+    )
   );
 };
 
@@ -377,25 +363,62 @@ export const _paginatedQueryContainer = (
  * @param outputParams
  * @param propsStructure
  * @param pageSize
- * @param page
+ * @param {Number} page The page number. If 1 then no query happens. previousPages is returned
+ * since we already had to query it to get the total number of pages
  * @param props
- * @param firstPageObjects
- * @param previousResults
+ * @param {Object} previousPages Accumulated previous pages in the form {
+ *   data: {
+ *     [name]: {
+ *       objects: [...all objects from previous pages...]
+ *     }
+ *   }
+ * }
  * @return {*}
  * @private
  */
-export const singlePageQueryContainer = (
+export const accumulatedSinglePageQueryContainer = (
   {apolloConfig, regionConfig},
   {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
-  {firstPageLocations: firstPageObjects, previousResults},
+  {previousPages},
   props
 ) => {
-  return composeWithMapMDeep(1, [
-    pageLocations => {
-      // Combine the objects responses, ignoring the pagination data
-      return R.concat(
-        previousResults,
-        reqPathThrowing(['data', name, 'objects'], pageLocations)
+  return composeWithComponentMaybeOrTaskChain([
+    pageResponse => {
+      // Return the task or Apollo component with the current request response objects
+      // concatenated to the previous
+      return containerForApolloType(
+        apolloConfig,
+        {
+          render: getRenderPropFunction(props),
+          response: R.ifElse(
+            pageResponse => R.propOr(false, 'data', pageResponse),
+            pageResponse => R.compose(
+              // Set the page size to the number of objects (just for consistency)
+              // Hard-code page and pages to 1 since we're combining all results into a single page
+              pageResponse => R.merge(
+                pageResponse,
+                {
+                  pageSize: R.length(reqPathThrowing(['data', name, 'objects'], pageResponse)),
+                  page: 1,
+                  pages: 1,
+                  hasPrev: false
+                }
+              ),
+              // concatenate
+              pageResponse => {
+                return R.over(
+                  R.lensPath(['data', name, 'objects']),
+                  objects => {
+                    return R.concat(reqPathThrowing(['data', name, 'objects'], previousPages), objects);
+                  },
+                  pageResponse
+                );
+              }
+            )(pageResponse),
+            // Data not ready
+            R.identity
+          )(pageResponse)
+        }
       );
     },
     page => {
@@ -403,12 +426,18 @@ export const singlePageQueryContainer = (
         R.equals(1),
         // Use the first result for page 1
         () => {
-          return of(firstPageObjects);
+          return previousPages;
         },
-        // Query for remaining pages
+        // Query for current page unless page.data is not ready (only relevant to component queries)
+        // If the previous page is still loading, skip
         page => {
           return _paginatedQueryContainer(
-            {apolloConfig, regionConfig},
+            {
+              apolloConfig: R.merge(
+                apolloConfig,
+                {options: {skip: R.complement(R.prop)('data', previousPages)}}
+              ), regionConfig
+            },
             {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
             props
           );

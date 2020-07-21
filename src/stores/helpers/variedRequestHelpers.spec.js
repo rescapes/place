@@ -111,8 +111,8 @@ describe('variedRequestHelpers', () => {
         expect(R.length(reqStrPathThrowing('data.projects', projectsFull))).toEqual(10);
         expect(R.length(reqStrPathThrowing('data.projects', projectsMinimized))).toEqual(10);
         expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged))).toEqual(3);
-        expect(R.length(projectsPagedAll)).toEqual(10);
-        expect(R.length(projectsPagedAllMinimized)).toEqual(10);
+        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPagedAll))).toEqual(10);
+        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPagedAllMinimized))).toEqual(10);
       }
     }, errors, done));
   });

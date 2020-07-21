@@ -99,7 +99,7 @@ export {
 
 export {
   queryUsingPaginationContainer,
-  singlePageQueryContainer
+  accumulatedSinglePageQueryContainer
 } from './stores/helpers/pagedRequestHelpers';
 
 export {
