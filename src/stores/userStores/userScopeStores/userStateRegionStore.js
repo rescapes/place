@@ -13,26 +13,19 @@ import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
 import {makeRegionsQueryContainer} from '../../scopeStores/region/regionStore';
-import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
+import {
+  makeUserStateScopeObjsMutationContainer,
+  makeUserStateScopeObjsQueryContainer
+} from './userStateHelpers';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
-  userStateOutputParamsCreator,
-  userStateReadInputTypeMapper
+  userStateOutputParamsCreator, userStateReadInputTypeMapper
 } from '../userStateStore';
 import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
 import {renameKey} from 'rescape-ramda';
 import {filterOutReadOnlyVersionProps} from 'rescape-apollo';
-
-// Variables of complex input type needs a type specified in graphql. Our type names are
-// always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
-// Following this location.data is represented as follows:
-// TODO These value should be derived from the schema
-const readInputTypeMapper = {
-  //'data': 'DataTypeofLocationTypeRelatedReadInputType'
-  'user': 'UserTypeofUserStateTypeRelatedReadInputType'
-};
 
 export const userStateRegionOutputParams = (explicitRegionOuputParams = regionOutputParams) => R.mergeAll([
   {
@@ -66,7 +59,7 @@ export const userStateRegionOutputParams = (explicitRegionOuputParams = regionOu
  */
 export const userStateRegionsQueryContainer = v(R.curry(
   (apolloConfig, {userRegionOutputParams: explicitUserRegionOutputParams}, propSets) => {
-    const scopeName = 'region'
+    const scopeName = 'region';
     return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
       {
@@ -126,7 +119,7 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRe
       {
         scopeQueryContainer: makeRegionsQueryContainer,
         scopeName,
-        readInputTypeMapper,
+        readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: userScopeOutputParams => {
           return userStateOutputParamsCreator(
             userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
@@ -137,7 +130,7 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRe
       R.compose(
         propSets => renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets),
         propSets => R.over(R.lensPath(['userRegion', 'region']), region => {
-          return filterOutReadOnlyVersionProps(region)
+          return filterOutReadOnlyVersionProps(region);
         }, propSets)
       )(propSets)
     );

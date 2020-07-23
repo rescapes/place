@@ -136,7 +136,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       ({apolloConfig, user}) => {
         return R.ifElse(
           R.identity,
-          f => f(apolloConfig, R.pick('id', user)),
+          f => f(apolloConfig, {}),
           () => of([])
         )(locationsContainer)
       }

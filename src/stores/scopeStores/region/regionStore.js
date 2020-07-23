@@ -11,23 +11,26 @@
 
 import * as R from 'ramda';
 import {
+  createReadInputTypeMapper,
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
-  makeQueryContainer,
+  makeQueryContainer, relatedObjectsToIdForm,
   versionOutputParamsMixin
 } from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 
+// TODO should be derived from the remote schema
+const RELATED_PROPS = [];
+
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
 // Following this location.data is represented as follows:
 // TODO These value should be derived from the schema
-export const regionReadInputTypeMapper = {
-  //'data': 'DataTypeofLocationTypeRelatedReadInputType'
-  'geojson': 'FeatureCollectionDataTypeofRegionTypeRelatedReadInputType'
-};
+export const regionReadInputTypeMapper = createReadInputTypeMapper(
+  'region', R.concat(['geojson'], RELATED_PROPS)
+);
 
 export const regionOutputParamsMinimized = {
   id: 1,
@@ -105,6 +108,18 @@ export const makeRegionsQueryContainer = v(R.curry(({apolloConfig, regionConfig}
 );
 
 /**
+ * Normalized region props for for mutation
+ * @param {Object} region
+ * @return {Object} the props modified
+ */
+export const normalizeRegionPropsForMutating = region => {
+  return R.compose(
+    // Make sure related objects only have an id
+    region => relatedObjectsToIdForm(RELATED_PROPS, region),
+    region => filterOutReadOnlyVersionProps(region)
+  )(region);
+};
+/**
  * Makes a Region mutation
  * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo component
  * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
@@ -142,7 +157,7 @@ export const makeRegionMutationContainer = v(R.curry(
     R.over(
       R.propOr(false, 'region', props) ? R.lensProp('region') : R.lensPath([]),
       region => {
-        return filterOutReadOnlyVersionProps(region);
+        return normalizeRegionPropsForMutating(region);
       },
       props
     )
@@ -184,3 +199,5 @@ export const regionQueryVariationContainers = ({apolloConfig, regionConfig: {}})
     }
   );
 };
+
+

@@ -10,23 +10,12 @@
  */
 
 import * as R from 'ramda';
-import moment from 'moment';
-import {of} from 'folktale/concurrency/task';
 import {v} from 'rescape-validate';
-import {
-  capitalize,
-  compact, composeWithChain, mapToNamedResponseAndInputs,
-  mergeDeep, mergeDeepAll,
-  pickDeepPaths,
-  renameKey,
-  reqPathThrowing,
-  strPath,
-  strPathOr
-} from 'rescape-ramda';
+import {capitalize, compact, mergeDeep, mergeDeepAll, pickDeepPaths, reqPathThrowing, strPathOr} from 'rescape-ramda';
 import {
   composeWithComponentMaybeOrTaskChain,
-  containerForApolloType, filterOutReadOnlyVersionProps,
-  getRenderPropFunction, makeMutationRequestContainer,
+  containerForApolloType,
+  getRenderPropFunction,
   makeQueryContainer,
   nameComponent
 } from 'rescape-apollo';
@@ -450,41 +439,3 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
     userScopeObjs: PropTypes.array
   })]
 ], 'queryScopeObjsOfUserStateContainer');
-
-/**
- * Queries using the queryContainer and deletes using the mutateContainer with each result
- * of the queryContainer
- * @param {String} queryName Used to find the query response objects
- * @param {Function} queryContainer Called with props
- * @param {Function} mutateContainer Called with each result of queryContainer
- * in {data: [queryName]: [...]}
- * @param props
- * @return {*}
- */
-export const queryAndDeleteIfFoundContainer = (
-  {queryName, queryContainer, mutateContainer},
-  props
-) => {
-  return composeWithChain([
-    response => {
-      const objectsToDelete = reqPathThrowing(['data', queryName], response);
-      return R.traverse(
-        of,
-        obj => {
-          return mutateContainer(
-            R.compose(
-              // And the deleted datetime to now
-              prps => R.set(R.lensProp('deleted'), moment().toISOString(true), prps),
-              // Just pass the id
-              o => R.pick(['id'], o)
-            )(obj)
-          );
-        },
-        objectsToDelete
-      );
-    },
-    props => {
-      return queryContainer(props);
-    }
-  ])(props);
-};

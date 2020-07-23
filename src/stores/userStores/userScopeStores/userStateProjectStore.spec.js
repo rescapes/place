@@ -174,8 +174,8 @@ describe('userProjectStore', () => {
 
   test('userStateProjectMutationContainer', done => {
     const errors = [];
-    const projectKey = `testProjectKey${moment().format('HH-mm-SS')}`;
-    const projectName = `TestProjectName${moment().format('HH-mm-SS')}`;
+    const projectKey = `testProjectKey${moment().format('HH-mm-ss-SSS')}`;
+    const projectName = `TestProjectName${moment().format('HH-mm-ss-SSS')}`;
     R.composeK(
       // Modify the new project in the UserState
       mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',

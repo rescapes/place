@@ -12,22 +12,27 @@
 import * as R from 'ramda';
 import {v} from 'rescape-validate';
 import {
+  createReadInputTypeMapper,
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
-  makeQueryContainer,
+  makeQueryContainer, relatedObjectsToIdForm,
   versionOutputParamsMixin
 } from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
-import {createReadInputTypeMapper} from 'rescape-apollo'
+
+// TODO should be derived from the remote schema
+const RELATED_PROPS = [
+  'user', 'locations'
+];
 
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
 // Following this location.data is represented as follows:
 // TODO These value should be derived from the schema
-export const projectReadInputTypeMapper =  createReadInputTypeMapper(
-  'project', ['geojson', 'user', 'locations']
+export const projectReadInputTypeMapper = createReadInputTypeMapper(
+  'project', R.concat(['geojson'], RELATED_PROPS)
 );
 
 export const projectOutputParamsMinimized = {
@@ -94,38 +99,38 @@ export const makeProjectsQueryContainer = v(R.curry(({apolloConfig, regionConfig
   ],
   'makeProjectsQueryContainer');
 
+/**
+ * Normalized project props for for mutation
+ * @param {Object} project
+ * @return {Object} the props modified
+ */
+export const normalizeProjectPropsForMutating = project => {
+  return R.compose(
+    // Make sure related objects only have an id
+    project => relatedObjectsToIdForm(RELATED_PROPS, project),
+    project => filterOutReadOnlyVersionProps(project)
+  )(project);
+};
 
 /**
  * Makes a project mutation
  * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
  * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
- * @param [String|Object] [outputParams]. Default projectOutputParamsMinimized. output parameters for the query in this style json format:
- *  ['id',
- *   {
- *        data: [
- *         'foo',
- *         {
- *            properties: [
- *             'type',
- *            ]
- *         },
- *         'bar',
- *       ]
- *    }
- *  ]
- *  @param {Object} props Object matching the shape of a project. E.g. {id: 1, city: "Stavanger", data: {foo: 2}}
- *  Optionally specify the project props at props.project in order to pass other props through the container
- *  @param {Object} [props.project] Optional to use as the project to save if passing other props through the container.
- *  If you use this option you must specify in apolloConfig
- *  {
- *     variables: (props) => {
- *      return R.propOr({}, 'project', props);
- *    },
- *  }
+ * @param {Object} requestConfig
+ * @param {Object} [requestConfig.outputParams]. Default projectOutputParamsMinimized. output parameters for the query
+ * @param {String} [projectPropsPath] If the project to be mutated is not at the base of props, this
+ * path separates it, such as 'project'
+ * @param {Object} props Object matching the shape of a project or matching the shape of the project at projectPropsPath.
+ * E.g. {id: 1, city: "Stavanger", data: {foo: 2}}
+ * or {project: {id: 1, city: "Stavanger", data: {foo: 2}}} where projectPropsPath = 'project'
  *  @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputParams = projectOutputParamsMinimized}, props) => {
+export const makeProjectMutationContainer = v(R.curry((
+  apolloConfig,
+  {outputParams = projectOutputParamsMinimized, projectPropsPath = null},
+  props
+) => {
   return makeMutationRequestContainer(
     apolloConfig,
     {
@@ -133,9 +138,10 @@ export const makeProjectMutationContainer = v(R.curry((apolloConfig, {outputPara
       outputParams
     },
     R.over(
-      R.propOr(false, 'project', props) ? R.lensProp('project') : R.lensPath([]),
+      // If projectPropsPath is null, over will operate on props
+      R.lensPath(projectPropsPath ? R.split('.', projectPropsPath) : []),
       project => {
-        return filterOutReadOnlyVersionProps(project);
+        return normalizeProjectPropsForMutating(project);
       },
       props
     )
@@ -178,3 +184,4 @@ export const projectQueryVariationContainers = ({apolloConfig, regionConfig: {}}
     }
   );
 };
+

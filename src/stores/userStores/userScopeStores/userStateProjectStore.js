@@ -13,7 +13,7 @@ import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
 import {makeProjectsQueryContainer} from '../../scopeStores/project/projectStore';
-import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './scopeHelpers';
+import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './userStateHelpers'
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,

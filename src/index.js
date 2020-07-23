@@ -64,7 +64,7 @@ export {
   regionOutputParamsMinimized,
   regionReadInputTypeMapper,
   makeRegionMutationContainer,
-  makeRegionsQueryContainer,
+  makeRegionsQueryContainer
 } from './stores/scopeStores/region/regionStore';
 
 export {
@@ -78,24 +78,20 @@ export {
   userStateOutputParamsOnlyIds,
   makeCurrentUserStateQueryContainer,
   userScopeOutputParamsFragmentDefaultOnlyIds,
-  deleteSampleUserStateScopeObjectsTask,
+  deleteSampleUserStateScopeObjectsContainer
 } from './stores/userStores/userStateStore';
 
 export {
   userStateRegionsQueryContainer,
   userStateRegionMutationContainer,
-  userStateRegionOutputParams,
+  userStateRegionOutputParams
 } from './stores/userStores/userScopeStores/userStateRegionStore';
 
 export {
   userStateProjectsQueryContainer,
   userStateProjectMutationContainer,
-  userStateProjectOutputParams,
+  userStateProjectOutputParams
 } from './stores/userStores/userScopeStores/userStateProjectStore';
-
-export {
-  createSampleRegionContainer
-} from './stores/scopeStores/region/regionStore.sample';
 
 export {
   queryUsingPaginationContainer,
@@ -116,5 +112,15 @@ export {
 export {queryVariationContainers} from './stores/helpers/variedRequestHelpers';
 
 export {
-  makeUserStateScopeObjsQueryContainer
-} from './stores/userStores/userScopeStores/scopeHelpers'
+  queryAndDeleteIfFoundContainer
+} from './stores/helpers/scopeHelpers';
+
+export {
+  createSampleProjectContainer,
+  createSampleProjectsContainer
+} from './stores/scopeStores/project/projectStore.sample';
+
+export {
+  createSampleRegionContainer,
+  createSampleRegionsContainer
+} from './stores/scopeStores/region/regionStore.sample';

@@ -12,11 +12,15 @@
 import * as R from 'ramda';
 import {
   addMutateKeyToMutationResponse,
-  createCacheOnlyProps, filterOutReadOnlyVersionProps,
+  createCacheOnlyProps,
+  createReadInputTypeMapper,
+  filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
   makeMutationWithClientDirectiveContainer,
   makeQueryContainer,
-  mergeCacheable, VERSION_PROPS, versionOutputParamsMixin
+  mergeCacheable,
+  omitClientFields, relatedObjectsToIdForm,
+  versionOutputParamsMixin
 } from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
@@ -33,14 +37,15 @@ import {
 import {
   capitalize,
   composeWithChain,
-  composeWithChainMDeep, filterWithKeys, mapToMergedResponseAndInputs,
-  mapToNamedPathAndInputs, mapToNamedResponseAndInputs,
+  composeWithChainMDeep,
+  mapToMergedResponseAndInputs,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
 import {activityOutputParamsFragment} from './activityStore';
-import {omitClientFields} from 'rescape-apollo';
-import {of} from 'folktale/concurrency/task'
+import {of} from 'folktale/concurrency/task';
 import moment from 'moment';
 
 // Every complex input type needs a type specified in graphql. Our type names are
@@ -51,10 +56,16 @@ const userReadInputTypeMapper = {
   'data': 'DataTypeofUserTypeRelatedReadInputType'
 };
 
-export const userStateReadInputTypeMapper = {
-  'user': 'UserTypeofUserStateTypeRelatedReadInputType',
-  'data': 'UserStateDataTypeofUserStateTypeRelatedReadInputType'
-};
+// TODO should be derived from the remote schema
+const RELATED_PROPS = ['user'];
+
+// Variables of complex input type needs a type specified in graphql. Our type names are
+// always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
+// Following this location.data is represented as follows:
+// TODO These value should be derived from the schema
+export const userStateReadInputTypeMapper = createReadInputTypeMapper(
+  'userState', R.concat(['data'], RELATED_PROPS)
+);
 
 export const userOutputParams = {
   id: 1,
@@ -291,6 +302,19 @@ export const makeAdminUserStateQueryContainer = v(R.curry(
   ], 'makeAdminUserStateQueryContainer');
 
 /**
+ * Normalized project props for for mutation
+ * @param {Object} project
+ * @return {Object} the props modified
+ */
+export const normalizeUserStatePropsForMutating = userState => {
+  return R.compose(
+    // Make sure related objects only have an id
+    userState => relatedObjectsToIdForm(RELATED_PROPS, userState),
+    userState => filterOutReadOnlyVersionProps(userState),
+    userState => filterOutCacheOnlyObjs(userState)
+  )(userState);
+};
+/**
  * Soft delete scope instances and the references to them in the user state
  * TODO: There is currently no way to prevent deleting regions that do not belong to the user
  * This will be fixed when Region ownership permissions are set up
@@ -304,7 +328,7 @@ export const makeAdminUserStateQueryContainer = v(R.curry(
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip=false, outputParams}, props) => {
+export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip = false, outputParams}, props) => {
     return makeMutationRequestContainer(
       R.merge(
         apolloConfig,
@@ -344,11 +368,7 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip=fal
         name: 'userState',
         outputParams
       },
-      // Remove client-side only values from userState
-      R.compose(
-        filterOutReadOnlyVersionProps,
-        filterOutCacheOnlyObjs
-      )(props)
+      normalizeUserStatePropsForMutating(props)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
@@ -370,43 +390,32 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip=fal
  * E.g. {region: {keyContains: 'test'}, project: {keyContains: 'test'}}
  * @return {*}
  */
-export const deleteSampleUserStateScopeObjectsTask = (apolloConfig, userState, scopeProps) => {
+export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, userState, scopeProps) => {
   return composeWithChain([
     mapToMergedResponseAndInputs(
       // clearedScopeObjsUserState is the userState with the regions cleared
       ({apolloConfig, clearedScopeObjsUserState}) => {
-        return deleteScopeObjectsTask(
-          apolloConfig,
-          {
-            outputParams: projectOutputParamsMinimized,
-            readInputTypeMapper: projectReadInputTypeMapper,
-            scopeName: 'project',
-            scopeProps: R.merge(
-              reqStrPathThrowing('project', scopeProps),
-              // Only allow deleting projects owned by this user
-              {user: R.pick(['id'], reqStrPathThrowing('user', clearedScopeObjsUserState))}
-            )
+        return deleteProjectsContainer(apolloConfig, {
+            // Only allow deleting projects owned by this user
+            userState: {user: R.pick(['id'], reqStrPathThrowing('user', clearedScopeObjsUserState))}
           },
-          clearedScopeObjsUserState
+          R.merge(
+            reqStrPathThrowing('project', scopeProps),
+            // Only allow deleting projects owned by this user
+            {user: R.pick(['id'], reqStrPathThrowing('user', clearedScopeObjsUserState))}
+          )
         );
       }
     ),
+
     mapToMergedResponseAndInputs(
       ({apolloConfig, userState}) => {
-        return deleteScopeObjectsTask(
-          apolloConfig,
-          {
-            outputParams: regionOutputParamsMinimized,
-            readInputTypeMapper: regionReadInputTypeMapper,
-            scopeName: 'region',
-            scopeProps: reqStrPathThrowing('region', scopeProps)
-          },
-          userState
-        );
+        return deleteRegionsContainer(apolloConfig, {userState}, reqStrPathThrowing('region', scopeProps));
       }
     )
   ])({apolloConfig, userState});
 };
+
 
 /**
  * Soft delete scope instances and the references to them in the user state
@@ -421,7 +430,7 @@ export const deleteSampleUserStateScopeObjectsTask = (apolloConfig, userState, s
  * @param {Object} userState The user state for which to delete scope objects
  * @return {Object} {deleted[scope name]s: deleted objects, clearedScopeObjsUserState: The user state post clearing}
  */
-export const deleteScopeObjectsTask = (
+export const deleteScopeObjectsContainer = (
   apolloConfig,
   {outputParams, readInputTypeMapper, scopeName, scopeProps},
   userState
@@ -444,7 +453,7 @@ export const deleteScopeObjectsTask = (
                 // And the deleted datetime
                 R.set(R.lensProp('deleted'), moment().toISOString(true)),
                 // Just pass the id
-                R.pick(['id']),
+                R.pick(['id'])
               )(scopeObj)
             );
           },
@@ -459,23 +468,72 @@ export const deleteScopeObjectsTask = (
           {
             name: `${scopeName}s`,
             outputParams: outputParams,
-            readInputTypeMapper,
+            readInputTypeMapper
           },
           scopeProps
         );
       }
     ),
-    // Remove existing scope objects from the userState
+    // Remove existing scope objects from the userState if userState was given
     mapToNamedPathAndInputs('clearedScopeObjsUserState', 'data.mutate.userState',
       ({apolloConfig, userState}) => {
-        const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
-        return makeUserStateMutationContainer(
-          apolloConfig,
-          // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
-          {outputParams: omitClientFields(userStateOutputParamsFull())},
-          modifiedUserState
-        );
+        return R.ifElse(
+          R.identity,
+          userState => {
+            const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
+            return makeUserStateMutationContainer(
+              apolloConfig,
+              // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
+              {outputParams: omitClientFields(userStateOutputParamsFull())},
+              modifiedUserState
+            );
+          },
+          () => of(null)
+        )(userState);
       }
     )
   ])(({apolloConfig, userState}));
+};
+
+/**
+ * Soft-delete the regions give by props. If userState is passed it will remove the deleted regions
+ * from the userState (TODO perhaps we should search for all userStates containing the regions and remove themn)
+ * @param apolloConfig
+ * @param {Object} requestConfig
+ * @param {Object} [requestConfig.userState] optional
+ * @param props
+ * @return {*}
+ */
+export const deleteRegionsContainer = (apolloConfig, {userState = null}, props) => {
+  return deleteScopeObjectsContainer(
+    apolloConfig,
+    {
+      outputParams: regionOutputParamsMinimized,
+      readInputTypeMapper: regionReadInputTypeMapper,
+      scopeName: 'region',
+      scopeProps: props
+    },
+    userState
+  );
+};
+/**
+ * Soft-delete the projects give by props. If userState is passed it will remove the deleted projects
+ * from the userState (TODO perhaps we should search for all userStates containing the projects and remove them)
+ * @param apolloConfig
+ * @param {Object} requestConfig
+ * @param {Object} [requestConfig.userState] optional
+ * @param props
+ * @return {*}
+ */
+export const deleteProjectsContainer = (apolloConfig, {userState = null}, props) => {
+  return deleteScopeObjectsContainer(
+    apolloConfig,
+    {
+      outputParams: projectOutputParamsMinimized,
+      readInputTypeMapper: projectReadInputTypeMapper,
+      scopeName: 'project',
+      scopeProps: props
+    },
+    userState
+  );
 };

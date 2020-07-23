@@ -9,14 +9,6 @@ import * as R from 'ramda';
 const config = {
   input: [
     'src/index.js',
-    'src/selectors/geojsonSelectors.js',
-    'src/selectors/mapboxSelectors.js',
-    'src/selectors/regionSelectors.js',
-    'src/selectors/settingsSelectors.js',
-    'src/selectors/storeSelectors.js',
-    'src/selectors/styleSelectors.js',
-    'src/selectors/userSelectors.js',
-    'src/selectors/selectorResolvers.js'
   ],
   plugins: []
 };

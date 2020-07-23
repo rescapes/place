@@ -25,7 +25,7 @@ import {
 import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {
-  deleteSampleUserStateScopeObjectsTask,
+  deleteSampleUserStateScopeObjectsContainer,
   makeCurrentUserQueryContainer,
   makeCurrentUserStateQueryContainer,
   makeUserStateMutationContainer,
@@ -177,8 +177,8 @@ describe('userRegionStore', () => {
 
   test('userStateRegionMutationContainer', done => {
     const errors = [];
-    const regionKey = `testRegionKey${moment().format('HH-mm-SS')}`;
-    const regionName = `TestRegionName${moment().format('HH-mm-SS')}`;
+    const regionKey = `testRegionKey${moment().format('HH-mm-ss-SSS')}`;
+    const regionName = `TestRegionName${moment().format('HH-mm-ss-SSS')}`;
     R.composeK(
       mapToNamedResponseAndInputs('userState',
         ({apolloConfig, userState, region}) => {
@@ -230,7 +230,7 @@ describe('userRegionStore', () => {
       },
       mapToMergedResponseAndInputs(
         ({apolloConfig, userState}) => {
-          return deleteSampleUserStateScopeObjectsTask(
+          return deleteSampleUserStateScopeObjectsContainer(
             apolloConfig,
             userState,
             {

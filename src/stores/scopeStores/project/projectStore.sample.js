@@ -2,7 +2,6 @@ import {makeProjectMutationContainer, makeProjectsQueryContainer, projectOutputP
 import {
   composeWithChain,
   mapToNamedResponseAndInputs,
-  mapToResponseAndInputs,
   mergeDeep,
   reqStrPathThrowing,
   traverseReduce
@@ -12,8 +11,7 @@ import moment from 'moment';
 import {fromPromised, of} from 'folktale/concurrency/task';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
-import {filterOutReadOnlyVersionProps} from 'rescape-apollo';
-import {queryAndDeleteIfFoundContainer} from '../../userStores/userScopeStores/scopeHelpers';
+import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -35,14 +33,15 @@ import {queryAndDeleteIfFoundContainer} from '../../userStores/userScopeStores/s
  * @return {Object} {data: project: {...}}
  */
 export const createSampleProjectContainer = (apolloConfig, props) => {
+  const now = moment().format('HH-mm-ss-SSS')
   return composeWithChain([
     ({props}) => makeProjectMutationContainer(
       apolloConfig,
       {outputParams: projectOutputParams},
       mergeDeep(
         {
-          key: 'downtownPincher',
-          name: 'Downtown Pincher Creek',
+          key: `downtownPincher${now}`,
+          name: ` Downtown Pincher Creek${now}`,
           geojson: {
             'type': 'FeatureCollection',
             'features': [{
