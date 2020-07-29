@@ -45,6 +45,7 @@ export const projectOutputParamsMinimized = {
 
 export const projectOutputParams = {
   id: 1,
+  deleted: 1,
   key: 1,
   name: 1,
   geojson: {

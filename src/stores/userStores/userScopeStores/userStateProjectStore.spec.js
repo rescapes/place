@@ -25,6 +25,7 @@ import {
 } from 'rescape-ramda';
 import * as R from 'ramda';
 import {
+  deleteSampleUserStateScopeObjectsContainer,
   makeCurrentUserQueryContainer,
   makeCurrentUserStateQueryContainer,
   makeUserStateMutationContainer,
@@ -127,7 +128,7 @@ describe('userProjectStore', () => {
           expect(R.length(reqStrPathThrowing('data.userProjects', response))).toEqual(1);
         }
     }, errors, done));
-  });
+  }, 1000000);
 
   test('makeActiveUserProjectQuery', done => {
     const errors = [];
@@ -244,10 +245,15 @@ describe('userProjectStore', () => {
       // Resolve the user state
       mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
         ({apolloConfig, userState}) => {
-          return makeUserStateMutationContainer(
+          return deleteSampleUserStateScopeObjectsContainer(
             apolloConfig,
-            {outputParams: userStateMutateOutputParams},
-            R.over(R.lensPath(['data', 'userProjects']), () => [], userState)
+            userState,
+            {
+              project: {
+                // Remove all projects
+                keyContains: ''
+              }
+            }
           );
         }
       ),

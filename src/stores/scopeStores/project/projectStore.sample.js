@@ -33,7 +33,7 @@ import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers';
  * @return {Object} {data: project: {...}}
  */
 export const createSampleProjectContainer = (apolloConfig, props) => {
-  const now = moment().format('HH-mm-ss-SSS')
+  const now = moment().format('HH-mm-ss-SSS');
   return composeWithChain([
     ({props}) => makeProjectMutationContainer(
       apolloConfig,
@@ -75,6 +75,7 @@ export const createSampleProjectContainer = (apolloConfig, props) => {
         props
       )
     ),
+    // Delete all projects of this user
     mapToNamedResponseAndInputs('deletedSamples',
       ({props}) => {
         return queryAndDeleteIfFoundContainer(
@@ -86,7 +87,11 @@ export const createSampleProjectContainer = (apolloConfig, props) => {
             ),
             mutateContainer: makeProjectMutationContainer(apolloConfig, {})
           },
-          props
+          {
+            user: {
+              id: reqStrPathThrowing('user.id', props)
+            }
+          }
         );
       }
     )

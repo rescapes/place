@@ -13,7 +13,7 @@ import * as R from 'ramda';
 import {
   addMutateKeyToMutationResponse,
   createCacheOnlyProps,
-  createReadInputTypeMapper,
+  createReadInputTypeMapper, filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
   makeMutationWithClientDirectiveContainer,
@@ -41,7 +41,7 @@ import {
   mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
-  reqStrPathThrowing
+  reqStrPathThrowing, strPathOr
 } from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
 import {activityOutputParamsFragment} from './activityStore';
@@ -58,6 +58,7 @@ const userReadInputTypeMapper = {
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = ['user'];
+const RELATED_DATA_PROPS = ['data.userRegions.region', 'data.userProjects.project']
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -125,17 +126,20 @@ export const userStateOutputParamsFull = () => {
 };
 
 /***
- * userProjects output params fragment when we only want the project ids or something custom.
+ * userState data for scope objects (Project, Region, etc) output params fragment when we only want the project ids or
+ * something custom.
  * The project property represents a single project and the other properties represent the relationship
  * between the user and the project. This can be properties that are stored on the server or only in cache.
  * @param {String} scopeName 'project' or 'region'
- * @param {Object} [userScopeOutputParams] Defaults to {project: {id: 1}}
+ * @param {Object} [userScopeOutputParams] Defaults to {project: {id: 1, deleted: 1}} We include deleted
+ * for the odd case that the userState has maintained references to deleted scope instances. The Server
+ * returns deleted instances when they are referenced.
  */
 export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScopeOutputParams = {}) => {
   const capitalized = capitalize((scopeName));
   return {
     [`user${capitalized}s`]: R.merge({
-        [scopeName]: R.propOr({id: 1}, scopeName, userScopeOutputParams)
+        [scopeName]: R.propOr({id: 1, deleted: true}, scopeName, userScopeOutputParams)
       },
       R.omit([scopeName], userScopeOutputParams)
     )
@@ -309,8 +313,9 @@ export const makeAdminUserStateQueryContainer = v(R.curry(
 export const normalizeUserStatePropsForMutating = userState => {
   return R.compose(
     // Make sure related objects only have an id
-    userState => relatedObjectsToIdForm(RELATED_PROPS, userState),
+    userState => relatedObjectsToIdForm(R.concat(RELATED_PROPS, RELATED_DATA_PROPS), userState),
     userState => filterOutReadOnlyVersionProps(userState),
+    userState => filterOutNullDeleteProps(userState),
     userState => filterOutCacheOnlyObjs(userState)
   )(userState);
 };
@@ -392,25 +397,39 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip = f
  */
 export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, userState, scopeProps) => {
   return composeWithChain([
+    ({clearedScopeObjsUserState}) => of(clearedScopeObjsUserState),
     mapToMergedResponseAndInputs(
       // clearedScopeObjsUserState is the userState with the regions cleared
       ({apolloConfig, clearedScopeObjsUserState}) => {
-        return deleteProjectsContainer(apolloConfig, {
-            // Only allow deleting projects owned by this user
-            userState: {user: R.pick(['id'], reqStrPathThrowing('user', clearedScopeObjsUserState))}
-          },
-          R.merge(
-            reqStrPathThrowing('project', scopeProps),
-            // Only allow deleting projects owned by this user
-            {user: R.pick(['id'], reqStrPathThrowing('user', clearedScopeObjsUserState))}
-          )
-        );
+        const userState = reqStrPathThrowing('data.mutate.userState', clearedScopeObjsUserState)
+        const user = reqStrPathThrowing('user', userState)
+        return R.ifElse(
+          R.identity,
+          project => deleteProjectsContainer(
+            apolloConfig,
+            {
+              // Only allow deleting projects owned by userState.user
+              // Also Clear the userState of these projects
+              userState,
+            },
+            R.merge(
+              project,
+              // Only allow deleting projects owned by this user
+              {user: R.pick(['id'], user)}
+            )
+          ),
+          _ => of({clearedScopeObjsUserState})
+        )(strPathOr(null, 'project', scopeProps));
       }
     ),
 
     mapToMergedResponseAndInputs(
       ({apolloConfig, userState}) => {
-        return deleteRegionsContainer(apolloConfig, {userState}, reqStrPathThrowing('region', scopeProps));
+        return R.ifElse(
+          R.identity,
+          region => deleteRegionsContainer(apolloConfig, {userState}, region),
+          _ => of({clearedScopeObjsUserState: {data: {mutate: {userState}}}})
+        )(strPathOr(null, 'region', scopeProps));
       }
     )
   ])({apolloConfig, userState});
@@ -428,7 +447,8 @@ export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, userSta
  * @param {Object} scopeConfig.scopeName e.g. 'project' or 'region'
  * @param {Object} scopeConfig.scopeProps The scope props to match test the scope, such as {keyContains: 'test'}
  * @param {Object} userState The user state for which to delete scope objects
- * @return {Object} {deleted[scope name]s: deleted objects, clearedScopeObjsUserState: The user state post clearing}
+ * @return {Object} {deleted[scope name]s: deleted objects, clearedScopeObjsUserState: Response after mutating the
+ * user state to clear the scope instances. In the form {data: {mutate|updateUserState: {...}}}
  */
 export const deleteScopeObjectsContainer = (
   apolloConfig,
@@ -475,7 +495,7 @@ export const deleteScopeObjectsContainer = (
       }
     ),
     // Remove existing scope objects from the userState if userState was given
-    mapToNamedPathAndInputs('clearedScopeObjsUserState', 'data.mutate.userState',
+    mapToNamedResponseAndInputs('clearedScopeObjsUserState',
       ({apolloConfig, userState}) => {
         return R.ifElse(
           R.identity,
@@ -492,7 +512,8 @@ export const deleteScopeObjectsContainer = (
         )(userState);
       }
     )
-  ])(({apolloConfig, userState}));
+  ])
+  (({apolloConfig, userState}));
 };
 
 /**
@@ -502,7 +523,7 @@ export const deleteScopeObjectsContainer = (
  * @param {Object} requestConfig
  * @param {Object} [requestConfig.userState] optional
  * @param props
- * @return {*}
+ * @return {Object} {deleteRegions: deleted region, clearedScopeObjsUserState: The user state post clearing}
  */
 export const deleteRegionsContainer = (apolloConfig, {userState = null}, props) => {
   return deleteScopeObjectsContainer(
@@ -523,7 +544,7 @@ export const deleteRegionsContainer = (apolloConfig, {userState = null}, props) 
  * @param {Object} requestConfig
  * @param {Object} [requestConfig.userState] optional
  * @param props
- * @return {*}
+ * @return {Object}  {deletedProjects: deleted project, clearedScopeObjsUserState: The user state post clearing}
  */
 export const deleteProjectsContainer = (apolloConfig, {userState = null}, props) => {
   return deleteScopeObjectsContainer(
