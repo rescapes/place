@@ -84,9 +84,6 @@ export const queryUsingPaginationContainer = v(R.curry((
     {objects: `[${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType]`},
     readInputTypeMapper
   );
-  // Make object props and array if not.
-  const propsAsArray = toArrayIfNot(props);
-
   return composeWithComponentMaybeOrTaskChain([
     // Take the first page response and use it to make the remaining queries
     // Each call to accumulatedSinglePageQueryContainer receives the accumulated results from previous
@@ -94,7 +91,7 @@ export const queryUsingPaginationContainer = v(R.curry((
     firstPage => {
       // Get the number of pages so we can query for the remaining pages if there are any
       const pageCount = reqPathThrowing(['data', name, 'pages'], firstPage);
-      // Run a query for each page (based on the result of the first query)
+      // Run a query for each page (based on the result of the first query). Reverse since we are composing
       return composeWithComponentMaybeOrTaskChain(
         R.reverse(R.times(page => {
             // Query for the page and extract the objects, since we don't need intermediate page info
@@ -112,7 +109,7 @@ export const queryUsingPaginationContainer = v(R.curry((
                 },
                 // Pass the compbined previous results
                 {previousPages},
-                propsAsArray
+                props,
               );
             };
           },
@@ -123,7 +120,7 @@ export const queryUsingPaginationContainer = v(R.curry((
     },
 
     // Initial query determines tells us the number of pages
-    ({page}) => {
+    ({page, props}) => {
       return _paginatedQueryContainer(
         {apolloConfig, regionConfig},
         {
@@ -134,10 +131,10 @@ export const queryUsingPaginationContainer = v(R.curry((
           readInputTypeMapper: readInputTypeMapperOrDefault,
           normalizeProps
         },
-        propsAsArray
+        props
       );
     }
-  ])({page: 1});
+  ])({page: 1, props});
 }), [
   ['config', PropTypes.shape(
     {
@@ -245,55 +242,6 @@ export const queryPageContainer = v(R.curry((
   'queryPageContainer');
 
 /**
- * Query objects paginated and return objects and the queryParams
- * @param {Object} config.apolloConfig The Apollo config
- * @param {Object} config.regionConfig Passed to t
- * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and returns limited props
- * to pass to the query
- * @param {Object} queryConfig.outputParams The output params of the query. This is in the form
- * {
- *   pageSize,
- *   page,
- *   pages,
- *   hasNext,
- *   hasPrev,
- *   objects
- * }
- * @param {Object} queryConfig.propsStructure A structure of the props when using Apollo component
- * @param {Object} queryConfig.outputParams The output params of the query. This is in the form
- * @param {Object} props The props for the query. This must be in the form
- * {pageSize: the page size, page: the current page to request, objects: normal location props}
- * @return {Task|Maybe} A task or Maybe containing the locations and the queryParams
- */
-export const queryObjectsPaginatedContainer = v(R.curry(
-  (
-    apolloConfig,
-    {name, outputParams, readInputTypeMapper, normalizeProps},
-    props
-  ) => {
-    return makeQueryContainer(
-      apolloConfig,
-      {name, readInputTypeMapper, outputParams},
-      R.over(
-        R.lensProp('objects'),
-        objs => {
-          // Apply the normalizeProps function if specified
-          return (normalizeProps || R.identity)(objs);
-        },
-        props
-      )
-    );
-  }),
-  [
-    ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
-    ['queryConfig', PropTypes.shape({
-      outputParams: PropTypes.shape().isRequired
-    })
-    ],
-    ['props', PropTypes.shape().isRequired]
-  ], 'queryObjectsPaginatedContainer');
-
-/**
  * Paginated query for locations
  * @param {Object} config
  * @param {Object} config.apolloConfig
@@ -318,9 +266,34 @@ export const _paginatedQueryContainer = (
   {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
   props
 ) => {
-  const propSets = toArrayIfNot(props);
-  return queryObjectsPaginatedContainer(
-    apolloConfig,
+  return makeQueryContainer(
+    // Modify apolloConfig.options.variables to modify props with pagination parameters
+    // We do this here so we can pass normal props to the query component so that it passes the normal
+    // props to its child component (plus its query results)
+    R.over(
+      R.lensPath(['options', 'variables']),
+      variables => {
+        return props => {
+          return R.compose(
+            // put the props in objects as an array. Pagination queries always accept plural objects, since it's
+            // a many-to-many relationship. But normally we only pass one set of props
+            // We also need to keep props.render at the top level if defined
+            props => R.merge(
+              {
+                pageSize,
+                page,
+                // Omit render from each propSet. It would only be here for the single propSet case anyway
+                objects: toArrayIfNot(R.omit(['render'], props))
+              },
+              R.pick(['render'], props)
+            ),
+            // Call the options.variables function if defined
+            props => (variables || R.identity)(props)
+          )(props);
+        };
+      },
+      apolloConfig
+    ),
     {
       name,
       outputParams: {
@@ -334,20 +307,7 @@ export const _paginatedQueryContainer = (
       readInputTypeMapper,
       normalizeProps
     },
-    // put the props in objects as an array. Pagination queries always accept plural objects, since it's
-    // a many-to-many relationship. But normally we only pass one set of props
-    // We also need to keep props.render at the top level if defined
-    R.merge(
-      {
-        pageSize,
-        page,
-        // Omit render from each propSet. It would only be here for the single propSet case anyway
-        objects: R.map(R.omit(['render']), propSets)
-      },
-      // If we have a render method, then we a single propset.
-      // We'd never pass multiple propsSets
-      R.pick(['render'], R.head(propSets))
-    )
+    props
   );
 };
 
