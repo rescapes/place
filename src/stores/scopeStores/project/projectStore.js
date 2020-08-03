@@ -92,7 +92,15 @@ export const makeProjectsQueryContainer = v(R.curry(({apolloConfig, regionConfig
     );
   }),
   [
-    ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
+    ['config', PropTypes.shape(
+      {
+        apolloConfig: PropTypes.shape().isRequired
+      },
+      {
+        regionConfig: PropTypes.shape()
+      }
+    ).isRequired
+    ],
     ['queryConfig', PropTypes.shape({
       outputParams: PropTypes.shape().isRequired
     })],
