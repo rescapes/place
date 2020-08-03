@@ -87,8 +87,6 @@ export const queryUsingPaginationContainer = v(R.curry((
   // Make object props and array if not.
   const propsAsArray = toArrayIfNot(props);
 
-  log.debug(`Checking for existence of objects with props ${inspect(normalizeProps(props))}`);
-
   return composeWithComponentMaybeOrTaskChain([
     // Take the first page response and use it to make the remaining queries
     // Each call to accumulatedSinglePageQueryContainer receives the accumulated results from previous
@@ -210,7 +208,6 @@ export const queryPageContainer = v(R.curry((
       {objects: `[${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType]`},
       readInputTypeMapper
     );
-    log.debug(`Checking for existence of objects with props ${inspect(normalizePropsOrDefault(props))}`);
 
     // Run a query for each page (based on the result of the first query)
     return _paginatedQueryContainer(
