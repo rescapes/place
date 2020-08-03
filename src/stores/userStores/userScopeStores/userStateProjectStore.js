@@ -51,8 +51,9 @@ export const userStateProjectOutputParams = (explicitProjectOutputParams = proje
 
 /**
  * Queries projects that are in the scope of the user and the values of that project
- * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
- * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
+ * @param {Object} config
+ * @param {Object} config.apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
+ * @param {Object} config.apolloConfig.apolloClient An authorized Apollo Client
  * @param {Object} outputParamSets Optional outputParam sets to override the defaults
  * @param {Object} [outputParamSets.userStateProjectOutputParams] Optional userProject output params.
  * Defaults to projectStore.projectOutputParams
@@ -67,7 +68,7 @@ export const userStateProjectOutputParams = (explicitProjectOutputParams = proje
  * @returns {Object} The resulting Projects in a Task in {data: usersProjects: [...]}}
  */
 export const userStateProjectsQueryContainer = v(R.curry((
-  apolloConfig, {
+  {apolloConfig}, {
     userProjectOutputParams: explicitUserProjectOutputParams
   }, propSets) => {
     const scopeName = 'project';

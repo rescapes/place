@@ -51,7 +51,7 @@ describe('userProjectStore', () => {
     composeWithChainMDeep(1, [
       ({apolloConfig, user}) => {
         return userStateProjectsQueryContainer(
-          apolloConfig,
+          {apolloConfig},
           {},
           {
             userState: {user: R.pick(['id'], user)},
@@ -95,7 +95,7 @@ describe('userProjectStore', () => {
       ({apolloConfig, user, projects}) => {
         // Get the name since it will be Shrangrila29 or whatever
         const projectNames = R.map(R.prop('name'), projects);
-        return userStateProjectsQueryContainer(apolloConfig, {}, {
+        return userStateProjectsQueryContainer({apolloConfig}, {}, {
           userState: {user: R.pick(['id'], user)},
           // Limit by geojson (both pass this) and by name (1 passes this)
           userProject: {
@@ -136,7 +136,7 @@ describe('userProjectStore', () => {
     R.composeK(
       ({apolloConfig, user}) => {
         return userStateProjectsQueryContainer(
-          apolloConfig,
+          {apolloConfig},
           {},
           {
             userState: {user: R.pick(['id'], user)},

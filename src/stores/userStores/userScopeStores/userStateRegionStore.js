@@ -44,7 +44,8 @@ export const userStateRegionOutputParams = (explicitRegionOuputParams = regionOu
 
 /**
  * Queries regions that are in the scope of the user and the values of that region
- * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
+ * @param {Object} config
+ * @param {Object} config.apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
  * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
  * @param {Object} outputParamSets Optional outputParam sets to override the defaults
  * @param {Object} [outputParamSets.userStateRegionOutputParams] Optional userRegion output params.
@@ -58,7 +59,7 @@ export const userStateRegionOutputParams = (explicitRegionOuputParams = regionOu
  * @returns {Object} The resulting User Regions in a Task in {data: usersRegions: [...]}}
  */
 export const userStateRegionsQueryContainer = v(R.curry(
-  (apolloConfig, {userRegionOutputParams: explicitUserRegionOutputParams}, propSets) => {
+  ({apolloConfig}, {userRegionOutputParams: explicitUserRegionOutputParams}, propSets) => {
     const scopeName = 'region';
     return makeUserStateScopeObjsQueryContainer(
       apolloConfig,
