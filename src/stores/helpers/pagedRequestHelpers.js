@@ -15,22 +15,13 @@ import {
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   getRenderPropFunction,
-  makeQueryContainer, nameComponent
+  makeQueryContainer,
+  nameComponent
 } from 'rescape-apollo';
-import {
-  capitalize,
-  composeWithChain,
-  composeWithChainMDeep,
-  composeWithMapMDeep,
-  mapToNamedResponseAndInputs,
-  reqPathThrowing,
-  reqStrPathThrowing, toArrayIfNot,
-  traverseReduceWhile
-} from 'rescape-ramda';
+import {capitalize, reqPathThrowing, strPathOr, toArrayIfNot} from 'rescape-ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
 import {loggers} from 'rescape-log';
-import {of} from 'folktale/concurrency/task';
 
 const log = loggers.get('rescapeDefault');
 
@@ -90,14 +81,24 @@ export const queryUsingPaginationContainer = v(R.curry((
     // pages and concats the new response to them
     nameComponent('tailPagesQueries', firstPage => {
       // Get the number of pages so we can query for the remaining pages if there are any
-      const pageCount = reqPathThrowing(['data', name, 'pages'], firstPage);
+      const pageCount = strPathOr(null, ['data', name, 'pages'], firstPage);
       // Run a query for each page (based on the result of the first query). Reverse since we are composing
       return composeWithComponentMaybeOrTaskChain(
         R.reverse(R.times(page => {
             // Query for the page and extract the objects, since we don't need intermediate page info
             return nameComponent(`page${page}Query`, previousPages => {
               return accumulatedSinglePageQueryContainer(
-                {apolloConfig, regionConfig},
+                {
+                  apolloConfig: R.merge(
+                    apolloConfig, {
+                      skip: !pageCount || R.any(
+                        previousPage => R.propOr(false, 'loading', previousPage),
+                        previousPages
+                      )
+                    }
+                  ),
+                  regionConfig
+                },
                 {
                   name,
                   outputParams,
