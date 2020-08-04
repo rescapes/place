@@ -9,37 +9,14 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import * as R from 'ramda';
-import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers';
+import {
+  _modifyApolloConfigOptionsVariablesForPagination,
+  queryPageContainer,
+  queryUsingPaginationContainer
+} from './pagedRequestHelpers';
 import {capitalize, toArrayIfNot} from 'rescape-ramda';
 
-/**
- * Modifies the props passed to options.variables for paginated queries, since options.variables
- * expects the model object params, not the pagination params
- * @param apolloConfig
- */
-export const _modifyApolloConfigOptionsVariablesForPagination = apolloConfig => {
-  return R.when(
-    R.view(R.lensPath(['options', 'variables'])),
-    R.over(
-      R.lensPath(['options', 'variables']),
-      variables => {
-        return props => {
-          return R.over(
-            R.lensProp('objects'),
-            objects => {
-              // objects are always an array of propSets, but for now assume only one set
-              // the variables function can return an array of sets here if it wants
-              return toArrayIfNot(variables(
-                R.head(objects)
-              ));
-            },
-            props
-          );
-        };
-      }
-    )
-  )(apolloConfig);
-};
+
 
 /**
  * Given a query container and request type returns version of the query for the given request types.
@@ -90,7 +67,7 @@ export const queryVariationContainers = R.curry((
                 return queryPageContainer(
                   // Update apolloConfig so that props.objects are passed to the optional options.variables function
                   {
-                    apolloConfig: _modifyApolloConfigOptionsVariablesForPagination(apolloConfig),
+                    apolloConfig,
                     regionConfig: regionConfig || {}
                   },
                   R.omit(['readInputTypeMapper'],
@@ -113,9 +90,8 @@ export const queryVariationContainers = R.curry((
             [R.equals('paginatedAll'),
               () => {
                 return queryUsingPaginationContainer(
-                  // Update apolloConfig so that props.objects are passed to the optional options.variables function
                   {
-                    apolloConfig: _modifyApolloConfigOptionsVariablesForPagination(apolloConfig),
+                    apolloConfig,
                     regionConfig: regionConfig || {}
                   },
                   R.omit(['readInputTypeMapper'],

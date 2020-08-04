@@ -15,7 +15,7 @@ import {
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   getRenderPropFunction,
-  makeQueryContainer
+  makeQueryContainer, nameComponent
 } from 'rescape-apollo';
 import {
   capitalize,
@@ -88,14 +88,14 @@ export const queryUsingPaginationContainer = v(R.curry((
     // Take the first page response and use it to make the remaining queries
     // Each call to accumulatedSinglePageQueryContainer receives the accumulated results from previous
     // pages and concats the new response to them
-    firstPage => {
+    nameComponent('tailPagesQueries', firstPage => {
       // Get the number of pages so we can query for the remaining pages if there are any
       const pageCount = reqPathThrowing(['data', name, 'pages'], firstPage);
       // Run a query for each page (based on the result of the first query). Reverse since we are composing
       return composeWithComponentMaybeOrTaskChain(
         R.reverse(R.times(page => {
             // Query for the page and extract the objects, since we don't need intermediate page info
-            return previousPages => {
+            return nameComponent(`page${page}Query`, previousPages => {
               return accumulatedSinglePageQueryContainer(
                 {apolloConfig, regionConfig},
                 {
@@ -109,15 +109,15 @@ export const queryUsingPaginationContainer = v(R.curry((
                 },
                 // Pass the compbined previous results
                 {previousPages},
-                props,
+                props
               );
-            };
+            });
           },
           // Skip the first page, we already have it
           pageCount - 1
         ))
       )(firstPage);
-    },
+    }),
 
     // Initial query determines tells us the number of pages
     ({page, props}) => {
@@ -208,7 +208,10 @@ export const queryPageContainer = v(R.curry((
 
     // Run a query for each page (based on the result of the first query)
     return _paginatedQueryContainer(
-      {apolloConfig, regionConfig},
+      {
+        apolloConfig,
+        regionConfig
+      },
       {
         name,
         outputParams,
@@ -267,33 +270,8 @@ export const _paginatedQueryContainer = (
   props
 ) => {
   return makeQueryContainer(
-    // Modify apolloConfig.options.variables to modify props with pagination parameters
-    // We do this here so we can pass normal props to the query component so that it passes the normal
-    // props to its child component (plus its query results)
-    R.over(
-      R.lensPath(['options', 'variables']),
-      variables => {
-        return props => {
-          return R.compose(
-            // put the props in objects as an array. Pagination queries always accept plural objects, since it's
-            // a many-to-many relationship. But normally we only pass one set of props
-            // We also need to keep props.render at the top level if defined
-            props => R.merge(
-              {
-                pageSize,
-                page,
-                // Omit render from each propSet. It would only be here for the single propSet case anyway
-                objects: toArrayIfNot(R.omit(['render'], props))
-              },
-              R.pick(['render'], props)
-            ),
-            // Call the options.variables function if defined
-            props => (variables || R.identity)(props)
-          )(props);
-        };
-      },
-      apolloConfig
-    ),
+    // Modify options.variables to put props in objects: [...]
+    _modifyApolloConfigOptionsVariablesForPagination(apolloConfig),
     {
       name,
       outputParams: {
@@ -307,7 +285,7 @@ export const _paginatedQueryContainer = (
       readInputTypeMapper,
       normalizeProps
     },
-    props
+    R.merge({page, pageSize}, props)
   );
 };
 
@@ -390,10 +368,12 @@ export const accumulatedSinglePageQueryContainer = (
         page => {
           return _paginatedQueryContainer(
             {
-              apolloConfig: R.merge(
-                apolloConfig,
-                {options: {skip: R.complement(R.prop)('data', previousPages)}}
-              ), regionConfig
+              apolloConfig: R.set(
+                R.lensPath(['options', 'skip']),
+                R.complement(R.prop)('data', previousPages),
+                apolloConfig
+              ),
+              regionConfig
             },
             {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
             props
@@ -402,4 +382,32 @@ export const accumulatedSinglePageQueryContainer = (
       )(page);
     }
   ])(page);
+};
+
+/**
+ * Modifies the props passed to options.variables for paginated queries, since options.variables
+ * expects the model object params, not the pagination params
+ * @param {Object} apolloConfig The apollo Config
+ */
+export const _modifyApolloConfigOptionsVariablesForPagination = apolloConfig => {
+  return R.over(
+    R.lensPath(['options', 'variables']),
+    variables => {
+      return props => {
+        return R.merge(
+          // Page props and render are combined with the objects prop
+          R.pick(['render', 'page', 'pageSize'], props),
+          {
+            // objects are always an array of propSets, but for now assume only one set
+            // the variables function can return an array of sets here if it wants
+            objects: R.compose(
+              toArrayIfNot,
+              R.omit(['render', 'page', 'pageSize']),
+              p => (variables || R.identity)(p)
+            )(props)
+          }
+        );
+      };
+    }
+  )(apolloConfig);
 };

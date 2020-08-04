@@ -32,7 +32,6 @@ test('queryUsingPaginationContainer', done => {
           typeName: 'project',
           name: 'projectsPaginated',
           pageSize: 1,
-          filterObjsByConfig: ({regionConfig}, objs) => objs,
           outputParams: projectOutputParams,
           normalizeProps: props => {
             return props;

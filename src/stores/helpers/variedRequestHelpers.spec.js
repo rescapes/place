@@ -34,41 +34,52 @@ describe('variedRequestHelpers', () => {
     const task = composeWithChain([
       mapToNamedResponseAndInputs('projectsPagedAllMinimized',
         ({projects, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns all 10 with 2 queries of pageSize 5
           return reqStrPathThrowing('projectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('projectsPagedAll',
         ({projects, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns all 10 with 2 queries of pageSize 5
           return reqStrPathThrowing('projectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('projectsPaged',
         ({projects, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns 3 of the 10 projects on page 3
           return reqStrPathThrowing('projectsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
         }
       ),
       mapToNamedResponseAndInputs('projectsMinimized',
         ({projects, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           return reqStrPathThrowing('projectsMinimized', variations)(props);
         }
       ),
       mapToNamedResponseAndInputs('projectsFull',
         ({projects, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projects)};
+          const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           return reqStrPathThrowing('projects', variations)(props);
         }
       ),
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
           return of(queryVariationContainers(
-            {apolloConfig, regionConfig: {}},
+            {
+              apolloConfig: R.merge(apolloConfig, {
+                  options: {
+                    variables: props => {
+                      // Search by whatever props are passed into locationFilter
+                      return R.propOr(null, 'projectFilter', props);
+                    },
+                    errorPolicy: 'all'
+                  }
+                }
+              ), regionConfig: {}
+            },
             {
               name: 'project',
               requestTypes: [
@@ -80,7 +91,11 @@ describe('variedRequestHelpers', () => {
                 // Note that we don't pass page size here because we want to be able to query for different pages
                 // We either pass page and page size here or in props instead
                 {type: 'paginatedAll', args: {}},
-                {name: 'paginatedAllMinimized', type:'paginatedAll', args: {outputParams: projectOutputParamsMinimized}}
+                {
+                  name: 'paginatedAllMinimized',
+                  type: 'paginatedAll',
+                  args: {outputParams: projectOutputParamsMinimized}
+                }
               ],
               queryConfig: {
                 outputParams: projectOutputParams,
@@ -115,5 +130,5 @@ describe('variedRequestHelpers', () => {
         expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPagedAllMinimized))).toEqual(10);
       }
     }, errors, done));
-  });
+  }, 10000000);
 });
