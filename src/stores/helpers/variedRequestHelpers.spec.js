@@ -36,33 +36,33 @@ describe('variedRequestHelpers', () => {
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('projectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+          return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('projectsPagedAll',
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('projectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+          return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('projectsPaged',
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns 3 of the 10 projects on page 3
-          return reqStrPathThrowing('projectsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
+          return reqStrPathThrowing('queryProjectsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
         }
       ),
       mapToNamedResponseAndInputs('projectsMinimized',
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
-          return reqStrPathThrowing('projectsMinimized', variations)(props);
+          return reqStrPathThrowing('queryProjectsMinimized', variations)(props);
         }
       ),
       mapToNamedResponseAndInputs('projectsFull',
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
-          return reqStrPathThrowing('projects', variations)(props);
+          return reqStrPathThrowing('queryProjects', variations)(props);
         }
       ),
       mapToNamedResponseAndInputs('variations',

@@ -42,6 +42,8 @@ import {capitalize, toArrayIfNot} from 'rescape-ramda';
  * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
  * passed to the query. Defaults to passing all of them
  * @param {Object} props
+ * @returns {Object} keyed by query names, e.g. queryFoos, queryFoosPaginated, queryFoosMinimized, valued by
+ * the query container
  */
 export const queryVariationContainers = R.curry((
   {apolloConfig, regionConfig},
@@ -56,7 +58,7 @@ export const queryVariationContainers = R.curry((
   return R.fromPairs(R.map(
     ({type, name: typeName, args}) => {
       const pluralName = `${name}s`;
-      const key = `${pluralName}${capitalize(typeName || type || '')}`;
+      const key = `query${capitalize(pluralName)}${capitalize(typeName || type || '')}`;
       return [
         key,
         props => {

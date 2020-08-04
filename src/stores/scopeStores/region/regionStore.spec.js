@@ -75,26 +75,26 @@ describe('regionStore', () => {
         ({regions, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('regionsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+          return reqStrPathThrowing('queryRegionsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('regionsPaged',
         ({regions, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
           // Returns 3 of the 10 regions on page 3
-          return reqStrPathThrowing('regionsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
+          return reqStrPathThrowing('queryRegionsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
         }
       ),
       mapToNamedResponseAndInputs('regionsMinimized',
         ({regions, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
-          return reqStrPathThrowing('regionsMinimized', variations)(props);
+          return reqStrPathThrowing('queryRegionsMinimized', variations)(props);
         }
       ),
       mapToNamedResponseAndInputs('regionsFull',
         ({regions, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
-          return reqStrPathThrowing('regions', variations)(props);
+          return reqStrPathThrowing('queryRegions', variations)(props);
         }
       ),
       mapToNamedResponseAndInputs('variations',
