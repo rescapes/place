@@ -120,7 +120,7 @@ export const queryUsingPaginationContainer = v(R.curry((
     }),
 
     // Initial query determines tells us the number of pages
-    ({page, props}) => {
+    ({page, ...props}) => {
       return _paginatedQueryContainer(
         {apolloConfig, regionConfig},
         {
@@ -134,7 +134,7 @@ export const queryUsingPaginationContainer = v(R.curry((
         props
       );
     }
-  ])({page: 1, props});
+  ])(R.merge({page: 1}, props));
 }), [
   ['config', PropTypes.shape(
     {
