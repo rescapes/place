@@ -65,7 +65,8 @@ export {
   regionOutputParamsMinimized,
   regionReadInputTypeMapper,
   makeRegionMutationContainer,
-  makeRegionsQueryContainer
+  makeRegionsQueryContainer,
+  regionQueryVariationContainers
 } from './stores/scopeStores/region/regionStore';
 
 export {
