@@ -79,45 +79,43 @@ export const queryUsingPaginationContainer = v(R.curry((
     // Take the first page response and use it to make the remaining queries
     // Each call to accumulatedSinglePageQueryContainer receives the accumulated results from previous
     // pages and concats the new response to them
-    nameComponent('tailPagesQueries', firstPage => {
+    nameComponent('tailPagesQueries', firstPageResponse => {
       // Get the number of pages so we can query for the remaining pages if there are any
-      const pageCount = strPathOr(null, ['data', name, 'pages'], firstPage);
+      const pageCount = strPathOr(0, `data.${name}.pages`, firstPageResponse);
+      if (pageCount < 2) {
+        // Loading the first page or there is only 1 page
+        return containerForApolloType(
+          apolloConfig,
+          {
+            render: getRenderPropFunction(props),
+            response: firstPageResponse
+          }
+        );
+      }
       // Run a query for each page (based on the result of the first query). Reverse since we are composing
       return composeWithComponentMaybeOrTaskChain(
         R.reverse(R.times(page => {
             // Query for the page and extract the objects, since we don't need intermediate page info
             return nameComponent(`page${page}Query`, previousPages => {
               return accumulatedSinglePageQueryContainer(
-                {
-                  apolloConfig: R.merge(
-                    apolloConfig, {
-                      skip: !pageCount || R.any(
-                        previousPage => R.propOr(false, 'loading', previousPage),
-                        previousPages
-                      )
-                    }
-                  ),
-                  regionConfig
-                },
+                {apolloConfig, regionConfig},
                 {
                   name,
                   outputParams,
                   readInputTypeMapper: readInputTypeMapperOrDefault,
-                  normalizeProps,
-                  pageSize: pageSizeOrDefault,
-                  // Skip the first page + 1-based index
-                  page: page + 2
+                  normalizeProps
                 },
-                // Pass the compbined previous results
+                // Pass the combined previous results
                 {previousPages},
-                props
+                // Skip the first page + 1-based index
+                R.merge(props, {pageSize: pageSizeOrDefault, page: page+2})
               );
             });
           },
           // Skip the first page, we already have it
           pageCount - 1
         ))
-      )(firstPage);
+      )(firstPageResponse);
     }),
 
     // Initial query determines tells us the number of pages
@@ -314,7 +312,7 @@ export const _paginatedQueryContainer = (
  */
 export const accumulatedSinglePageQueryContainer = (
   {apolloConfig, regionConfig},
-  {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
+  {name, outputParams, readInputTypeMapper, normalizeProps},
   {previousPages},
   props
 ) => {
@@ -357,7 +355,7 @@ export const accumulatedSinglePageQueryContainer = (
         }
       );
     },
-    page => {
+    ({page, pageSize, ...props}) => {
       return R.ifElse(
         R.equals(1),
         // Use the first result for page 1
@@ -382,7 +380,7 @@ export const accumulatedSinglePageQueryContainer = (
         }
       )(page);
     }
-  ])(page);
+  ])(props)
 };
 
 /**
