@@ -15,7 +15,7 @@ import {
   queryUsingPaginationContainer
 } from './pagedRequestHelpers';
 import {capitalize, toArrayIfNot} from 'rescape-ramda';
-import {nameComponent} from 'rescape-apollo';
+
 
 
 /**
@@ -62,71 +62,68 @@ export const queryVariationContainers = R.curry((
       return [
         key,
         props => {
-          return nameComponent(
-            key,
-            R.cond([
-              // Queries for one page at a time
-              [R.equals('paginated'),
-                () => {
-                  return queryPageContainer(
-                    // Update apolloConfig so that props.objects are passed to the optional options.variables function
-                    {
-                      apolloConfig,
-                      regionConfig: regionConfig || {}
-                    },
-                    R.omit(['readInputTypeMapper'],
-                      R.mergeAll([
-                        queryConfig,
-                        {
+          return R.cond([
+            // Queries for one page at a time
+            [R.equals('paginated'),
+              () => {
+                return queryPageContainer(
+                  // Update apolloConfig so that props.objects are passed to the optional options.variables function
+                  {
+                    apolloConfig,
+                    regionConfig: regionConfig || {}
+                  },
+                  R.omit(['readInputTypeMapper'],
+                    R.mergeAll([
+                      queryConfig,
+                      {
+                        typeName: name,
+                        name: `${pluralName}Paginated`
+                      },
+                      normalizeProps,
+                      args
+                    ])
+                  ),
+                  props
+                );
+              }
+            ],
+            // Queries for all objects using pages whose results are combined.
+            // This prevents large query results that tax the server
+            [R.equals('paginatedAll'),
+              () => {
+                return queryUsingPaginationContainer(
+                  {
+                    apolloConfig,
+                    regionConfig: regionConfig || {}
+                  },
+                  R.omit(['readInputTypeMapper'],
+                    R.mergeAll([
+                        queryConfig, {
                           typeName: name,
                           name: `${pluralName}Paginated`
                         },
                         normalizeProps,
                         args
-                      ])
-                    ),
-                    props
-                  );
-                }
-              ],
-              // Queries for all objects using pages whose results are combined.
-              // This prevents large query results that tax the server
-              [R.equals('paginatedAll'),
-                () => {
-                  return queryUsingPaginationContainer(
-                    {
-                      apolloConfig,
-                      regionConfig: regionConfig || {}
-                    },
-                    R.omit(['readInputTypeMapper'],
-                      R.mergeAll([
-                          queryConfig, {
-                            typeName: name,
-                            name: `${pluralName}Paginated`
-                          },
-                          normalizeProps,
-                          args
-                        ]
-                      )
-                    ),
-                    props
-                  );
-                }
-              ],
-              // Normal queries such as with full outputParams or minimized outputParams
-              // Type is optional here
-              [R.T,
-                () => {
-                  // Perform the normal query
-                  return queryContainer(
-                    {apolloConfig, regionConfig},
-                    R.mergeAll([queryConfig, args]),
-                    normalizeProps(props)
-                  );
-                }
-              ]
-            ])(type)
-          );
+                      ]
+                    )
+                  ),
+                  props
+                );
+              }
+            ],
+            // Normal queries such as with full outputParams or minimized outputParams
+            // Type is optional here
+            [R.T,
+              () => {
+                // Perform the normal query
+                return queryContainer(
+                  {apolloConfig, regionConfig},
+                  R.mergeAll([queryConfig, args]),
+                  normalizeProps(props)
+                );
+              }
+            ]
+          ])(type);
         }
       ];
     },
