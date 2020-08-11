@@ -126,3 +126,5 @@ export {
   createSampleRegionContainer,
   createSampleRegionsContainer
 } from './stores/scopeStores/region/regionStore.sample';
+
+export {matchingUserStateScopeInstances, makeUserStateScopeObjsMutationContainer} from './stores/userStores/userScopeStores/userStateHelpers'

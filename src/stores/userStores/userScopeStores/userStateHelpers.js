@@ -11,7 +11,16 @@
 
 import * as R from 'ramda';
 import {v} from 'rescape-validate';
-import {capitalize, compact, mergeDeep, mergeDeepAll, pickDeepPaths, reqPathThrowing, strPathOr} from 'rescape-ramda';
+import {
+  capitalize,
+  compact,
+  mergeDeep,
+  mergeDeepAll,
+  onlyOneThrowing,
+  pickDeepPaths,
+  reqPathThrowing,
+  strPathOr
+} from 'rescape-ramda';
 import {
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
@@ -439,3 +448,41 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
     userScopeObjs: PropTypes.array
   })]
 ], 'queryScopeObjsOfUserStateContainer');
+
+/**
+ * Matches 0 or 1 userState scope instances for the scope given by scopeName (e.g. region, project, location).
+ * The predicate is called for each scope instance.
+ * @param {String} scopeName Scope name. If 'project', the userState.data.userProjects array is sought.
+ * Each user scope instance (e.g. userProject) is called on predicate for a match.
+ * @param {Function} predicate. Unary function expecting a UserState scope instance. For example strPathOr(false, 'activity.isActive')
+ * to find UserState scope instance that is active.
+ * @param {Object} userState The userState to search or null
+ * @returns {Object} The matching UserState scope instance (e.g. the UserState project {activity: {isActive: true}, selection: {isSelected: true}, project}
+ * Raises an error if multiple values match the predicate. Use matchingUserStateScopeInstances to support multiple matches
+ */
+export const matchingUserStateScopeInstance = R.curry((scopeName, predicate, userState) => {
+  return R.compose(
+    R.head,
+    onlyOneThrowing,
+    matchingUserStateScopeInstances(scopeName, predicate)
+  )(userState);
+});
+
+/**
+ * Matches 0 or more userState scope instances for the scope given by scopeName (e.g. region, project, location).
+ * The predicate is called for each scope instance.
+ * @param {String} scopeName Scope name. If 'project', the userState.data.userProjects array is sought.
+ * Each user scope instance (e.g. userProject) is called on predicate for a match.
+ * @param {Function} predicate. Unary function expecting a UserState scope instance. For example strPathOr(false, 'selection.isSelected')
+ * to find UserState scope instance that is active.
+ * @param {Object} userState The userState to search or null
+ * @returns {Object} The matching UserState scope instances (e.g. the UserState projects
+ * [{selection: {isSelected: true}, activity: {isActive: true}, project}, {selection: {isSelected: true}, activity: {isActive: false}, project}]
+ */
+export const matchingUserStateScopeInstances = R.curry((scopeName, predicate, userState) => {
+  const userScopeName = _userScopeName(scopeName);
+  return R.filter(
+    predicate,
+    strPathOr([], `data.${userScopeName}`, userState)
+  );
+});
