@@ -40,7 +40,7 @@ export {
   usersSelector
 } from './selectors/userSelectors';
 export {
-  makeMapboxesQueryResultTask,
+  makeMapboxQueryContainer,
   makeRegionMutationTask,
   projectMapboxOutputParamsCreator,
   regionMapboxOutputParamsCreator,

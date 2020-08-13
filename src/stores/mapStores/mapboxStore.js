@@ -11,21 +11,18 @@
 
 import bbox from '@turf/bbox';
 import bboxPolygon from '@turf/bbox-polygon';
-import {point, featureCollection} from '@turf/helpers';
+import {featureCollection, point} from '@turf/helpers';
 import * as R from 'ramda';
-import {makeMutationRequestContainer, makeSettingsQueryContainer} from 'rescape-apollo';
+import {
+  composeWithComponentMaybeOrTaskChain,
+  containerForApolloType,
+  getRenderPropFunction,
+  makeMutationRequestContainer,
+  makeSettingsQueryContainer
+} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
-import {of, waitAll} from 'folktale/concurrency/task';
-import {
-  compact,
-  composeWithChain, mergeDeepAll,
-  reqStrPath,
-  reqStrPathThrowing,
-  resultsToResultObj,
-  resultToTaskNeedingResult, sequenceBucketed,
-  strPathOr
-} from 'rescape-ramda';
+import {compact, mergeDeepAll, pickDeepPaths, reqStrPath, reqStrPathThrowing, strPathOr} from 'rescape-ramda';
 import {makeRegionsQueryContainer} from '../scopeStores/region/regionStore';
 import {makeCurrentUserStateQueryContainer} from '../userStores/userStateStore';
 import {makeProjectsQueryContainer} from '../scopeStores/project/projectStore';
@@ -170,60 +167,93 @@ export const scopeObjMapboxOutputParamsCreator = (scopeName, mapboxOutputParamsF
  * project queries are made
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
-export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams, propSets) => {
-    return composeWithChain([
-      mapboxes => {
+export const makeMapboxQueryContainer = v(R.curry((apolloConfig, outputParams, props) => {
+    return composeWithComponentMaybeOrTaskChain([
+      settingsResponse => {
+        if (!R.prop('data', settingsResponse)) {
+          // return the previous response if loading. The requests are independent but we don't have a compose
+          // call for parallel requests yet
+          return settingsResponse;
+        }
         // Merge the mapbox results. This takes the most last defined viewport to give use the viewport
         // for the most specific scope
         // TODO if we need to deep merge anything in the mapboxes we need to add it here
-        return of(
-          R.mergeAll(mapboxes)
+        return containerForApolloType(
+          apolloConfig,
+          {
+            render: getRenderPropFunction(props),
+            // Override the data with the consolidated mapbox
+            response: R.over(
+              R.lensProp('data'),
+              () => ({
+                mapbox: R.mergeAll(
+                  R.map(
+                    path => strPathOr(null, path, settingsResponse),
+                    ['data.mapbox', 'props.regionsMapbox', 'props.projectsMapbox', 'props.userStateMapbox']
+                  )
+                )
+              }),
+              settingsResponse
+            )
+          }
         );
       },
-      // Each Result.Ok is mapped to a Task. Result.Errors are mapped to a Task.of
-      // [Result] -> [Task Object]
-      ({propSets}) => R.map(
-        // Eliminate any Result.Error
-        values => R.prop('Ok', resultsToResultObj(values)),
-        // Seek each mapbox state. This is from lowest to highest priority
-        // PropSets that are missing will be discarded as a Result.Error
-        R.sequence(of, [
-          // Get the global Mapbox state from the settings object
-          resultToTaskNeedingResult(
-            props => {
-              return _makeSettingsQueryResolveMapboxContainer(apolloConfig, outputParams, props);
-            },
-            // Object -> Result Ok|Error
-            reqStrPath('settings', propSets)
-          ),
-          // Get the mapbox settings for the given region
-          resultToTaskNeedingResult(
-            props => {
-              return _makeRegionsQueryResolveMapboxContainer(apolloConfig, outputParams, props);
-            },
-            // Object -> Result Ok|Error
-            reqStrPath('regionFilter', propSets)
-          ),
-          // Get the mapbox settings for the given project
-          resultToTaskNeedingResult(
-            props => {
-              return _makeProjectsQueryResolveMapboxContainer(apolloConfig, outputParams, props);
-            },
-            // Object -> Result Ok|Error
-            reqStrPath('projectFilter', propSets)
-          ),
-          // The UserState's various mapbox values
-          resultToTaskNeedingResult(
-            props => {
-              return _makeCurrentUserStateQueryResolveMapboxContainer(apolloConfig, outputParams, props);
-            },
-            // user arg is required. This gives a Result.Error if it doesn't exist
-            // Object -> Result Ok|Error
-            reqStrPath('user', propSets)
+      regionsResponse => {
+        if (!R.prop('settings') || !R.prop('data', regionsResponse)) {
+          // return the previous response if loading or no settings
+          // The requests are independent but we don't have a compose call for parallel requests yet
+          return regionsResponse;
+        }
+        return _makeSettingsQueryResolveMapboxContainer(
+          apolloConfig,
+          outputParams,
+          // Pass the last mapbox results with the props to accumulate mapboxes
+          R.merge(
+            reqStrPathThrowing('props', regionsResponse),
+            {regionsMapbox: reqStrPathThrowing('data.mapbox', regionsResponse)}
           )
-        ])
-      )
-    ])({propSets});
+        );
+      },
+      projectsResponse => {
+        if (!R.prop('regionFilter', props) || !R.prop('data', projectsResponse)) {
+          // return the previous response if loading or no regionFilter.
+          // The requests are independent but we don't have a compose call for parallel requests yet
+          return projectsResponse;
+        }
+        return _makeRegionsQueryResolveMapboxContainer(
+          apolloConfig,
+          outputParams,
+          // Pass the last mapbox results with the props to accumulate mapboxes
+          R.merge(
+            reqStrPathThrowing('props', projectsResponse),
+            {projectsMapbox: reqStrPathThrowing('data.mapbox', projectsResponse)}
+          )
+        );
+      },
+      userStateMapboxResponse => {
+        if (!R.prop('projectFilter', props) || !R.prop('data', userStateMapboxResponse)) {
+          // return the previous response if loading or no projectFilter.
+          // The requests are independent but we don't have a compose call for parallel requests yet
+          return userStateMapboxResponse;
+        }
+        return _makeProjectsQueryResolveMapboxContainer(
+          apolloConfig,
+          outputParams,
+          // Pass the last mapbox results with the props to accumulate mapboxes
+          R.merge(
+            props,
+            {userStateMapbox: reqStrPathThrowing('data.mapbox', userStateMapboxResponse)}
+          )
+        );
+      },
+      props => {
+        return _makeCurrentUserStateQueryResolveMapboxContainer(
+          apolloConfig,
+          outputParams,
+          props
+        );
+      }
+    ])(props);
   }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
@@ -233,7 +263,7 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
       regionFilter: PropTypes.shape().isRequired,
       projectFilter: PropTypes.shape().isRequired
     }).isRequired]
-  ], 'makeMapboxesQueryResultTask');
+  ], 'makeMapboxQueryContainer');
 
 const consolidateMapboxes = mapboxes => {
   const viewports = R.map(
@@ -292,10 +322,30 @@ const _consolidateViewports = viewports => {
   )(viewports);
 };
 
+/**
+ * Requests the userState and combines it the mapbox values in data.userGlobal, data.userRegions, and data.userProject
+ * into a single mapbox value
+ * @param apolloConfig
+ * @param outputParams
+ * @param props
+ * @returns {Task|Object} The userstate response with data overridden as {data: mapbox} object as a task or component.
+ * If a component an not ready then the loading userStateResponse is returned
+ * @private
+ */
 const _makeCurrentUserStateQueryResolveMapboxContainer = (apolloConfig, outputParams, props) => {
-  return R.map(
-    value => {
-      const userState = reqStrPathThrowing('data.userStates.0', value);
+  return composeWithComponentMaybeOrTaskChain([
+    userStateResponse => {
+      const userState = strPathOr(null, 'data.userStates.0', userStateResponse);
+      if (userState) {
+        // Loading
+        return containerForApolloType(
+          apolloConfig,
+          {
+            render: getRenderPropFunction(props),
+            response: userStateResponse
+          }
+        );
+      }
 
       const regionMapboxes = R.map(
         region => reqStrPathThrowing('data.mapbox', region),
@@ -307,32 +357,86 @@ const _makeCurrentUserStateQueryResolveMapboxContainer = (apolloConfig, outputPa
         strPathOr([], 'data.projects', userState)
       );
 
-      return R.mergeAll([
-        consolidateMapboxes([strPathOr({}, 'data.userGlobal.mapbox', userState)]),
+      const mapbox = R.mergeAll([
+        consolidateMapboxes(compact([strPathOr(null, 'data.userGlobal.mapbox', userState)])),
         consolidateMapboxes(regionMapboxes),
         consolidateMapboxes(projectMapboxes)
       ]);
+      return containerForApolloType(
+        apolloConfig,
+        {
+          render: getRenderPropFunction(props),
+          // Override the data with the consolidated mapbox
+          response: R.over(
+            R.lensProp('data'),
+            data => ({mapbox}),
+            userStateResponse
+          )
+        }
+      );
     },
     // Query for the user state by id
-    makeCurrentUserStateQueryContainer(
-      apolloConfig,
-      {outputParams: userStateMapboxOutputParamsCreator(outputParams)},
-      {user: props}
-    )
-  );
+    props => {
+      return makeCurrentUserStateQueryContainer(
+        R.merge(apolloConfig, {
+          options: {
+            variables: props => {
+              // Search by whatever props are passed into locationFilter
+              return R.prop('user', props);
+            },
+            errorPolicy: 'all'
+          }
+        }),
+        {outputParams: userStateMapboxOutputParamsCreator(outputParams)},
+        props
+      );
+    }
+  ])(props);
 };
 
 const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, props) => {
-  return R.map(
-    value => {
+  return composeWithComponentMaybeOrTaskChain([
+    projectsResponse => {
+      if (!strPathOr(null, 'data', projectsResponse)) {
+        // Loading
+        return containerForApolloType(
+          apolloConfig,
+          {
+            render: getRenderPropFunction(props),
+            response: projectsResponse
+          }
+        );
+      }
       const mapboxes = R.map(
         region => reqStrPathThrowing('data.mapbox', region),
-        reqStrPathThrowing('data.projects', value)
+        reqStrPathThrowing('data.projects', projectsResponse)
       );
-      return consolidateMapboxes(mapboxes);
+      const mapbox = consolidateMapboxes(mapboxes);
+      return containerForApolloType(
+        apolloConfig,
+        {
+          render: getRenderPropFunction(props),
+          // Override the data with the consolidated mapbox
+          response: R.over(
+            R.lensProp('data'),
+            data => ({mapbox}),
+            R.merge(projectsResponse, {props})
+          )
+        }
+      );
     },
-    makeProjectsQueryContainer(
-      {apolloConfig},
+    props => makeProjectsQueryContainer(
+      {
+        apolloConfig: R.merge(apolloConfig, {
+          options: {
+            variables: props => {
+              // Search by whatever props are passed into locationFilter
+              return R.prop('projectFilter', props);
+            },
+            errorPolicy: 'all'
+          }
+        })
+      },
       {
         name: 'projects',
         readInputTypeMapper,
@@ -340,34 +444,105 @@ const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
       },
       props
     )
-  );
+  ])(props);
 };
 
 const _makeRegionsQueryResolveMapboxContainer = (apolloConfig, outputParams, props) => {
-  return R.map(
-    value => {
+  return composeWithComponentMaybeOrTaskChain([
+    regionsResponse => {
+      if (!strPathOr(null, 'data', regionsResponse)) {
+        // Loading
+        return containerForApolloType(
+          apolloConfig,
+          {
+            render: getRenderPropFunction(props),
+            response: regionsResponse
+          }
+        );
+      }
       const mapboxes = R.map(
         region => reqStrPathThrowing('data.mapbox', region),
-        reqStrPathThrowing('data.regions', value)
+        reqStrPathThrowing('data.regions', regionsResponse)
       );
-      return consolidateMapboxes(mapboxes);
+      const mapbox = consolidateMapboxes(mapboxes);
+      return containerForApolloType(
+        apolloConfig,
+        {
+          render: getRenderPropFunction(props),
+          // Override the data with the consolidated mapbox
+          response: R.over(
+            R.lensProp('data'),
+            data => ({mapbox}),
+            R.merge(regionsResponse, {props})
+          )
+        }
+      );
     },
-    makeRegionsQueryContainer(
-      {apolloConfig},
-      {name: 'regions', readInputTypeMapper, outputParams: regionMapboxOutputParamsCreator(outputParams)},
-      props
-    )
-  );
+    props => {
+      return makeRegionsQueryContainer(
+        {
+          apolloConfig: R.merge(apolloConfig, {
+            options: {
+              variables: props => {
+                return R.prop('regionFilter', props);
+              },
+              errorPolicy: 'all'
+            }
+          })
+        },
+        {name: 'regions', readInputTypeMapper, outputParams: regionMapboxOutputParamsCreator(outputParams)},
+        props
+      );
+    }
+  ])(props);
 };
 
-const _makeSettingsQueryResolveMapboxContainer = (apolloConfig, outputParams, settingsProps) => {
-  return R.map(
-    value => {
-      // Only can be one settings result as of now
-      return reqStrPathThrowing('data.settings.0.data.mapbox', value);
+/**
+ * Query for the settings and return the mapbox value if defined
+ * @param apolloConfig
+ * @param outputParams
+ * @param props
+ * @returns {Task|Object} Task or Component in the form {data.mapbox: mapbox} if loaded. If not loaded then
+ * the settings query response is returned
+ * @private
+ */
+const _makeSettingsQueryResolveMapboxContainer = (apolloConfig, outputParams, props) => {
+  return composeWithComponentMaybeOrTaskChain([
+    settingsResponse => {
+      if (!strPathOr(null, 'data', settingsResponse)) {
+        // Loading
+        return containerForApolloType(
+          apolloConfig,
+          {
+            render: getRenderPropFunction(props),
+            response: settingsResponse
+          }
+        );
+      }
+      return containerForApolloType(
+        apolloConfig,
+        {
+          render: getRenderPropFunction(props),
+          // Override the data with the consolidated mapbox
+          response: R.over(
+            R.lensProp('data'),
+            // Only can be one settings result as of now
+            data => ({mapbox: reqStrPathThrowing('data.settings.0.data.mapbox', settingsResponse)}),
+            R.merge(settingsResponse, {props})
+          )
+        }
+      );
     },
-    makeSettingsQueryContainer(
-      apolloConfig,
+    props => makeSettingsQueryContainer(
+      R.merge(apolloConfig, {
+        options: {
+          variables: props => {
+            // Search by whatever props are passed into locationFilter
+            return R.prop('settings', props);
+          },
+          errorPolicy: 'all'
+        }
+      }),
       {
         outputParams: R.merge(
           // Merge the settings identifier param with the mapbox params
@@ -375,9 +550,9 @@ const _makeSettingsQueryResolveMapboxContainer = (apolloConfig, outputParams, se
           settingdMapboxOutputParamsCreator(outputParams)
         )
       },
-      settingsProps
+      props
     )
-  );
+  ])(props);
 };
 
 /**

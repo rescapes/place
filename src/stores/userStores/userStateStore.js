@@ -11,7 +11,7 @@
 
 import * as R from 'ramda';
 import {
-  addMutateKeyToMutationResponse,
+  addMutateKeyToMutationResponse, composeWithComponentMaybeOrTaskChain,
   createCacheOnlyProps,
   createReadInputTypeMapper, filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
@@ -58,7 +58,7 @@ const userReadInputTypeMapper = {
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = ['user'];
-const RELATED_DATA_PROPS = ['data.userRegions.region', 'data.userProjects.project']
+const RELATED_DATA_PROPS = ['data.userRegions.region', 'data.userProjects.project'];
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -227,13 +227,20 @@ export const createCacheOnlyPropsForUserState = props => {
  */
 export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputParams, props) => {
     return makeQueryContainer(
-      apolloConfig,
+      R.merge(apolloConfig, {
+        options: {
+          variables: props => {
+            // No arguments, the server resolves the current user based on authentication
+            return {}
+          },
+          errorPolicy: 'all'
+        }
+      }),
       {
         // If we have to query for users separately use the limited output userStateOutputParamsCreator
         name: 'currentUser', readInputTypeMapper: userReadInputTypeMapper, outputParams
       },
-      // No arguments, the server resolves the current user based on authentication
-      {}
+      props
     );
   }),
   [
@@ -252,8 +259,13 @@ export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputPara
  */
 export const makeCurrentUserStateQueryContainer = v(R.curry(
   (apolloConfig, {outputParams}, props) => {
-    return composeWithChainMDeep(1, [
-      ({apolloConfig, outputParams, user, props}) => {
+    return composeWithComponentMaybeOrTaskChain([
+      response => {
+        if (!R.prop('data', response)) {
+          // Loading
+          return response
+        }
+        const user = reqStrPathThrowing('data.currentUser', response);
         // Get the current user state
         return makeQueryContainer(
           apolloConfig,
@@ -267,12 +279,10 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
         );
       },
       // Get the current user
-      mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, {id: 1}, null);
-        }
-      )
-    ])({apolloConfig, outputParams, props});
+      props => {
+        return makeCurrentUserQueryContainer(apolloConfig, {id: 1}, props);
+      }
+    ])(props);
   }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
@@ -401,8 +411,8 @@ export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, userSta
     mapToMergedResponseAndInputs(
       // clearedScopeObjsUserState is the userState with the regions cleared
       ({apolloConfig, clearedScopeObjsUserState}) => {
-        const userState = reqStrPathThrowing('data.mutate.userState', clearedScopeObjsUserState)
-        const user = reqStrPathThrowing('user', userState)
+        const userState = reqStrPathThrowing('data.mutate.userState', clearedScopeObjsUserState);
+        const user = reqStrPathThrowing('user', userState);
         return R.ifElse(
           R.identity,
           project => deleteProjectsContainer(
@@ -410,7 +420,7 @@ export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, userSta
             {
               // Only allow deleting projects owned by userState.user
               // Also Clear the userState of these projects
-              userState,
+              userState
             },
             R.merge(
               project,

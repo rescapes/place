@@ -30,6 +30,8 @@ import {
 } from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {makeUserStateMutationContainer} from '../../userStores/userStateStore';
+import {makeRegionsQueryContainer} from '../../../stores/scopeStores/region/regionStore';
+import {regionMapboxOutputParamsCreator} from '../../../stores/mapStores/mapboxStore';
 
 /**
  * returns userState.data.user[Project|Region]` based on scopeName = 'project' \ 'region'

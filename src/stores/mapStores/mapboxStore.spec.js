@@ -2,18 +2,19 @@ import {testAuthTask} from '../../helpers/testHelpers';
 import moment from 'moment';
 import {
   deleteSampleUserStateScopeObjectsContainer,
-  makeCurrentUserQueryContainer, makeCurrentUserStateQueryContainer,
-  userOutputParams, userStateOutputParamsFull
+  makeCurrentUserQueryContainer,
+  makeCurrentUserStateQueryContainer,
+  userOutputParams,
+  userStateOutputParamsFull
 } from '../userStores/userStateStore';
-import {makeMapboxesQueryResultTask} from '../mapStores/mapboxStore';
+import {makeMapboxQueryContainer} from '../mapStores/mapboxStore';
 import * as R from 'ramda';
 import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs, strPathOr} from 'rescape-ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
-import {mutateSampleUserStateWithProjectAndRegionTask} from '../userStores/userStateStore.sample';
 import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
 import {of} from 'folktale/concurrency/task';
 import {expectKeys} from 'rescape-apollo';
-import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../..';
+import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample';
 
 /**
  * Created by Andy Likuski on 2018.12.31
@@ -27,13 +28,13 @@ import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../..';
  */
 describe('mapboxStore', () => {
   test('makeMapboxStore', done => {
-    const someMapboxKeys = ['viewport'];
+    const someMapboxKeys = ['data.mapbox.viewport.extent'];
     const errors = [];
     expect.assertions(1);
     R.composeK(
       // Now that we have a user, region, and project, we query
       ({apolloConfig, user, regions, projects}) => {
-        return makeMapboxesQueryResultTask(
+        return makeMapboxQueryContainer(
           apolloConfig,
           mapboxOutputParamsFragment,
           {

@@ -11,12 +11,7 @@ import moment from 'moment';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import * as R from 'ramda';
-import {
-  makeProjectMutationContainer,
-  makeProjectsQueryContainer,
-  projectOutputParams,
-  queryAndDeleteIfFoundContainer
-} from '../../..';
+import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -73,7 +68,8 @@ export const createSampleRegionContainer = ({apolloClient}, props = {}) => {
           }
         }
       },
-      props)
+      props
+    )
   );
 };
 
