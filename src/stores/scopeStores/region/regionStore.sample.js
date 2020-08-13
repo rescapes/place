@@ -45,9 +45,11 @@ export const createSampleRegionContainer = ({apolloClient}, props = {}) => {
         key: 'testPincherCreek',
         name: 'Test Pincher Creek',
         geojson: {
+
           'type': 'FeatureCollection',
           'features': [{
             "type": "Feature",
+            'id': 'rel/999999',
             "geometry": {
               "type": "Polygon",
               "coordinates": [[[49.54147, -114.17439], [49.42996, -114.17439], [49.42996, -113.72635], [49.54147, -113.72635], [49.54147, -114.174390]]]

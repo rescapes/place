@@ -45,11 +45,11 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
     ),
     // Create a sample project
     mapToNamedPathAndInputs('project', 'data.mutate.project',
-      ({apolloConfig, user}) => {
+      ({apolloConfig, user, userState}) => {
         return createSampleProjectContainer(apolloConfig, {
             key: projectKey,
             name: capitalize(projectKey),
-            user: R.pick(['id'], user)
+            user: userState ? R.prop('user', userState) : user
           }
         );
       }

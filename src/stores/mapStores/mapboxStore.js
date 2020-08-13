@@ -9,17 +9,21 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import bbox from '@turf/bbox';
+import bboxPolygon from '@turf/bbox-polygon';
+import {point, featureCollection} from '@turf/helpers';
 import * as R from 'ramda';
 import {makeMutationRequestContainer, makeSettingsQueryContainer} from 'rescape-apollo';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {of, waitAll} from 'folktale/concurrency/task';
 import {
-  composeWithChain,
+  compact,
+  composeWithChain, mergeDeepAll,
   reqStrPath,
   reqStrPathThrowing,
   resultsToResultObj,
-  resultToTaskNeedingResult,
+  resultToTaskNeedingResult, sequenceBucketed,
   strPathOr
 } from 'rescape-ramda';
 import {makeRegionsQueryContainer} from '../scopeStores/region/regionStore';
@@ -112,7 +116,7 @@ export const userStateMapboxOutputParamsCreator = mapboxOutputParamsFragment => 
       // The mapbox state for the project regions
       userProjects: mapboxOutputParamsFragment
     }
-  }
+  };
 };
 
 /**
@@ -160,17 +164,22 @@ export const scopeObjMapboxOutputParamsCreator = (scopeName, mapboxOutputParamsF
  * @params {Object} propSets.settings Arguments to limit the settings to the global settings
  * @params {Object} propSets.user Arguments to limit the user to zero or one user. If unspecified no
  * user-specific queries are made, meaning no user state is merged into the result
- * @params {Object} propSets.region Arguments to limit the region to zero or one region. If unspecified no
+ * @params {Object} propSets.regionFilter Arguments to limit the region to zero or one region. If unspecified no
  * region queries are made
- * @params {Object} propSets.project Arguments to limit the project to zero or one project. If unspecified no
+ * @params {Object} propSets.projectFilter Arguments to limit the project to zero or one project. If unspecified no
  * project queries are made
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
 export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams, propSets) => {
     return composeWithChain([
-      // Merge, giving priority to the most specific mapbox state
-      // TODO This might need to be more sophisticated
-      all => of(R.mergeAll(all)),
+      mapboxes => {
+        // Merge the mapbox results. This takes the most last defined viewport to give use the viewport
+        // for the most specific scope
+        // TODO if we need to deep merge anything in the mapboxes we need to add it here
+        return of(
+          R.mergeAll(mapboxes)
+        );
+      },
       // Each Result.Ok is mapped to a Task. Result.Errors are mapped to a Task.of
       // [Result] -> [Task Object]
       ({propSets}) => R.map(
@@ -178,35 +187,35 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
         values => R.prop('Ok', resultsToResultObj(values)),
         // Seek each mapbox state. This is from lowest to highest priority
         // PropSets that are missing will be discarded as a Result.Error
-        waitAll([
+        R.sequence(of, [
           // Get the global Mapbox state from the settings object
           resultToTaskNeedingResult(
-            settingsProps => {
-              return _makeSettingsQueryResolveMapboxContainer(apolloConfig, outputParams, settingsProps);
+            props => {
+              return _makeSettingsQueryResolveMapboxContainer(apolloConfig, outputParams, props);
             },
             // Object -> Result Ok|Error
             reqStrPath('settings', propSets)
           ),
           // Get the mapbox settings for the given region
           resultToTaskNeedingResult(
-            regionAsId => {
-              return _makeRegionsQueryResolveMapboxContainer(apolloConfig, outputParams, regionAsId);
+            props => {
+              return _makeRegionsQueryResolveMapboxContainer(apolloConfig, outputParams, props);
             },
             // Object -> Result Ok|Error
-            reqStrPath('region', propSets)
+            reqStrPath('regionFilter', propSets)
           ),
           // Get the mapbox settings for the given project
           resultToTaskNeedingResult(
-            projectAsId => {
-              return _makeProjectsQueryResolveMapboxContainer(apolloConfig, outputParams, projectAsId);
+            props => {
+              return _makeProjectsQueryResolveMapboxContainer(apolloConfig, outputParams, props);
             },
             // Object -> Result Ok|Error
-            reqStrPath('project', propSets)
+            reqStrPath('projectFilter', propSets)
           ),
           // The UserState's various mapbox values
           resultToTaskNeedingResult(
-            userAsId => {
-              return _makeCurrentUserStateQueryResolveMapboxContainer(apolloConfig, outputParams, userAsId);
+            props => {
+              return _makeCurrentUserStateQueryResolveMapboxContainer(apolloConfig, outputParams, props);
             },
             // user arg is required. This gives a Result.Error if it doesn't exist
             // Object -> Result Ok|Error
@@ -221,19 +230,87 @@ export const makeMapboxesQueryResultTask = v(R.curry((apolloConfig, outputParams
     ['outputParams', PropTypes.shape().isRequired],
     ['propSets', PropTypes.shape({
       user: PropTypes.shape().isRequired,
-      region: PropTypes.shape().isRequired,
-      project: PropTypes.shape().isRequired
+      regionFilter: PropTypes.shape().isRequired,
+      projectFilter: PropTypes.shape().isRequired
     }).isRequired]
   ], 'makeMapboxesQueryResultTask');
+
+const consolidateMapboxes = mapboxes => {
+  const viewports = R.map(
+    mapbox => reqStrPathThrowing('viewport', mapbox),
+    mapboxes
+  );
+  return mergeDeepAll(
+    R.concat(
+      R.map(R.omit(['viewport']), mapboxes),
+      // Set viewport to the consolidated viewport if there is one and it has any values.
+      [
+        R.ifElse(
+          R.compose(
+            R.length,
+            compact,
+            R.values,
+            R.pick(['extent', 'longitude', 'latitude', 'zoom']),
+            R.defaultTo({})
+          ),
+          viewport => ({viewport}),
+          () => ({})
+        )(_consolidateViewports(viewports))
+      ]
+    )
+  );
+};
+
+/**
+ * Creates one viewport from one or more.
+ * @param viewports
+ * @returns {*}
+ * @private
+ */
+const _consolidateViewports = viewports => {
+  return R.ifElse(
+    R.compose(R.lt(1), R.length()),
+    // Multiple viewports from mulitple same-level scope instances. Create a new viewport that contains them.
+    viewports => {
+      // Since we can't guess a zoom, instead store the extents
+      // Create the bounds with the first two viewports, then add more. I don't know if there's a better
+      // method that takes any number of bounds to create a new viewport
+      return {
+        extent: bboxPolygon(
+          bbox(
+            featureCollection(
+              R.map(({longitude, latitude}) => {
+                return point([longitude, latitude]);
+              }, viewports)
+            )
+          )
+        )
+      };
+    },
+    // Just one or none, leave it as is
+    viewports => R.when(Array.isArray, R.head)(viewports)
+  )(viewports);
+};
 
 const _makeCurrentUserStateQueryResolveMapboxContainer = (apolloConfig, outputParams, props) => {
   return R.map(
     value => {
-      const userStateData = reqStrPathThrowing('data.userStates.0.data', value);
+      const userState = reqStrPathThrowing('data.userStates.0', value);
+
+      const regionMapboxes = R.map(
+        region => reqStrPathThrowing('data.mapbox', region),
+        strPathOr([], 'data.regions', userState)
+      );
+
+      const projectMapboxes = R.map(
+        project => reqStrPathThrowing('data.mapbox', project),
+        strPathOr([], 'data.projects', userState)
+      );
+
       return R.mergeAll([
-        strPathOr({}, 'userGlobal.mapbox', userStateData),
-        strPathOr({}, 'userRegions.0.mapbox', userStateData),
-        strPathOr({}, 'userProjects.0.mapbox', userStateData)
+        consolidateMapboxes([strPathOr({}, 'data.userGlobal.mapbox', userState)]),
+        consolidateMapboxes(regionMapboxes),
+        consolidateMapboxes(projectMapboxes)
       ]);
     },
     // Query for the user state by id
@@ -248,7 +325,11 @@ const _makeCurrentUserStateQueryResolveMapboxContainer = (apolloConfig, outputPa
 const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, props) => {
   return R.map(
     value => {
-      return reqStrPathThrowing('data.projects.0.data.mapbox', value);
+      const mapboxes = R.map(
+        region => reqStrPathThrowing('data.mapbox', region),
+        reqStrPathThrowing('data.projects', value)
+      );
+      return consolidateMapboxes(mapboxes);
     },
     makeProjectsQueryContainer(
       {apolloConfig},
@@ -265,7 +346,11 @@ const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
 const _makeRegionsQueryResolveMapboxContainer = (apolloConfig, outputParams, props) => {
   return R.map(
     value => {
-      return reqStrPathThrowing('data.regions.0.data.mapbox', value);
+      const mapboxes = R.map(
+        region => reqStrPathThrowing('data.mapbox', region),
+        reqStrPathThrowing('data.regions', value)
+      );
+      return consolidateMapboxes(mapboxes);
     },
     makeRegionsQueryContainer(
       {apolloConfig},
@@ -278,6 +363,7 @@ const _makeRegionsQueryResolveMapboxContainer = (apolloConfig, outputParams, pro
 const _makeSettingsQueryResolveMapboxContainer = (apolloConfig, outputParams, settingsProps) => {
   return R.map(
     value => {
+      // Only can be one settings result as of now
       return reqStrPathThrowing('data.settings.0.data.mapbox', value);
     },
     makeSettingsQueryContainer(

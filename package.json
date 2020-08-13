@@ -33,6 +33,10 @@
     "publish-minor": "yarn version --minor && yarn publish --non-interactive"
   },
   "dependencies": {
+    "@mapbox/geo-viewport": "^0.4.0",
+    "@turf/bbox": "^6.0.1",
+    "@turf/bbox-polygon": "^6.0.1",
+    "@turf/helpers": "^6.1.4",
     "apollo-client": "^2.6.8",
     "apollo-client-preset": "^1.0.8",
     "apollo-link-error": "^1.1.12",
@@ -42,6 +46,7 @@
     "graphql-tag": "^2.10.1",
     "http-https": "^1.0.0",
     "inflected": "^2.0.4",
+    "mapbox-gl": "^1.11.1",
     "node-fetch": "^2.6.0",
     "path": "^0.12.7",
     "prop-types": "^15.7.2",

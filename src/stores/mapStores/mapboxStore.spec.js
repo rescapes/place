@@ -1,12 +1,19 @@
 import {testAuthTask} from '../../helpers/testHelpers';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStateStore';
+import moment from 'moment';
+import {
+  deleteSampleUserStateScopeObjectsContainer,
+  makeCurrentUserQueryContainer, makeCurrentUserStateQueryContainer,
+  userOutputParams, userStateOutputParamsFull
+} from '../userStores/userStateStore';
 import {makeMapboxesQueryResultTask} from '../mapStores/mapboxStore';
 import * as R from 'ramda';
-import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs} from 'rescape-ramda';
+import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs, strPathOr} from 'rescape-ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
 import {mutateSampleUserStateWithProjectAndRegionTask} from '../userStores/userStateStore.sample';
 import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
+import {of} from 'folktale/concurrency/task';
 import {expectKeys} from 'rescape-apollo';
+import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../..';
 
 /**
  * Created by Andy Likuski on 2018.12.31
@@ -25,27 +32,65 @@ describe('mapboxStore', () => {
     expect.assertions(1);
     R.composeK(
       // Now that we have a user, region, and project, we query
-      ({apolloConfig, user, region, project}) => makeMapboxesQueryResultTask(
-        apolloConfig,
-        mapboxOutputParamsFragment,
-        {
-          settings: {key: rescapePlaceDefaultSettingsKey},
-          user: {id: parseInt(user.id)},
-          region: {id: parseInt(region.id)},
-          project: {id: parseInt(project.id)}
-        }
-      ),
+      ({apolloConfig, user, regions, projects}) => {
+        return makeMapboxesQueryResultTask(
+          apolloConfig,
+          mapboxOutputParamsFragment,
+          {
+            settings: {key: rescapePlaceDefaultSettingsKey},
+            user: {id: parseInt(user.id)},
+            regionFilter: {idIn: R.map(region => R.prop('id', region), regions)},
+            projectFilter: {idIn: R.map(project => R.prop('id', project), projects)}
+          }
+        );
+      },
 
       // Set the UserState
-      ({apolloConfig, user}) => mutateSampleUserStateWithProjectAndRegionTask({
-        apolloConfig,
-        user,
-        regionKey: 'antarctica',
-        projectKey: 'refrost'
-      }),
-      // Get the current user
+      ({apolloConfig, user}) => {
+        const now = moment().format('HH-mm-ss-SSS');
+        return mutateSampleUserStateWithProjectsAndRegionsContainer({
+          apolloConfig,
+          user,
+          regionKeys: [`testAntarctica${now}`],
+          projectKeys: [`testRefrost${now}`, `testPoleVault${now}`]
+        });
+      },
+      // Get the current user if we didn't get a userState
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
+        ({apolloConfig, userState}) => R.ifElse(
+          R.identity,
+          userState => of({data: {currentUser: R.prop('user', userState)}}),
+          () => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
+        )(userState)
+      ),
+      mapToNamedResponseAndInputs('void',
+        ({apolloConfig, userStateResponse}) => {
+          const userState = strPathOr(null, 'data.userStates.0', userStateResponse);
+          return R.ifElse(
+            R.identity,
+            userState => deleteSampleUserStateScopeObjectsContainer(
+              apolloConfig,
+              userState,
+              {
+                project: {
+                  keyContains: 'testRefrost'
+                },
+                region: {
+                  keyContains: 'testAntarctica'
+                }
+              }
+            ),
+            () => of({})
+          )(userState);
+        }),
+
+      // Get the current user state
+      mapToNamedResponseAndInputs('userStateResponse',
+        ({apolloConfig}) => makeCurrentUserStateQueryContainer(
+          apolloConfig,
+          {outputParams: userStateOutputParamsFull()},
+          {}
+        )
       ),
       // Authenticate
       mapToNamedResponseAndInputs('apolloConfig',
