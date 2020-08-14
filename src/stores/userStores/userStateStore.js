@@ -11,10 +11,10 @@
 
 import * as R from 'ramda';
 import {
-  addMutateKeyToMutationResponse, composeWithComponentMaybeOrTaskChain,
+  addMutateKeyToMutationResponse, composeWithComponentMaybeOrTaskChain, containerForApolloType,
   createCacheOnlyProps,
   createReadInputTypeMapper, filterOutNullDeleteProps,
-  filterOutReadOnlyVersionProps,
+  filterOutReadOnlyVersionProps, getRenderPropFunction,
   makeMutationRequestContainer,
   makeMutationWithClientDirectiveContainer,
   makeQueryContainer,
@@ -263,7 +263,13 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
       response => {
         if (!R.prop('data', response)) {
           // Loading
-          return response
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response
+            }
+          );
         }
         const user = reqStrPathThrowing('data.currentUser', response);
         // Get the current user state

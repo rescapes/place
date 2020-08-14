@@ -173,7 +173,14 @@ export const makeMapboxQueryContainer = v(R.curry((apolloConfig, outputParams, p
         if (!R.prop('data', settingsResponse)) {
           // return the previous response if loading. The requests are independent but we don't have a compose
           // call for parallel requests yet
-          return settingsResponse;
+          // Loading
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: settingsResponse
+            }
+          );
         }
         // Merge the mapbox results. This takes the most last defined viewport to give use the viewport
         // for the most specific scope
@@ -210,7 +217,7 @@ export const makeMapboxQueryContainer = v(R.curry((apolloConfig, outputParams, p
           // Pass the last mapbox results with the props to accumulate mapboxes
           R.merge(
             reqStrPathThrowing('props', regionsResponse),
-            {regionsMapbox: reqStrPathThrowing('data.mapbox', regionsResponse)}
+            {regionsMapbox: strPathOr(null, 'data.mapbox', regionsResponse)}
           )
         );
       },
@@ -226,7 +233,7 @@ export const makeMapboxQueryContainer = v(R.curry((apolloConfig, outputParams, p
           // Pass the last mapbox results with the props to accumulate mapboxes
           R.merge(
             reqStrPathThrowing('props', projectsResponse),
-            {projectsMapbox: reqStrPathThrowing('data.mapbox', projectsResponse)}
+            {projectsMapbox: strPathOr(null, 'data.mapbox', projectsResponse)}
           )
         );
       },
@@ -234,7 +241,13 @@ export const makeMapboxQueryContainer = v(R.curry((apolloConfig, outputParams, p
         if (!R.prop('projectFilter', props) || !R.prop('data', userStateMapboxResponse)) {
           // return the previous response if loading or no projectFilter.
           // The requests are independent but we don't have a compose call for parallel requests yet
-          return userStateMapboxResponse;
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: userStateMapboxResponse
+            }
+          );
         }
         return _makeProjectsQueryResolveMapboxContainer(
           apolloConfig,
@@ -242,7 +255,7 @@ export const makeMapboxQueryContainer = v(R.curry((apolloConfig, outputParams, p
           // Pass the last mapbox results with the props to accumulate mapboxes
           R.merge(
             props,
-            {userStateMapbox: reqStrPathThrowing('data.mapbox', userStateMapboxResponse)}
+            {userStateMapbox: strPathOr(null, 'data.userStates.mapbox', userStateMapboxResponse)}
           )
         );
       },
@@ -336,7 +349,7 @@ const _makeCurrentUserStateQueryResolveMapboxContainer = (apolloConfig, outputPa
   return composeWithComponentMaybeOrTaskChain([
     userStateResponse => {
       const userState = strPathOr(null, 'data.userStates.0', userStateResponse);
-      if (userState) {
+      if (!userState) {
         // Loading
         return containerForApolloType(
           apolloConfig,
@@ -408,7 +421,7 @@ const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
         );
       }
       const mapboxes = R.map(
-        region => reqStrPathThrowing('data.mapbox', region),
+        region => strPathOr(null, 'data.mapbox', region),
         reqStrPathThrowing('data.projects', projectsResponse)
       );
       const mapbox = consolidateMapboxes(mapboxes);
@@ -461,7 +474,7 @@ const _makeRegionsQueryResolveMapboxContainer = (apolloConfig, outputParams, pro
         );
       }
       const mapboxes = R.map(
-        region => reqStrPathThrowing('data.mapbox', region),
+        region => strPathOr(null, 'data.mapbox', region),
         reqStrPathThrowing('data.regions', regionsResponse)
       );
       const mapbox = consolidateMapboxes(mapboxes);
@@ -527,7 +540,7 @@ const _makeSettingsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
           response: R.over(
             R.lensProp('data'),
             // Only can be one settings result as of now
-            data => ({mapbox: reqStrPathThrowing('data.settings.0.data.mapbox', settingsResponse)}),
+            data => ({mapbox: strPathOr(null, 'data.settings.0.data.mapbox', settingsResponse)}),
             R.merge(settingsResponse, {props})
           )
         }
