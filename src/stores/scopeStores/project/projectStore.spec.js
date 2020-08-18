@@ -20,8 +20,8 @@ import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore';
 import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../../userStores/userStateStore';
 import {of} from 'folktale/concurrency/task';
+import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 
 const someProjectKeys = ['id', 'key', 'geojson'];
 describe('projectStore', () => {

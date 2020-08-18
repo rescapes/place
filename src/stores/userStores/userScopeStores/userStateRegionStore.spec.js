@@ -26,10 +26,8 @@ import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {
   deleteSampleUserStateScopeObjectsContainer,
-  makeCurrentUserQueryContainer,
   makeCurrentUserStateQueryContainer,
   makeUserStateMutationContainer,
-  userOutputParams,
   userStateMutateOutputParams,
   userStateOutputParamsOnlyIds
 } from '../userStateStore';
@@ -39,6 +37,7 @@ import {
 } from '../userStateStore.sample';
 import moment from 'moment';
 import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample';
+import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {

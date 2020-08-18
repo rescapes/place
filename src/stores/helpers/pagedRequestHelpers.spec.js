@@ -18,10 +18,10 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../userStores/userStateStore';
 import * as R from 'ramda';
 import {projectOutputParams} from '../scopeStores/project/projectStore';
 import {testAuthTask} from '../../helpers/testHelpers';
+import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 
 test('queryUsingPaginationContainer', done => {
   const task = composeWithChain([

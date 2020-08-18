@@ -2,9 +2,7 @@ import {testAuthTask} from '../../helpers/testHelpers';
 import moment from 'moment';
 import {
   deleteSampleUserStateScopeObjectsContainer,
-  makeCurrentUserQueryContainer,
   makeCurrentUserStateQueryContainer,
-  userOutputParams,
   userStateOutputParamsFull
 } from '../userStores/userStateStore';
 import {makeMapboxQueryContainer} from '../mapStores/mapboxStore';
@@ -13,7 +11,7 @@ import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs, 
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
 import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
 import {of} from 'folktale/concurrency/task';
-import {expectKeys} from 'rescape-apollo';
+import {expectKeys, makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample';
 
 /**

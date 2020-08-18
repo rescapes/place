@@ -70,12 +70,10 @@ export {
 } from './stores/scopeStores/region/regionStore';
 
 export {
-  makeCurrentUserQueryContainer,
   makeUserStateMutationContainer,
   makeAdminUserStateQueryContainer,
   userStateMutateOutputParams,
   userStateOutputParamsCreator,
-  userOutputParams,
   userStateOutputParamsFull,
   userStateOutputParamsOnlyIds,
   makeCurrentUserStateQueryContainer,

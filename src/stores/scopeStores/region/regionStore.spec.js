@@ -25,8 +25,8 @@ import {
   regionQueryVariationContainers
 } from './regionStore';
 import {createSampleRegionContainer, createSampleRegionsContainer} from './regionStore.sample';
-import {makeCurrentUserQueryContainer, userOutputParams} from '../../userStores/userStateStore';
-import {of} from 'folktale/concurrency/task'
+import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {of} from 'folktale/concurrency/task';
 
 const someRegionKeys = ['id', 'key', 'geojson', 'data'];
 describe('regionStore', () => {

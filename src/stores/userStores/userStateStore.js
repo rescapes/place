@@ -11,15 +11,20 @@
 
 import * as R from 'ramda';
 import {
-  addMutateKeyToMutationResponse, composeWithComponentMaybeOrTaskChain, containerForApolloType,
+  addMutateKeyToMutationResponse,
+  composeWithComponentMaybeOrTaskChain,
+  containerForApolloType,
   createCacheOnlyProps,
-  createReadInputTypeMapper, filterOutNullDeleteProps,
-  filterOutReadOnlyVersionProps, getRenderPropFunction,
+  createReadInputTypeMapper,
+  filterOutNullDeleteProps,
+  filterOutReadOnlyVersionProps,
+  getRenderPropFunction, makeCurrentUserQueryContainer,
   makeMutationRequestContainer,
   makeMutationWithClientDirectiveContainer,
   makeQueryContainer,
   mergeCacheable,
-  omitClientFields, relatedObjectsToIdForm,
+  omitClientFields,
+  relatedObjectsToIdForm,
   versionOutputParamsMixin
 } from 'rescape-apollo';
 import {v} from 'rescape-validate';
@@ -37,24 +42,16 @@ import {
 import {
   capitalize,
   composeWithChain,
-  composeWithChainMDeep,
   mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
-  reqStrPathThrowing, strPathOr
+  reqStrPathThrowing,
+  strPathOr
 } from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
 import {activityOutputParamsFragment} from './activityStore';
 import {of} from 'folktale/concurrency/task';
 import moment from 'moment';
-
-// Every complex input type needs a type specified in graphql. Our type names are
-// always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
-// Following this location.data is represented as follows:
-// TODO These value should be dervived from the schema
-const userReadInputTypeMapper = {
-  'data': 'DataTypeofUserTypeRelatedReadInputType'
-};
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = ['user'];
@@ -67,19 +64,6 @@ const RELATED_DATA_PROPS = ['data.userRegions.region', 'data.userProjects.projec
 export const userStateReadInputTypeMapper = createReadInputTypeMapper(
   'userState', R.concat(['data'], RELATED_PROPS)
 );
-
-export const userOutputParams = {
-  id: 1,
-  lastLogin: 1,
-  username: 1,
-  firstName: 1,
-  lastName: 1,
-  email: 1,
-  isStaff: 1,
-  isActive: 1,
-  dateJoined: 1,
-  ...versionOutputParamsMixin
-};
 
 
 /**
@@ -217,37 +201,6 @@ export const createCacheOnlyPropsForUserState = props => {
   return createCacheOnlyProps({name: 'userStore', cacheIdProps, cacheOnlyObjs}, props);
 };
 
-/**
- * Queries users
- * @params {Object} apolloClient The Apollo Client
- * @params {Object} ouptputParams OutputParams for the query such as userOutputParams
- * @params {Object} props Unused but here to match the Apollo Component pattern. Use null or {}.
- * @returns {Task<Result>} A Task containing the Result.Ok with a User in an object with Result.Ok({data: currentUser: {}})
- * or errors in Result.Error({errors: [...]})
- */
-export const makeCurrentUserQueryContainer = v(R.curry((apolloConfig, outputParams, props) => {
-    return makeQueryContainer(
-      R.merge(apolloConfig, {
-        options: {
-          variables: props => {
-            // No arguments, the server resolves the current user based on authentication
-            return {}
-          },
-          errorPolicy: 'all'
-        }
-      }),
-      {
-        // If we have to query for users separately use the limited output userStateOutputParamsCreator
-        name: 'currentUser', readInputTypeMapper: userReadInputTypeMapper, outputParams
-      },
-      props
-    );
-  }),
-  [
-    ['apolloConfig', PropTypes.shape().isRequired],
-    ['outputParams', PropTypes.shape().isRequired],
-    ['props', PropTypes.shape()]
-  ], 'makeCurrentUserQueryContainer');
 
 /**
  * Queries userState for the current user as identified by the apollo client.

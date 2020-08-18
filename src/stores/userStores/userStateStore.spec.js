@@ -23,18 +23,17 @@ import {expectKeys, expectKeysAtPath} from 'rescape-ramda';
 import * as R from 'ramda';
 import {
   makeAdminUserStateQueryContainer,
-  makeCurrentUserQueryContainer,
   makeCurrentUserStateQueryContainer,
   makeUserStateMutationContainer,
-  userOutputParams,
   userStateOutputParamsFull
 } from './userStateStore';
 import {mutateSampleUserStateWithProjectAndRegionTask} from './userStateStore.sample';
 import {testAuthTask} from '../../helpers/testHelpers';
+import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 
 
 describe('userStore', () => {
-  test('makeUserQueryTask', done => {
+  test('makeCurrentUserQueryContainer', done => {
     const someUserKeys = ['id', 'email', 'username'];
     const errors = [];
     R.composeK(
@@ -60,7 +59,7 @@ describe('userStore', () => {
           return makeCurrentUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
-            null
+            {}
           );
         }
       ),
