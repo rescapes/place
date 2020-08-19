@@ -74,7 +74,7 @@ export const regionOutputParams = {
   ...versionOutputParamsMixin
 };
 
-const normalizeRegionPropsForMutating = region => {
+const normalizeRegionPropsForQuerying = region => {
   return filterOutNullDeleteProps(region);
 };
 
@@ -89,7 +89,7 @@ const normalizeRegionPropsForMutating = region => {
  */
 export const makeRegionsQueryContainer = v(R.curry(({apolloConfig, regionConfig}, {outputParams}, props) => {
     return makeQueryContainer(
-      composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeRegionPropsForMutating),
+      composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeRegionPropsForQuerying),
       {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams}
     );
   }),
