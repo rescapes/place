@@ -407,7 +407,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
         const scopeProps = R.prop(scopeName, userScope);
         return scopeQueryContainer(
           {
-            apolloConfig: R.merge(apolloConfig,
+            apolloConfig: R.mergeDeepRight(apolloConfig,
               {
                 options: {
                   skip: !R.length(userScopeObjs || [])

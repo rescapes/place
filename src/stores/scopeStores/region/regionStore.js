@@ -21,7 +21,6 @@ import {
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
-import {normalizeProjectPropsForQuerying} from '../project/projectStore';
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [];
@@ -90,7 +89,8 @@ const normalizeRegionPropsForQuerying = region => {
 export const makeRegionsQueryContainer = v(R.curry(({apolloConfig, regionConfig}, {outputParams}, props) => {
     return makeQueryContainer(
       composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeRegionPropsForQuerying),
-      {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams}
+      {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams},
+      props
     );
   }),
   [
