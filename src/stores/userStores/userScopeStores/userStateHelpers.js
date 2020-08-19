@@ -26,7 +26,8 @@ import {
   containerForApolloType,
   getRenderPropFunction,
   makeQueryContainer,
-  nameComponent
+  nameComponent,
+  composePropsFilterIntoApolloConfigOptionsVariables
 } from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {makeUserStateMutationContainer} from '../../userStores/userStateStore';
@@ -403,35 +404,38 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
           }
         )(userScopeObjs);
       }),
-      nameComponent('scopeQuery', ({render, children, userScope, userScopeObjs}) => {
+      nameComponent('scopeQuery', props => {
+        const {userScope, userScopeObjs} = props;
         const scopeProps = R.prop(scopeName, userScope);
         return scopeQueryContainer(
           {
-            apolloConfig: R.mergeDeepRight(apolloConfig,
-              {
-                options: {
-                  skip: !R.length(userScopeObjs || [])
+            apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(
+              R.mergeDeepRight(
+                apolloConfig,
+                {
+                  options: {
+                    skip: !R.length(userScopeObjs || [])
+                  }
                 }
-              }
+              ),
+              ({userScopeObjs}) => R.merge(
+                // Limit by any properties in the scope that aren't id
+                R.omit(['id'], scopeProps || {}),
+                {
+                  // Map each scope object to its id
+                  idIn: R.map(
+                    userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj),
+                    // If we don't have any we'll skip the query above
+                    userScopeObjs || []
+                  )
+                }
+              )
             )
           },
           {
             outputParams: scopeOutputParams
           },
-          R.merge(
-            // Limit by an properties in the scope that aren't id
-            R.omit(['id'], scopeProps || {}),
-            {
-              render,
-              children,
-              // Map each scope object to its id
-              idIn: R.map(
-                userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj),
-                // If we don't have any we'll skip the query above
-                userScopeObjs || []
-              )
-            }
-          )
+          props
         );
       })
     ])(props);
