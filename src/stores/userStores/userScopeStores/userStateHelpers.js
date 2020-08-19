@@ -13,7 +13,7 @@ import * as R from 'ramda';
 import {v} from 'rescape-validate';
 import {
   capitalize,
-  compact,
+  compact, compactEmpty,
   mergeDeep,
   mergeDeepAll,
   onlyOneThrowing,
@@ -421,14 +421,14 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
               ({userScopeObjs}) => R.merge(
                 // Limit by any properties in the scope that aren't id
                 R.omit(['id'], scopeProps || {}),
-                {
+                R.reject(R.compose(R.equals(0), R.length), {
                   // Map each scope object to its id
                   idIn: R.map(
                     userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj),
                     // If we don't have any we'll skip the query above
                     userScopeObjs || []
                   )
-                }
+                })
               )
             )
           },
