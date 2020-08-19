@@ -418,18 +418,28 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
                   }
                 }
               ),
-              ({userScopeObjs}) => R.merge(
-                // Limit by any properties in the scope that aren't id
-                R.omit(['id'], scopeProps || {}),
-                R.filter(R.length, {
-                  // Map each scope object to its id
-                  idIn: R.map(
-                    userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj),
-                    // If we don't have any we'll skip the query above
-                    userScopeObjs || []
-                  )
-                })
-              )
+              _props => {
+                // If p hasn't been changed by composed filtering, filter by userScopeObjs and/or scopeProps
+                // TODO scopeProps should be removed since it messes up component prop flow
+                return R.when(
+                  p => R.equals(p, props),
+                  p => {
+                    const userScopeObjs = R.propOr(null, 'userScopeObjs', p);
+                    return R.merge(
+                      // Limit by any properties in the scope that aren't id
+                      R.omit(['id'], scopeProps || {}),
+                      R.filter(R.length, {
+                        // Map each scope object to its id
+                        idIn: R.map(
+                          userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj),
+                          // If we don't have any we'll skip the query above
+                          userScopeObjs || []
+                        )
+                      })
+                    );
+                  }
+                )(_props);
+              }
             )
           },
           {
