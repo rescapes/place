@@ -11,7 +11,7 @@
 
 import * as R from 'ramda';
 import {
-  addMutateKeyToMutationResponse,
+  addMutateKeyToMutationResponse, composePropsFilterIntoApolloConfigOptionsVariables,
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   createCacheOnlyProps,
@@ -227,14 +227,24 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
         const user = reqStrPathThrowing('data.currentUser', response);
         // Get the current user state
         return makeQueryContainer(
-          apolloConfig,
+          composePropsFilterIntoApolloConfigOptionsVariables(
+            apolloConfig,
+            props => {
+              // Merge any other props (usually null) with current user
+              return R.merge(
+                props,
+                // Limit to the number version of the id
+                {
+                  user: R.pick(
+                    ['id'],
+                    user
+                  )
+                }
+              );
+            }
+          ),
           {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
-          // Merge any other props (usually null) with current user
-          R.merge(
-            props,
-            // Limit to the number version of the id
-            {user: R.pick(['id'], R.over(R.lensProp('id'), id => parseInt(id), user))}
-          )
+          props
         );
       },
       // Get the current user
