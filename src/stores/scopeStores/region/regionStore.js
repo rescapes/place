@@ -11,6 +11,7 @@
 
 import * as R from 'ramda';
 import {
+  composePropsFilterIntoApolloConfigOptionsVariables,
   createReadInputTypeMapper, filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
@@ -20,6 +21,7 @@ import {
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
+import {normalizeProjectPropsForQuerying} from '../project/projectStore';
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [];
@@ -72,6 +74,9 @@ export const regionOutputParams = {
   ...versionOutputParamsMixin
 };
 
+const normalizeRegionPropsForMutating = region => {
+  return filterOutNullDeleteProps(region);
+};
 
 /**
  * Queries regions
@@ -84,9 +89,8 @@ export const regionOutputParams = {
  */
 export const makeRegionsQueryContainer = v(R.curry(({apolloConfig, regionConfig}, {outputParams}, props) => {
     return makeQueryContainer(
-      apolloConfig,
-      {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams},
-      props
+      composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeRegionPropsForMutating),
+      {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams}
     );
   }),
   [

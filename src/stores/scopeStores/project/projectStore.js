@@ -12,6 +12,7 @@
 import * as R from 'ramda';
 import {v} from 'rescape-validate';
 import {
+  composePropsFilterIntoApolloConfigOptionsVariables,
   createReadInputTypeMapper, filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
@@ -74,6 +75,15 @@ export const projectOutputParams = {
 };
 
 /**
+ * Normalized project props for for querying
+ * @param {Object} project
+ * @return {Object} the props modified
+ */
+export const normalizeProjectPropsForQuerying = project => {
+  return filterOutNullDeleteProps(project);
+};
+
+/**
  * Queries projects
  * @params {Object} config
  * @params {Object} config.apolloConfig The Apollo config. See makeQueryContainer for options
@@ -86,7 +96,7 @@ export const projectOutputParams = {
  */
 export const makeProjectsQueryContainer = v(R.curry(({apolloConfig, regionConfig}, {outputParams}, props) => {
     return makeQueryContainer(
-      apolloConfig,
+      composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProjectPropsForQuerying),
       {name: 'projects', readInputTypeMapper: projectReadInputTypeMapper, outputParams},
       props
     );
