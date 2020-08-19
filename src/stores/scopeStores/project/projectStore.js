@@ -12,7 +12,7 @@
 import * as R from 'ramda';
 import {v} from 'rescape-validate';
 import {
-  createReadInputTypeMapper,
+  createReadInputTypeMapper, filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
   makeQueryContainer, relatedObjectsToIdForm,
@@ -117,6 +117,7 @@ export const normalizeProjectPropsForMutating = project => {
   return R.compose(
     // Make sure related objects only have an id
     project => relatedObjectsToIdForm(RELATED_PROPS, project),
+    project => filterOutNullDeleteProps(project),
     project => filterOutReadOnlyVersionProps(project)
   )(project);
 };

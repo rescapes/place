@@ -11,7 +11,7 @@
 
 import * as R from 'ramda';
 import {
-  createReadInputTypeMapper,
+  createReadInputTypeMapper, filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
   makeQueryContainer, relatedObjectsToIdForm,
@@ -113,6 +113,7 @@ export const normalizeRegionPropsForMutating = region => {
   return R.compose(
     // Make sure related objects only have an id
     region => relatedObjectsToIdForm(RELATED_PROPS, region),
+    region => filterOutNullDeleteProps(region),
     region => filterOutReadOnlyVersionProps(region)
   )(region);
 };
