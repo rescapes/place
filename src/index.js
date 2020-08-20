@@ -126,3 +126,6 @@ export {
 } from './stores/scopeStores/region/regionStore.sample';
 
 export {matchingUserStateScopeInstances, matchingUserStateScopeInstance} from './stores/userStores/userScopeStores/userStateHelpers'
+
+export {activityOutputParamsFragment, isActive} from './stores/userStores/activityStore'
+export {selectionOutputParamsFragment, isSelected} from './stores/userStores/selectionStore'
