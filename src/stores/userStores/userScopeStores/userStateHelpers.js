@@ -13,21 +13,22 @@ import * as R from 'ramda';
 import {v} from 'rescape-validate';
 import {
   capitalize,
-  compact, compactEmpty,
+  compact,
   mergeDeep,
   mergeDeepAll,
+  omitDeepBy,
   onlyOneThrowing,
   pickDeepPaths,
   reqPathThrowing,
   strPathOr
 } from 'rescape-ramda';
 import {
+  composePropsFilterIntoApolloConfigOptionsVariables,
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   getRenderPropFunction,
   makeQueryContainer,
-  nameComponent,
-  composePropsFilterIntoApolloConfigOptionsVariables
+  nameComponent
 } from 'rescape-apollo';
 import PropTypes from 'prop-types';
 import {makeUserStateMutationContainer} from '../../userStores/userStateStore';
@@ -422,7 +423,10 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
                 // If p hasn't been changed by composed filtering, filter by userScopeObjs and/or scopeProps
                 // TODO scopeProps should be removed since it messes up component prop flow
                 return R.when(
-                  p => R.equals(p, props),
+                  p => R.equals(
+                    omitDeepBy(R.is(Function), p),
+                    omitDeepBy(R.is(Function), props)
+                  ),
                   p => {
                     const userScopeObjs = R.propOr(null, 'userScopeObjs', p);
                     return R.merge(
