@@ -269,7 +269,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           apolloConfig,
           {
             // Skip if we don't have the variable ready
-            skip: R.propOr(false, 'loading', userScopeObjsResponse),
+            skip: R.complement(R.propOr)(false, 'data', userScopeObjsResponse),
             outputParams: userStateOutputParamsCreator(
               userScopeOutputParams
             )
@@ -420,13 +420,11 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
                 }
               ),
               _props => {
-                // If p hasn't been changed by composed filtering, filter by userScopeObjs and/or scopeProps
-                // TODO scopeProps should be removed since it messes up component prop flow
+                // If there is not a previous filter, filter
                 return R.when(
-                  p => R.equals(
-                    omitDeepBy(R.is(Function), p),
-                    omitDeepBy(R.is(Function), props)
-                  ),
+                  () => {
+                    return R.complement(strPathOr)(false, 'options.variables', apolloConfig)
+                  },
                   p => {
                     const userScopeObjs = R.propOr(null, 'userScopeObjs', p);
                     return R.merge(

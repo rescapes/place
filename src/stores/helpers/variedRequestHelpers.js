@@ -93,11 +93,14 @@ export const queryVariationContainers = R.curry((
                   },
                   R.omit(['readInputTypeMapper'],
                     R.mergeAll([
-                        queryConfig, {
+                        // Defaults
+                        queryConfig,
+                        {
                           typeName: name,
                           name: `${pluralName}Paginated`
                         },
-                        normalizeProps,
+                        {normalizeProps},
+                        // Overrides for particular query type
                         args
                       ]
                     )
