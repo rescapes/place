@@ -49,8 +49,6 @@ const log = loggers.get('rescapeDefault');
  * Where objects are the paginated objects returned by the query and thus
  * `${capitalize(typeName)}TypeofPaginated{capitalize(typeName)}TypeMixinRelatedReadInputType` is the input type argument we can use for
  * filtering
- * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
- * passed to the query. Defaults to passing all of them
  * @param {Object|{[Object]}} props The props for querying the object. This can also be an array of filter objects
  * that are or'd, since the objects parameter is a toMany the api expects an array of arguments
  * @returns {Task|Object} Object or Task resolving to the all the matching objects of all pages
@@ -63,7 +61,6 @@ export const queryUsingPaginationContainer = v(R.curry((
     name,
     outputParams,
     readInputTypeMapper,
-    normalizeProps = R.identity,
     postProcessObjsByConfig = (config, objs) => objs
   },
   {pageSize: propsPageSize, ...props}
@@ -102,8 +99,7 @@ export const queryUsingPaginationContainer = v(R.curry((
                 {
                   name,
                   outputParams,
-                  readInputTypeMapper: readInputTypeMapperOrDefault,
-                  normalizeProps
+                  readInputTypeMapper: readInputTypeMapperOrDefault
                 },
                 // Pass the combined previous results
                 {previousPages},
@@ -127,8 +123,7 @@ export const queryUsingPaginationContainer = v(R.curry((
           outputParams,
           pageSize: pageSizeOrDefault,
           page,
-          readInputTypeMapper: readInputTypeMapperOrDefault,
-          normalizeProps
+          readInputTypeMapper: readInputTypeMapperOrDefault
         },
         props
       );
@@ -177,8 +172,6 @@ export const queryUsingPaginationContainer = v(R.curry((
  * Where objects are the paginated objects returned by the query and thus
  * `${capitalize(typeName)}TypeofPaginatedTypeMixin${capitalize(typeName)}TypeRelatedReadInputType` is the input type argument we can use for
  * filtering
- * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
- * passed to the query. Defaults to passing all of them
  * @param {Object} props
  * @returns {Task|Object} Object or Task resolving to the all the matching objects for the given page. Note
  * that if filterObjsByConfig removes objects then not all objects of the page will be returned, so don't rely
@@ -188,7 +181,7 @@ export const queryPageContainer = v(R.curry((
   {apolloConfig, regionConfig},
   {
     page, pageSize,
-    typeName, name, filterObjsByConfig, outputParams, readInputTypeMapper, normalizeProps
+    typeName, name, filterObjsByConfig, outputParams, readInputTypeMapper
   },
   {pageSize: propsPageSize, page: propsPage, ...props}
   ) => {
@@ -198,7 +191,6 @@ export const queryPageContainer = v(R.curry((
     if (!pageOrDefault) {
       throw new Error(`Neither props.page nor queryConfig.page was specified. Props: ${inspect(props)}`);
     }
-    const normalizePropsOrDefault = R.defaultTo(R.identity, normalizeProps);
     const className = capitalize(typeName);
     const readInputTypeMapperOrDefault = R.defaultTo(
       {objects: `[${className}TypeofPaginatedTypeMixinFor${className}TypeRelatedReadInputType]`},
@@ -215,7 +207,6 @@ export const queryPageContainer = v(R.curry((
         name,
         outputParams,
         readInputTypeMapper: readInputTypeMapperOrDefault,
-        normalizeProps: normalizePropsOrDefault,
         pageSize: pageSizeOrDefault,
         page: pageOrDefault
       },
@@ -256,8 +247,6 @@ export const queryPageContainer = v(R.curry((
  * @param {Object} queryConfig.pageSize
  * @param {Object} queryConfig.page
  * @param {Object} queryConfig.readInputTypeMapper Maps complex input types
- * @param {Function} [queryConfig.normalizeProps] Optionally takes props and limits what is passed to the query.
- * Default to passing everything
  * @param {Object|[Object]} props Props to resolve the instance. This can also be a list of prop sets
  * @param {Boolean} skip Skip the query if dependent props aren't ready (Only relevent for component queries)
  * @return {Task | Maybe} resolving to the page of location results
@@ -265,7 +254,7 @@ export const queryPageContainer = v(R.curry((
  */
 export const _paginatedQueryContainer = (
   {apolloConfig, regionConfig},
-  {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
+  {name, outputParams, readInputTypeMapper, pageSize, page},
   props
 ) => {
   return makeQueryContainer(
@@ -282,7 +271,6 @@ export const _paginatedQueryContainer = (
         objects: outputParams
       },
       readInputTypeMapper,
-      normalizeProps
     },
     R.merge({page, pageSize}, props)
   );
@@ -312,7 +300,7 @@ export const _paginatedQueryContainer = (
  */
 export const accumulatedSinglePageQueryContainer = (
   {apolloConfig, regionConfig},
-  {name, outputParams, readInputTypeMapper, normalizeProps},
+  {name, outputParams, readInputTypeMapper},
   {previousPages},
   props
 ) => {
@@ -374,7 +362,7 @@ export const accumulatedSinglePageQueryContainer = (
               ),
               regionConfig
             },
-            {name, outputParams, readInputTypeMapper, normalizeProps, pageSize, page},
+            {name, outputParams, readInputTypeMapper, pageSize, page},
             props
           );
         }

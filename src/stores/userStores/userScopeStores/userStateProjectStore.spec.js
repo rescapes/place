@@ -86,7 +86,7 @@ describe('userProjectStore', () => {
     expect.assertions(2);
     const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
-    composeWithChainMDeep(1, [
+    composeWithChain([
       // Filter for projects where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Projects so we can filter by Project
       ({apolloConfig, user, projects}) => {

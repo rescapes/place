@@ -11,6 +11,7 @@
 import * as R from 'ramda';
 import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers';
 import {capitalize} from 'rescape-ramda';
+import {composePropsFilterIntoApolloConfigOptionsVariables} from 'rescape-apollo';
 
 
 /**
@@ -64,7 +65,7 @@ export const queryVariationContainers = R.curry((
                 return queryPageContainer(
                   // Update apolloConfig so that props.objects are passed to the optional options.variables function
                   {
-                    apolloConfig,
+                    apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProps),
                     regionConfig: regionConfig || {}
                   },
                   R.omit(['readInputTypeMapper'],
@@ -75,7 +76,6 @@ export const queryVariationContainers = R.curry((
                         typeName: name,
                         name: `${pluralName}Paginated`
                       },
-                      {normalizeProps},
                       // Overrides for particular query type
                       args
                     ])
@@ -90,7 +90,7 @@ export const queryVariationContainers = R.curry((
               () => {
                 return queryUsingPaginationContainer(
                   {
-                    apolloConfig,
+                    apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProps),
                     regionConfig: regionConfig || {}
                   },
                   R.omit(['readInputTypeMapper'],
@@ -101,7 +101,6 @@ export const queryVariationContainers = R.curry((
                           typeName: name,
                           name: `${pluralName}Paginated`
                         },
-                        {normalizeProps},
                         // Overrides for particular query type
                         args
                       ]
@@ -117,9 +116,12 @@ export const queryVariationContainers = R.curry((
               () => {
                 // Perform the normal query
                 return queryContainer(
-                  {apolloConfig, regionConfig},
+                  {
+                    apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProps),
+                    regionConfig
+                  },
                   R.mergeAll([queryConfig, args]),
-                  normalizeProps(props)
+                  props
                 );
               }
             ]
