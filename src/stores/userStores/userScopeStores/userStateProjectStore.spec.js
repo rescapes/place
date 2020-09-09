@@ -15,6 +15,7 @@ import {
   userStateProjectsQueryContainer
 } from './userStateProjectStore';
 import {
+  composeWithChain,
   composeWithChainMDeep,
   defaultRunConfig,
   expectKeysAtPath,
