@@ -109,7 +109,7 @@ export {
   mutateSampleUserStateWithProjectsAndRegionsContainer
 } from './stores/userStores/userStateStore.sample';
 
-export {queryVariationContainers} from './stores/helpers/variedRequestHelpers';
+export {queryVariationContainers, variationContainerAuthDependency} from './stores/helpers/variedRequestHelpers';
 
 export {
   queryAndDeleteIfFoundContainer

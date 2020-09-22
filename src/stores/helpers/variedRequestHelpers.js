@@ -10,8 +10,12 @@
  */
 import * as R from 'ramda';
 import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers';
-import {capitalize} from 'rescape-ramda';
-import {composePropsFilterIntoApolloConfigOptionsVariables} from 'rescape-apollo';
+import {capitalize, strPathOr} from 'rescape-ramda';
+import {
+  composePropsFilterIntoApolloConfigOptionsVariables,
+  containerForApolloType,
+  getRenderPropFunction
+} from 'rescape-apollo';
 
 
 /**
@@ -132,3 +136,32 @@ export const queryVariationContainers = R.curry((
     requestTypes
   ));
 });
+
+/**
+ * Wraps queryVariationContainers in a function to verify authentication. If not authenticated, the queries don't
+ * run and instead return null response, sort of like specifying the skip parameter for each
+ * @param {Object} apolloConfig
+ * @param {String} authenticationPath A path into props that must be truthy to indicate authentication
+ * @param {Object} queryVariationContainers. Keyed by query and valued by query component/task. See queryVariationContainers
+ * @returns {Object} queryVariationContainers or modified if not authenticated
+ */
+export const variationContainerAuthDependency = (apolloConfig, authenticationPath, queryVariationContainers) => {
+  return R.map(
+    component => {
+      // Skip if not authenticated
+      return props => {
+        if (!strPathOr(false, authenticationPath, props)) {
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: null
+            }
+          );
+        }
+        return component(props);
+      };
+    },
+    queryVariationContainers
+  );
+};

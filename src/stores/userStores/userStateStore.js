@@ -214,7 +214,7 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
   (apolloConfig, {outputParams}, props) => {
     return composeWithComponentMaybeOrTaskChain([
       response => {
-        if (!R.prop('data', response)) {
+        if (!strPathOr(null, 'data.currentUser', response)) {
           // Loading
           return containerForApolloType(
             apolloConfig,
@@ -224,7 +224,7 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
             }
           );
         }
-        const user = reqStrPathThrowing('data.currentUser', response);
+        const user = strPathOr(null, 'data.currentUser', response);
         // Get the current user state
         return makeQueryContainer(
           composePropsFilterIntoApolloConfigOptionsVariables(
