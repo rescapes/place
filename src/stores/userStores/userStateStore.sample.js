@@ -138,7 +138,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
           R.identity,
           f => f(apolloConfig, {}, {}),
           () => of([])
-        )(locationsContainer)
+        )(locationsContainer);
       }
     )
 
@@ -219,8 +219,25 @@ const createSampleUserStateProps = ({user, regions, projects}) => {
   return {
     user: {id: parseInt(reqStrPathThrowing('id', user))},
     data: {
-      userRegions: R.map(region => createUserRegionWithDefaults(region), regions),
-      userProjects: R.map(project => createUserProjectWithDefaults(project), projects)
+      // Make the first instance of each active
+      userRegions: R.addIndex(R.map)(
+        (region, i) => {
+          return R.merge(
+            createUserRegionWithDefaults(region),
+            {activity: {isActive: !i}}
+          );
+        },
+        regions
+      ),
+      userProjects: R.addIndex(R.map)(
+        (project, i) => {
+          return R.merge(
+            createUserProjectWithDefaults(project),
+            {activity: {isActive: !i}}
+          );
+        },
+        projects
+      )
     }
   };
 };
