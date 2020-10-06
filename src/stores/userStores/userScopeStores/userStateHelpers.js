@@ -51,7 +51,11 @@ const hasScopeParams = scope => {
 /**
  * Queries scope objects (Region, Project, etc) that are in the scope of the given user. If scopeArguments are
  * specified the returned scope objects are queried by the scopeArguments to possibly reduce those matching
- * @param {Object} apolloClient The Apollo Client
+ * @param {Object} apolloConfig
+ * @param {Object} apolloConfig.apolloClient The Apollo Client for non-component queries
+ * @param {Object} [apolloConfig.options]
+ * @param {Function} [apolloConfig.options.variables] Function to limit the props for the scope query. This
+ * is not used for the userState query
  * @param {Object} requestConfig
  * @param {Object} [requestConfig.completeWithRenderProp] Default true, set false if this is being
  * used within another call to composeWithComponentMaybeOrTaskChain
@@ -100,7 +104,6 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       // Dig into the results and return the userStates with the scope objects
       // where scope names is 'Regions', 'Projects', etc
       nameComponent('queryUserStates', ({render, children, userState}) => {
-
         const userPropPaths = ['id', 'user.id'];
         const props = pickDeepPaths(userPropPaths, userState || {});
         // Use makeCurrentUserStateQueryContainer unless user params are specified.
@@ -123,7 +126,14 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
               // pass null to default to the id
               R.when(
                 () => hasScopeParams(R.omit(['id'], scopeOutputParams)),
-                R.always(null)
+                // Just query for the id of the scope object, since we have to query more thoroughly later
+                // The userState.data only has the ids of the scope objects. We need to query them separately
+                // to get other properties
+                userScopeOutputParams => R.over(
+                  R.lensProp(scopeName),
+                  () => ({id: 1}),
+                  userScopeOutputParams
+                )
               )(userScopeOutputParams)
             )
           },
@@ -309,7 +319,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
             {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
             {
               // We can only query userState by id or user.id or neither to use the current user
-              userState: R.pick(['id', 'user'], userState),
+              userState: pickDeepPaths(['id', 'user.id'], userState),
               userScope: pickDeepPaths([`${scopeName}.id`], userScope), render
             }
           );
@@ -318,7 +328,10 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
     ])({
       apolloConfig,
       scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams,
-      userState, userScope, render
+      // Default to empty to use the current user
+      userState: userState || {},
+      userScope,
+      render
     });
   }),
   [
