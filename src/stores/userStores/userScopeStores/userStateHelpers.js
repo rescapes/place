@@ -102,7 +102,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       nameComponent('queryUserStates', ({render, children, userState}) => {
 
         const userPropPaths = ['id', 'user.id'];
-        const props = pickDeepPaths(userPropPaths, userState);
+        const props = pickDeepPaths(userPropPaths, userState || {});
         // Use makeCurrentUserStateQueryContainer unless user params are specified.
         // Only admins can query for other users (to be controlled on the server)
         const queryContainer = R.any(p => strPathOr(null, p, userState), userPropPaths) ?

@@ -60,9 +60,10 @@ export const userStateProjectOutputParams = (explicitProjectOutputParams = proje
  * @param {Object} propSets The props used for the query. userState and project objects are required
  * @param {Object} [propSets.userState] Props for the UserStates queries {user: {id: }} is to limit
  * the query to one user. If omitted then the current user is queried
- * @param {Object} propSets.userScope Object matching the shape of the userProject to mutate in the user state
- * @param {Object} propSets.userScope.project Object matching the shape of the project to mutate in the user state
- * @param {Number} propSets.userScope.project.id Required id of the project to update or add in userState.data.userProjec
+ * @param {Object} [propSets.userScope] Object matching the shape of the userProject to mutate in the user state
+ * If not specified the mutation will have a skipped status and not be able to run
+ * @param {Object} [propSets.userScope.project] Object matching the shape of the project to mutate in the user state
+ * @param {Number} [propSets.userScope.project.id] Required id of the project to update or add in userState.data.userProjec
  * Projects will be limited to those returned by the UserState query. These should not specify ids since
  * the UserState query selects the ids
  * @returns {Object} The resulting Projects in a Task in {data: usersProjects: [...]}}
@@ -95,7 +96,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
       projectOutputParams: PropTypes.shape()
     })],
     ['propSets', PropTypes.shape({
-      userState: PropTypes.shape().isRequired,
+      userState: PropTypes.shape(),
       userProject: PropTypes.shape({
         project: PropTypes.shape()
       })

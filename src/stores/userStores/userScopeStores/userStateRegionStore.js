@@ -90,10 +90,10 @@ export const userStateRegionsQueryContainer = v(R.curry(
             PropTypes.string,
             PropTypes.number
           ])
-        }).isRequired
-      }).isRequired,
+        })
+      }),
       userRegion: PropTypes.shape({
-        userRegion: PropTypes.shape
+        region: PropTypes.shape
       })
     })]
   ], 'userStateRegionsQueryContainer');
@@ -106,9 +106,10 @@ export const userStateRegionsQueryContainer = v(R.curry(
  * @param {Object} propSets Object matching the shape of a userState and region for the create or update
  * @param {Object} [propSets.userState] Props for the UserStates queries {user: {id: }} is to limit
  * the query to one user. If omitted then the current user is queried
- * @param {Object} propSets.userRegion Object matching the shape of the userRegion to mutate in the user state
- * @param {Object} propSets.userRegion.region Object matching the shape of the region to mutate in the user state
- * @param {Number} propSets.userRegion.region.id Required id of the region to update or add in userState.data.userRegions
+ * @param {Object} [propSets.userRegion] Object matching the shape of the userRegion to mutate in the user state
+ * If not specified the mutation will have a skipped status and not be able to run
+ * @param {Object} [propSets.userRegion.region] Object matching the shape of the region to mutate in the user state
+ * @param {Number} [propSets.userRegion.region.id] Required id of the region to update or add in userState.data.userRegions
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
@@ -143,7 +144,7 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRe
       userState: PropTypes.shape(),
       userRegion: PropTypes.shape({
         region: PropTypes.shape()
-      }).isRequired
+      })
     }).isRequired]
   ],
   'userStateRegionMutationContainer'
