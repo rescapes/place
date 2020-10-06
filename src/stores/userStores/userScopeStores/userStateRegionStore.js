@@ -104,9 +104,8 @@ export const userStateRegionsQueryContainer = v(R.curry(
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
  * @param [Object] outputParams outputParams Region output params for UserRegion
  * @param {Object} propSets Object matching the shape of a userState and region for the create or update
- * @param {Object} propSets.userState Object matching the shape of a userState.
- * @param {Object} propSets.userState.data The data to mutate. For updates any array in data will replace that
- * on the server, but otherwise this data is deep merged with the existing data on the server
+ * @param {Object} [propSets.userState] Props for the UserStates queries {user: {id: }} is to limit
+ * the query to one user. If omitted then the current user is queried
  * @param {Object} propSets.userRegion Object matching the shape of the userRegion to mutate in the user state
  * @param {Object} propSets.userRegion.region Object matching the shape of the region to mutate in the user state
  * @param {Number} propSets.userRegion.region.id Required id of the region to update or add in userState.data.userRegions
@@ -141,7 +140,7 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRe
       userRegionOutputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape({
-      userState: PropTypes.shape().isRequired,
+      userState: PropTypes.shape(),
       userRegion: PropTypes.shape({
         region: PropTypes.shape()
       }).isRequired

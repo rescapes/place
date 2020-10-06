@@ -153,7 +153,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
             PropTypes.number
           ])
         })
-      }).isRequired,
+      }),
       scope: PropTypes.shape()
     })]
   ], 'makeUserStateScopeObjsQueryContainer'
@@ -218,7 +218,9 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
  * the query to one user
  * @param {Object} props Props to query with. userState is required and a scope property that can contain none
  * or more of region, project, etc. keys with their query values
- * @param {Object} props.userState props for the UserState
+ * @param {Object} [props.userState] props for the UserState. Defaults to the current user
+ * @param {Object} [props.userState.id] Either this or user.id can be used to identify the user
+ * @param {Object} [props.userState.user.id]
  * @param {Object} props.userScope userRegion, userProject, etc. query to add/update in the userState.
  * @param {Number} props.userScope.[region|project].id
  * Required id of the scope instance to add or update within userState.data[scope]
@@ -301,11 +303,12 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
            userState, userScope, render
          }) => {
           // Query for the userScope instance by id to see if the userState already contains the userScope object
+          // UserState defaults to the current user
           return makeUserStateScopeObjsQueryContainer(
             apolloConfig,
             {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
             {
-              // We can only query userState by id or user.id
+              // We can only query userState by id or user.id or neither to use the current user
               userState: R.pick(['id', 'user'], userState),
               userScope: pickDeepPaths([`${scopeName}.id`], userScope), render
             }
@@ -336,7 +339,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
             PropTypes.number
           ])
         })
-      }).isRequired,
+      }),
       userScope: PropTypes.shape({}).isRequired
     })]
   ], 'makeUserStateScopeObjsMutationContainer');

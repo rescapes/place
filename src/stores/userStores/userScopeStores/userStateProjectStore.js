@@ -58,8 +58,8 @@ export const userStateProjectOutputParams = (explicitProjectOutputParams = proje
  * @param {Object} [outputParamSets.userStateProjectOutputParams] Optional userProject output params.
  * Defaults to projectStore.projectOutputParams
  * @param {Object} propSets The props used for the query. userState and project objects are required
- * @param {Object} propSets.userState Props for the UserStates queries {user: {id: }} is required to limit
- * the query to one user
+ * @param {Object} [propSets.userState] Props for the UserStates queries {user: {id: }} is to limit
+ * the query to one user. If omitted then the current user is queried
  * @param {Object} propSets.userScope Object matching the shape of the userProject to mutate in the user state
  * @param {Object} propSets.userScope.project Object matching the shape of the project to mutate in the user state
  * @param {Number} propSets.userScope.project.id Required id of the project to update or add in userState.data.userProjec
@@ -109,7 +109,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
  * @param [Object] userScopeOutputParams Project output params that will be returned for the mutated project
  * within the user state
  * @param {Object} propSets Object matching the shape of a userState and project for the create or update
- * @param {Object} propSets.userState Object matching the shape of a userState.
+ * @param {Object} [props.userState] props for the UserState. If omitted defaults to the current userState query
  * @param {Object} propSets.userState.data The data to mutate. For updates any array in data will replace that
  * on the server, but otherwise this data is deep merged with the existing data on the server
  * @param {Object} propSets.userProject Object matching the shape of userState.data[*}.userProject
@@ -146,7 +146,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userP
       userProjectOutputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape({
-      userState: PropTypes.shape().isRequired,
+      userState: PropTypes.shape(),
       userProject: PropTypes.shape({
         project: PropTypes.shape({
           id: PropTypes.number.isRequired
