@@ -1,6 +1,26 @@
-import {matchingUserStateScopeInstance, matchingUserStateScopeInstances} from './userStateHelpers';
-import {reqStrPathThrowing, strPathOr} from 'rescape-ramda';
+import {
+  makeUserStateScopeObjsQueryContainer,
+  matchingUserStateScopeInstance,
+  matchingUserStateScopeInstances
+} from './userStateHelpers';
+import {
+  composeWithChain, defaultRunConfig, expectKeysAtPath,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs,
+  reqStrPathThrowing,
+  strPathOr
+} from 'rescape-ramda';
 import * as R from 'ramda';
+import {userStateProjectOutputParams, userStateProjectsQueryContainer} from './userStateProjectStore';
+import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../userStateStore.sample';
+import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {testAuthTask} from '../../../helpers/testHelpers';
+import {
+  makeProjectsQueryContainer,
+  userScopeOutputParamsFragmentDefaultOnlyIds,
+  userStateOutputParamsCreator
+} from '../../..';
+import {userStateReadInputTypeMapper} from '../userStateStore';
 
 describe('userStateHelpers', () => {
   const userState = {
@@ -59,4 +79,64 @@ describe('userStateHelpers', () => {
       R.slice(0, 2, reqStrPathThrowing('data.userProjects', userState))
     );
   });
+
+  test('makeUserStateScopeObjsQueryContainer', done => {
+    expect.assertions(2);
+    const errors = [];
+    const someProjectKeys = ['id', 'key', 'name'];
+    composeWithChain([
+      // Filter for projects where the geojson.type is 'FeatureCollection'
+      // This forces a separate query on Projects so we can filter by Project
+      ({apolloConfig, user, projects}) => {
+        // Get the name since it will be Shrangrila29 or whatever
+        const projectNames = R.map(R.prop('name'), projects);
+        const scopeName = 'project';
+        return makeUserStateScopeObjsQueryContainer(
+          apolloConfig,
+          {
+            scopeQueryContainer: makeProjectsQueryContainer,
+            scopeName,
+            readInputTypeMapper: userStateReadInputTypeMapper,
+            userStateOutputParamsCreator: userScopeOutputParams => {
+              return userStateOutputParamsCreator(
+                userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+              );
+            },
+            userScopeOutputParams: userStateProjectOutputParams()
+          },
+          {
+            // Just use the current user
+            userState: {},
+            userScope: {
+              project: {geojson: {type: 'FeatureCollection'}, name: projectNames[0]}
+            }
+          }
+        );
+      },
+      // Set the UserState, returns previous values and {userState, projects, regions}
+      // where project and region are scope instances of userState
+      ({apolloConfig, user}) => {
+        return mutateSampleUserStateWithProjectsAndRegionsContainer({
+          apolloConfig,
+          user: R.pick(['id'], user),
+          regionKeys: ['earth'],
+          projectKeys: ['shrangrila', 'pangea']
+        });
+      },
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => testAuthTask
+      )
+    ])({}).run().listen(defaultRunConfig({
+      onResolved:
+        response => {
+          expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
+          expect(R.length(reqStrPathThrowing('data.userProjects', response))).toEqual(1);
+        }
+    }, errors, done));
+  }, 1000000);
 });

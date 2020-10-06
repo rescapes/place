@@ -207,7 +207,7 @@ export const createCacheOnlyPropsForUserState = props => {
  * @param {Object} apolloClient The Apollo Client
  * @param [Object] outputParams OutputParams for the query
  * @param {Object} props Arguments for the UserState query. Likely null unless testing whether the current
- * user state has passes a certain precicate
+ * user state has passes a certain predicate
  * @returns {Task|Just<Object>} A Task containing the single item user state response {data: {usersStates: []}}
  */
 export const makeCurrentUserStateQueryContainer = v(R.curry(
