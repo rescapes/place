@@ -118,7 +118,7 @@ export {
 
 export {
   createSampleProjectContainer,
-  createSampleProjectsContainer,
+  createSampleProjectsContainer
 } from './stores/scopeStores/project/projectStore.sample';
 
 export {
@@ -126,7 +126,9 @@ export {
   createSampleRegionsContainer
 } from './stores/scopeStores/region/regionStore.sample';
 
-export {matchingUserStateScopeInstances, matchingUserStateScopeInstance} from './stores/userStores/userScopeStores/userStateHelpers'
+export {
+  matchingUserStateScopeInstances, matchingUserStateScopeInstance, findUserScopeInstance
+} from './stores/userStores/userScopeStores/userStateHelpers';
 
-export {activityOutputParamsFragment, isActive} from './stores/userStores/activityStore'
-export {selectionOutputParamsFragment, isSelected} from './stores/userStores/selectionStore'
+export {activityOutputParamsFragment, isActive} from './stores/userStores/activityStore';
+export {selectionOutputParamsFragment, isSelected} from './stores/userStores/selectionStore';

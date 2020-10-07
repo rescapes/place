@@ -1,4 +1,5 @@
 import {
+  findUserScopeInstance,
   makeUserStateScopeObjsQueryContainer,
   matchingUserStateScopeInstance,
   matchingUserStateScopeInstances
@@ -139,4 +140,31 @@ describe('userStateHelpers', () => {
         }
     }, errors, done));
   }, 1000000);
+
+  test('findUserScopeInstance', () => {
+    const userState = {
+      data: {
+        userRegions: [
+          {region: {id: 1}},
+          {region: {id: 2}}
+        ]
+      }
+    };
+    const region = {id: 2};
+    const found = findUserScopeInstance({
+      userScopeCollectName: 'userRegions',
+      scopeName: 'region',
+      userStatePropKey: 'userState',
+      scopeInstancePropKey: 'region'
+    }, {userState, region});
+
+    expect(found).toEqual(userState['data']['userRegions'][1]);
+    const notFound = findUserScopeInstance({
+      userScopeCollectName: 'userRegions',
+      scopeName: 'region',
+      userStatePropKey: 'userState',
+      scopeInstancePropKey: 'region'
+    }, {userState, region: {id: 'fred'}});
+    expect(notFound).toEqual(undefined);
+  });
 });

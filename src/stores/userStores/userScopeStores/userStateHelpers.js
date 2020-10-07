@@ -19,8 +19,8 @@ import {
   omitDeepBy,
   onlyOneThrowing,
   pickDeepPaths, renameKey,
-  reqPathThrowing,
-  strPathOr
+  reqPathThrowing, reqStrPathThrowing,
+  strPathOr, toNamedResponseAndInputs
 } from 'rescape-ramda';
 import {
   composePropsFilterIntoApolloConfigOptionsVariables,
@@ -482,7 +482,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
                     const userScopeObjs = R.propOr(null, 'userScopeObjs', p);
                     return R.merge(
                       // Limit by any properties in the scope that aren't id. Keep id if we don't have userScopeObjs
-                      R.omit(R.length(userScopeObjs || []) ? ['id'] :[], scopeProps || {}),
+                      R.omit(R.length(userScopeObjs || []) ? ['id'] : [], scopeProps || {}),
                       R.filter(R.length, {
                         // Map each scope object to its id
                         idIn: R.map(
@@ -576,5 +576,45 @@ export const userScopeOrNullAndProps = (userScopeName, scopeName, props) => {
         }, propSets)
       )(propSets);
     }
-  )(props)
-}
+  )(props);
+};
+
+/**
+ * Find the userScope instance that matches props[scopeInstancePropKey] by id
+ * @param {Object} config
+ * @param {String} config.userScopeCollectName collection in props.userState.data, e,g. 'userProjects' or 'userRegions'
+ * @param {String} config.scopeName The name of the scope instance in the user scope instance, e.g. 'project', or 'region'
+ * @param {String} config.userStatePropKey The userState in props. For instance 'userState'
+ * @param {String} config.scopeInstancePropKey The key props that points to the scope instance that we want to look
+ * for in the user scopes
+ * @param {Object} props The props to scour
+ * @returns {Object} The matching userScope instance or undefined
+ */
+export const findUserScopeInstance = (
+  {userScopeCollectName, scopeName, userStatePropKey, scopeInstancePropKey},
+  props) => {
+  return R.compose(
+    ({userScopes, scopeInstance}) => {
+      return R.find(
+        userScope => {
+          // Find a userScope.scope instance id that matches scopeIntances's id
+          return R.eqProps(
+            'id',
+            scopeInstance,
+            reqStrPathThrowing(scopeName, userScope)
+          );
+        },
+        userScopes
+      );
+    },
+    toNamedResponseAndInputs('scopeInstance',
+      // If there is no scope instance in the props return null. The mutation won't be able to run
+      // until we specify one.
+      props => strPathOr(null, scopeInstancePropKey, props)
+    ),
+    toNamedResponseAndInputs('userScopes',
+      // If there are no userStates then we can't find the one matching the scope instance, return empty
+      props => strPathOr([], `${userStatePropKey}.data.${userScopeCollectName}`, props)
+    )
+  )(props);
+};
