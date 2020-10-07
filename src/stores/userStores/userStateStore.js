@@ -109,6 +109,32 @@ export const userStateOutputParamsFull = () => {
   };
 };
 
+/**
+ * When meta data of the user scope instances is needed but only the id of the scope instances
+ * @returns {Object} Props such as activity and selection for each userScope instance, but just
+ * ids for the scope instance
+ */
+export const userStateOutputParamsFullMetaOnlyScopeIds = () => {
+  return {
+    id: 1,
+    user: {id: 1},
+    data: {
+      userRegions: R.mergeAll([{
+        region: regionOutputParamsMinimized
+      },
+        selectionOutputParamsFragment,
+        activityOutputParamsFragment
+      ]),
+      userProjects: R.mergeAll([{
+        project: projectOutputParamsMinimized
+      },
+        selectionOutputParamsFragment,
+        activityOutputParamsFragment
+      ])
+    }
+  };
+};
+
 /***
  * userState data for scope objects (Project, Region, etc) output params fragment when we only want the project ids or
  * something custom.
