@@ -12,7 +12,7 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
-import {makeRegionsQueryContainer} from '../../scopeStores/region/regionStore';
+import {makeRegionsQueryContainer, regionOutputParamsMinimized} from '../../scopeStores/region/regionStore';
 import {
   makeUserStateScopeObjsMutationContainer,
   makeUserStateScopeObjsQueryContainer, userScopeOrNullAndProps
@@ -73,7 +73,9 @@ export const userStateRegionsQueryContainer = v(R.curry(
           );
           return params;
         },
-        userScopeOutputParams: explicitUserRegionOutputParams || userStateRegionOutputParams()
+        // Default to the user state params with only ids for the regions. This prevents an extra query to
+        // load the region data
+        userScopeOutputParams: explicitUserRegionOutputParams || userStateRegionOutputParams(regionOutputParamsMinimized)
       },
       renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
     );

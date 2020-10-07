@@ -43,7 +43,7 @@ describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
     expect.assertions(1);
     const errors = [];
-    const someRegionKeys = ['id', 'key', 'name', 'data'];
+    const someRegionKeys = ['id']
     R.composeK(
       // Get the authenticated user
       ({apolloConfig, user}) => {
@@ -92,7 +92,7 @@ describe('userRegionStore', () => {
   test('makeUserRegionQueryTaskWithRegionFilter', done => {
     expect.assertions(1);
     const errors = [];
-    const someRegionKeys = ['id', 'key', 'name', 'data'];
+    const someRegionKeys = ['id']
     composeWithChainMDeep(1, [
       // Filter for regions where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Regions so we can filter by Region
@@ -136,7 +136,7 @@ describe('userRegionStore', () => {
 
   test('makeActiveUserRegionQuery', done => {
     const errors = [];
-    const someRegionKeys = ['id', 'key', 'name', 'data'];
+    const someRegionKeys = ['id']
     R.composeK(
       ({apolloConfig, user}) => {
         return userStateRegionsQueryContainer(
