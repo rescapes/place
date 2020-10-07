@@ -179,6 +179,22 @@ describe('userRegionStore', () => {
     const regionKey = `testRegionKey${moment().format('HH-mm-ss-SSS')}`;
     const regionName = `TestRegionName${moment().format('HH-mm-ss-SSS')}`;
     R.composeK(
+      // Since this is a mutation, it's okay to not have a userRegion defined, but then we can't mutate
+      mapToNamedResponseAndInputs('undefinedUserRegion',
+        ({apolloConfig, userState, region}) => {
+          // Add the new region to the UserState
+          return userStateRegionMutationContainer(
+            apolloConfig,
+            {
+              userRegionOutputParams: userStateRegionOutputParams()
+            },
+            {
+              userState,
+              userRegion: null
+            }
+          );
+        }
+      ),
       mapToNamedResponseAndInputs('userState',
         ({apolloConfig, userState, region}) => {
           // Add the new region to the UserState
@@ -260,8 +276,9 @@ describe('userRegionStore', () => {
       )
     )({}).run().listen(defaultRunConfig({
       onResolved:
-        ({region, userState}) => {
+        ({region, userState, undefinedUserRegion}) => {
           expect(strPathOr(null, 'data.updateUserState.userState.data.userRegions.0.region.id', userState)).toEqual(region.id);
+          expect(R.propOr(false, 'skip', undefinedUserRegion)).toBeTruthy()
           done();
         }
     }, errors, done));

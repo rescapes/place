@@ -18,15 +18,15 @@ import {
   mergeDeepAll,
   omitDeepBy,
   onlyOneThrowing,
-  pickDeepPaths,
+  pickDeepPaths, renameKey,
   reqPathThrowing,
   strPathOr
 } from 'rescape-ramda';
 import {
   composePropsFilterIntoApolloConfigOptionsVariables,
   composeWithComponentMaybeOrTaskChain,
-  containerForApolloType,
-  getRenderPropFunction,
+  containerForApolloType, filterOutReadOnlyVersionProps,
+  getRenderPropFunction, makeMutationRequestContainer,
   makeQueryContainer,
   nameComponent
 } from 'rescape-apollo';
@@ -242,6 +242,21 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
   (apolloConfig,
    {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    {userState, userScope, render}) => {
+
+    if (!userScope) {
+      return makeUserStateMutationContainer(
+        apolloConfig,
+        {
+          // Skip if we don't have the variable ready
+          skip: true,
+          outputParams: userStateOutputParamsCreator(
+            userScopeOutputParams
+          )
+        },
+        {render}
+      );
+    }
+
     const userScopeName = _userScopeName(scopeName);
     return composeWithComponentMaybeOrTaskChain([
       // If there is a match with what the caller is submitting, update it, else add it
@@ -320,7 +335,8 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
             {
               // We can only query userState by id or user.id or neither to use the current user
               userState: pickDeepPaths(['id', 'user.id'], userState),
-              userScope: pickDeepPaths([`${scopeName}.id`], userScope), render
+              userScope: pickDeepPaths([`${scopeName}.id`], userScope),
+              render
             }
           );
         }
@@ -353,7 +369,8 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           ])
         })
       }),
-      userScope: PropTypes.shape({}).isRequired
+      // Not required when setting up mutation
+      userScope: PropTypes.shape({})
     })]
   ], 'makeUserStateScopeObjsMutationContainer');
 
@@ -538,3 +555,26 @@ export const matchingUserStateScopeInstances = R.curry((scopeName, predicate, us
     strPathOr([], `data.${userScopeName}`, userState)
   );
 });
+
+/**
+ * Converts the prop at userScopeName with scope key scopeName to be called userScope
+ * E.g. {userRegion: {region: ...}} is renamed {userScope: {region: ...}}
+ * @param {String} userScopeName E.g. 'userRegion'
+ * @param {String} scopeName E.g. 'region'
+ * @param {Object} props
+ * @returns {Object} The renamed prop to userScope and the other props that were in the propSets
+ */
+export const userScopeOrNullAndProps = (userScopeName, scopeName, props) => {
+  return R.when(
+    R.propOr(false, userScopeName),
+    propSets => {
+      return R.compose(
+        propSets => renameKey(R.lensPath([]), userScopeName, 'userScope', propSets),
+        propSets => R.over(R.lensPath([userScopeName, scopeName]), region => {
+          // Simplify the region we are querying for. We can't query for version props
+          return filterOutReadOnlyVersionProps(region);
+        }, propSets)
+      )(propSets);
+    }
+  )(props)
+}

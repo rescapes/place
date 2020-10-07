@@ -11,7 +11,7 @@
 
 import {
   userStateOutputParamsCreator,
-  userStateProjectMutationContainer,
+  userStateProjectMutationContainer, userStateProjectOutputParams,
   userStateProjectsQueryContainer
 } from './userStateProjectStore';
 import {
@@ -41,6 +41,7 @@ import {createSampleProjectContainer} from '../../scopeStores/project/projectSto
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
 import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {userStateRegionMutationContainer, userStateRegionOutputParams} from './userStateRegionStore';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -176,6 +177,22 @@ describe('userProjectStore', () => {
     const projectKey = `testProjectKey${moment().format('HH-mm-ss-SSS')}`;
     const projectName = `TestProjectName${moment().format('HH-mm-ss-SSS')}`;
     R.composeK(
+      // Since this is a mutation, it's okay to not have a userProject defined, but then we can't mutate
+      mapToNamedResponseAndInputs('undefinedUserProject',
+        ({apolloConfig, userState, project}) => {
+          // Add the new region to the UserState
+          return userStateProjectMutationContainer(
+            apolloConfig,
+            {
+              userProjectOutputParams: userStateProjectOutputParams()
+            },
+            {
+              userState,
+              userProject: null
+            }
+          );
+        }
+      ),
       // Modify the new project in the UserState
       mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
         ({apolloConfig, userState, project}) => {
@@ -281,8 +298,9 @@ describe('userProjectStore', () => {
       )
     )({}).run().listen(defaultRunConfig({
       onResolved:
-        ({project, userState}) => {
+        ({project, userState, undefinedUserProject}) => {
           expect(strPathOr(null, 'data.userProjects.0.project.id', userState)).toEqual(project.id);
+          expect(R.propOr(false, 'skip', undefinedUserProject)).toBeTruthy()
           done();
         }
     }, errors, done));

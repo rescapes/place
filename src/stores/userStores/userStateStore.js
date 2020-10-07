@@ -317,8 +317,9 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip = f
       R.merge(
         apolloConfig,
         {
-          skip,
+          // Skip if passed in or in apolloConfig
           options: {
+            skip: R.propOr(skip, 'option.skip', apolloConfig),
             update: (store, response) => {
               // Add mutate to response.data so we dont' have to guess if it's a create or udpate
               const userState = reqStrPathThrowing(

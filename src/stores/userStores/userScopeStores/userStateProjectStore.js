@@ -13,7 +13,11 @@ import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
 import {makeProjectsQueryContainer} from '../../scopeStores/project/projectStore';
-import {makeUserStateScopeObjsMutationContainer, makeUserStateScopeObjsQueryContainer} from './userStateHelpers'
+import {
+  makeUserStateScopeObjsMutationContainer,
+  makeUserStateScopeObjsQueryContainer,
+  userScopeOrNullAndProps
+} from './userStateHelpers';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
@@ -134,12 +138,8 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userP
         },
         userScopeOutputParams: userProjectOutputParams
       },
-      R.compose(
-        propSets => renameKey(R.lensPath([]), 'userProject', 'userScope', propSets),
-        propSets => R.over(R.lensPath(['userProject', 'project']), project => {
-          return filterOutReadOnlyVersionProps(project)
-        }, propSets)
-      )(propSets)
+      // Create the userScope param from userProject if we have a userProject
+      userScopeOrNullAndProps('userProject', 'project', propSets)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
@@ -148,11 +148,13 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userP
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape(),
+      // Not required because userProject can be null when the mutation is created
+      // To be able to make a mutation, it must be specified
       userProject: PropTypes.shape({
         project: PropTypes.shape({
           id: PropTypes.number.isRequired
         })
-      }).isRequired
+      })
     }).isRequired]
   ],
   'userStateProjectMutationContainer'

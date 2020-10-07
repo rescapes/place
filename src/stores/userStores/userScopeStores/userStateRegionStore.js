@@ -15,7 +15,7 @@ import {v} from 'rescape-validate';
 import {makeRegionsQueryContainer} from '../../scopeStores/region/regionStore';
 import {
   makeUserStateScopeObjsMutationContainer,
-  makeUserStateScopeObjsQueryContainer
+  makeUserStateScopeObjsQueryContainer, userScopeOrNullAndProps
 } from './userStateHelpers';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
@@ -128,12 +128,8 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRe
         },
         userScopeOutputParams: userRegionOutputParams
       },
-      R.compose(
-        propSets => renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets),
-        propSets => R.over(R.lensPath(['userRegion', 'region']), region => {
-          return filterOutReadOnlyVersionProps(region);
-        }, propSets)
-      )(propSets)
+      // Create the userScope param from userRegion if we have a userRegion
+      userScopeOrNullAndProps('userRegion', 'region', propSets)
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
