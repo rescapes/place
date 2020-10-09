@@ -191,7 +191,11 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
             scope => R.omit(['id'], scope),
             userScope => R.propOr({}, scopeName, userScope)
           )(userScope),
-          R.equals({id: 1}, scopeOutputParams)
+          // Only requesting id from the userScope instances
+          R.and(
+            R.equals(1, R.length(R.keys(scopeOutputParams))),
+            R.propOr(false, 'id', scopeOutputParams)
+          )
         );
       },
       // Done, return all of the userScopeObjs in the appropriate containers
@@ -424,7 +428,8 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
             return containerForApolloType(
               apolloConfig,
               {
-                render: getRenderPropFunction(props),
+                // The render prop is based with the response for components
+                render: getRenderPropFunction(scopeObjsResponse),
                 // If the data isn't loaded then return scopeObjsResponse, which is either loading or was skipped
                 response: scopeUserObjsResponse || scopeObjsResponse
               }

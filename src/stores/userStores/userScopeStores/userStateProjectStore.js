@@ -92,7 +92,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
         },
         // Default to the user state params with only ids for the project. This prevents an extra query to
         // load the project data
-        userScopeOutputParams: explicitUserProjectOutputParams || userStateProjectOutputParams(projectOutputParamsMinimized)
+        userScopeOutputParams: explicitUserProjectOutputParams || userStateProjectOutputParams({id: 1})
       },
       renameKey(R.lensPath([]), 'userProject', 'userScope', propSets)
     );

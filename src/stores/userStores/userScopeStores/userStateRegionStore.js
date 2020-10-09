@@ -75,7 +75,7 @@ export const userStateRegionsQueryContainer = v(R.curry(
         },
         // Default to the user state params with only ids for the regions. This prevents an extra query to
         // load the region data
-        userScopeOutputParams: explicitUserRegionOutputParams || userStateRegionOutputParams(regionOutputParamsMinimized)
+        userScopeOutputParams: explicitUserRegionOutputParams || userStateRegionOutputParams({id: 1})
       },
       renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
     );
