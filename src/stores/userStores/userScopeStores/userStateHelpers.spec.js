@@ -135,8 +135,8 @@ describe('userStateHelpers', () => {
     ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
-          expect(R.length(reqStrPathThrowing('data.userProjects', response))).toEqual(1);
+          expectKeysAtPath(someProjectKeys, 'data.userStates.0.data.userProjects.0.project', response);
+          expect(R.length(reqStrPathThrowing('data.userStates.0.data.userProjects', response))).toEqual(1);
         }
     }, errors, done));
   }, 1000000);

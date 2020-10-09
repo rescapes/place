@@ -103,11 +103,11 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       // First query for UserState
       // Dig into the results and return the userStates with the scope objects
       // where scope names is 'Regions', 'Projects', etc
-      nameComponent('queryUserStates', ({render, children, userState}) => {
+      nameComponent('queryUserStates', props => {
         const userPropPaths = ['id', 'user.id'];
-        const props = pickDeepPaths(userPropPaths, userState || {});
         // Use makeCurrentUserStateQueryContainer unless user params are specified.
         // Only admins can query for other users (to be controlled on the server)
+        const userState = strPathOr({}, 'userState', props);
         const queryContainer = R.any(p => strPathOr(null, p, userState), userPropPaths) ?
           makeQueryContainer :
           makeCurrentUserStateQueryContainer;
@@ -116,7 +116,13 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
           mergeDeep(
             apolloConfig,
             // Keep all props
-            {options: {variables: R.identity}}
+            {
+              options: {
+                variables: ({userState}) => {
+                  return pickDeepPaths(userPropPaths, userState || {});
+                }
+              }
+            }
           ),
           {
             name: 'userStates',
@@ -137,11 +143,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
               )(userScopeOutputParams)
             )
           },
-          // The props that identify the user state. Either the user state id or user id
-          R.merge(
-            {render, children},
-            props
-          )
+          props
         );
       })
     ])(props);
@@ -204,7 +206,7 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
           apolloConfig,
           {
             render: getRenderPropFunction(props),
-            response: R.prop('userStatesResponse', props)
+            response: reqStrPathThrowing('userStatesResponse', props)
           }
         );
       },
@@ -421,7 +423,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
               R.identity,
               compactedMatchingUserScopeObjs => R.set(
                 R.lensProp('data'),
-                {[userScopeName]: compactedMatchingUserScopeObjs},
+                {userStates: [{data: {[userScopeName]: compactedMatchingUserScopeObjs}}]},
                 scopeObjsResponse
               )
             )(compactedMatchingUserScopeObjs);

@@ -10,14 +10,15 @@
  */
 
 import {
+  userStateRegionMutationContainer,
   userStateRegionOutputParams,
-  userStateRegionsQueryContainer,
-  userStateRegionMutationContainer
+  userStateRegionsQueryContainer
 } from './userStateRegionStore';
 import {
   composeWithChainMDeep,
   defaultRunConfig,
-  expectKeysAtPath, mapToMergedResponseAndInputs,
+  expectKeysAtPath,
+  mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   strPathOr
@@ -31,19 +32,17 @@ import {
   userStateMutateOutputParams,
   userStateOutputParamsOnlyIds
 } from '../userStateStore';
-import {
-  createUserRegionWithDefaults,
-  mutateSampleUserStateWithProjectAndRegionTask
-} from '../userStateStore.sample';
+import {createUserRegionWithDefaults, mutateSampleUserStateWithProjectAndRegionTask} from '../userStateStore.sample';
 import moment from 'moment';
 import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample';
 import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {regionOutputParamsMinimized} from '../../..';
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
     expect.assertions(1);
     const errors = [];
-    const someRegionKeys = ['id']
+    const someRegionKeys = ['id'];
     R.composeK(
       // Get the authenticated user
       ({apolloConfig, user}) => {
@@ -84,7 +83,7 @@ describe('userRegionStore', () => {
     )({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtPath(someRegionKeys, 'data.userRegions.0.region', response);
+          expectKeysAtPath(someRegionKeys, 'data.userStates.0.data.userRegions.0.region', response);
         }
     }, errors, done));
   });
@@ -92,14 +91,14 @@ describe('userRegionStore', () => {
   test('makeUserRegionQueryTaskWithRegionFilter', done => {
     expect.assertions(1);
     const errors = [];
-    const someRegionKeys = ['id']
+    const someRegionKeys = ['id'];
     composeWithChainMDeep(1, [
       // Filter for regions where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Regions so we can filter by Region
       ({apolloConfig, user}) => {
         return userStateRegionsQueryContainer(
           {apolloConfig},
-          {},
+          {userRegionOutputParams: userStateRegionOutputParams(regionOutputParamsMinimized)},
           {
             userState: {user: R.pick(['id'], user)},
             userRegion: {region: {geojson: {type: 'FeatureCollection'}}}
@@ -129,14 +128,14 @@ describe('userRegionStore', () => {
     ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtPath(someRegionKeys, 'data.userRegions.0.region', response);
+          expectKeysAtPath(someRegionKeys, 'data.userStates.0.data.userRegions.0.region', response);
         }
     }, errors, done));
   });
 
   test('makeActiveUserRegionQuery', done => {
     const errors = [];
-    const someRegionKeys = ['id']
+    const someRegionKeys = ['id'];
     R.composeK(
       ({apolloConfig, user}) => {
         return userStateRegionsQueryContainer(
@@ -169,7 +168,7 @@ describe('userRegionStore', () => {
     )({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtPath(someRegionKeys, 'data.userRegions.0.region', response);
+          expectKeysAtPath(someRegionKeys, 'data.userStates.0.data.userRegions.0.region', response);
         }
     }, errors, done));
   }, 1000000);
@@ -278,7 +277,7 @@ describe('userRegionStore', () => {
       onResolved:
         ({region, userState, undefinedUserRegion}) => {
           expect(strPathOr(null, 'data.updateUserState.userState.data.userRegions.0.region.id', userState)).toEqual(region.id);
-          expect(R.propOr(false, 'skip', undefinedUserRegion)).toBeTruthy()
+          expect(R.propOr(false, 'skip', undefinedUserRegion)).toBeTruthy();
           done();
         }
     }, errors, done));

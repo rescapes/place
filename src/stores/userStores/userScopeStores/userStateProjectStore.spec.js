@@ -42,6 +42,7 @@ import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
 import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {userStateRegionMutationContainer, userStateRegionOutputParams} from './userStateRegionStore';
+import {projectOutputParams, projectOutputParamsMinimized} from '../../..';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -51,7 +52,9 @@ describe('userProjectStore', () => {
       ({apolloConfig, user}) => {
         return userStateProjectsQueryContainer(
           {apolloConfig},
-          {},
+          {
+            userProjectOutputParams: userStateProjectOutputParams(projectOutputParamsMinimized)
+          },
           {
             userState: {user: R.pick(['id'], user)},
             // Don't limit the projects further
@@ -78,7 +81,7 @@ describe('userProjectStore', () => {
     ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
+          expectKeysAtPath(someProjectKeys, 'data.userStates.0.data.userProjects.0.project', response);
           done();
         }
     }, errors, done));
@@ -94,7 +97,9 @@ describe('userProjectStore', () => {
       ({apolloConfig, user, projects}) => {
         // Get the name since it will be Shrangrila29 or whatever
         const projectNames = R.map(R.prop('name'), projects);
-        return userStateProjectsQueryContainer({apolloConfig}, {}, {
+        return userStateProjectsQueryContainer({apolloConfig}, {
+          userProjectOutputParams: userStateProjectOutputParams(projectOutputParamsMinimized)
+        }, {
           userState: {user: R.pick(['id'], user)},
           // Limit by geojson (both pass this) and by name (1 passes this)
           userProject: {
@@ -123,15 +128,15 @@ describe('userProjectStore', () => {
     ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
-          expect(R.length(reqStrPathThrowing('data.userProjects', response))).toEqual(1);
+          expectKeysAtPath(someProjectKeys, 'data.userStates.0.data.userProjects.0.project', response);
+          expect(R.length(reqStrPathThrowing('data.userStates.0.data.userProjects', response))).toEqual(1);
         }
     }, errors, done));
   }, 1000000);
 
   test('makeActiveUserProjectQuery', done => {
     const errors = [];
-    const someProjectKeys = ['id', 'key', 'name'];
+    const someProjectKeys = ['id'];
     R.composeK(
       ({apolloConfig, user}) => {
         return userStateProjectsQueryContainer(
@@ -166,7 +171,7 @@ describe('userProjectStore', () => {
     )({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtPath(someProjectKeys, 'data.userProjects.0.project', response);
+          expectKeysAtPath(someProjectKeys, 'data.userStates.0.data.userProjects.0.project', response);
           done();
         }
     }, errors, done));
