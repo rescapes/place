@@ -397,7 +397,7 @@ const _makeCurrentUserStateQueryResolveMapboxContainer = (apolloConfig, outputPa
               // Search by whatever props are passed into locationFilter
               return R.prop('user', props);
             },
-            errorPolicy: 'all'
+            errorPolicy: 'all', partialRefetch: true
           }
         }),
         {outputParams: userStateMapboxOutputParamsCreator(outputParams)},
@@ -446,7 +446,7 @@ const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
               // Search by whatever props are passed into locationFilter
               return R.prop('projectFilter', props);
             },
-            errorPolicy: 'all'
+            errorPolicy: 'all', partialRefetch: true
           }
         })
       },
@@ -499,7 +499,7 @@ const _makeRegionsQueryResolveMapboxContainer = (apolloConfig, outputParams, pro
               variables: props => {
                 return R.prop('regionFilter', props);
               },
-              errorPolicy: 'all'
+              errorPolicy: 'all', partialRefetch: true
             }
           })
         },
@@ -553,7 +553,7 @@ const _makeSettingsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
             // Search by whatever props are passed into locationFilter
             return R.prop('settings', props);
           },
-          errorPolicy: 'all'
+          errorPolicy: 'all', partialRefetch: true
         }
       }),
       {

@@ -121,7 +121,9 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
                 variables: ({userState}) => {
                   return pickDeepPaths(userPropPaths, userState || {});
                 }
-              }
+              },
+              errorPolicy: 'all',
+              partialRefetch: true
             }
           ),
           {
