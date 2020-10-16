@@ -217,13 +217,17 @@ export const userStateStorePoliciesConfig = [
   {
     type: 'UserStateDataType',
     fields: ['userRegions', 'userProjects'],
-    idPathLookup: userStateDataTypeIdPathLookup
+    idPathLookup: userStateDataTypeIdPathLookup,
+    cacheOnlyFieldLookup: {
+      userRegions: {selection: true},
+      userProjects: {selection: true}
+    }
   },
   // cacheOnly true instructs the merge function not to overwrite existing objects on this
   // field if the incoming object is not defined. This is because we add to the cache when
   // we mutate but subsequent queries don't have the cache only data, but we dont want to lose the cache-only data
-  {type: 'UserRegionDataType', fields: ['selection'], cacheOnlyFieldLookup: {selection: true}},
-  {type: 'UserProjectDataType', fields: ['selection'], cacheOnlyFieldLookup: {selection: true}}
+  {type: 'UserRegionDataType', fields: ['selection']},
+  {type: 'UserProjectDataType', fields: ['selection']}
 ];
 
 export const createCacheOnlyPropsForUserState = props => {
