@@ -10,7 +10,7 @@
  */
 import * as R from 'ramda';
 import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers';
-import {capitalize, strPathOr} from 'rescape-ramda';
+import {capitalize, mergeDeep, strPathOr} from 'rescape-ramda';
 import {
   composePropsFilterIntoApolloConfigOptionsVariables,
   containerForApolloType,
@@ -69,7 +69,10 @@ export const queryVariationContainers = R.curry((
                 return queryPageContainer(
                   // Update apolloConfig so that props.objects are passed to the optional options.variables function
                   {
-                    apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProps),
+                    apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(
+                      apolloConfig,
+                      normalizeProps
+                    ),
                     regionConfig: regionConfig || {}
                   },
                   R.omit(['readInputTypeMapper'],

@@ -14,7 +14,7 @@ import {
   composeWithChain,
   defaultRunConfig,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs,
+  mapToNamedResponseAndInputs, mergeDeep,
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample';
@@ -66,8 +66,46 @@ test('queryUsingPaginationContainer', done => {
 
 test('queryPageContainer', done => {
   const pageSize = 1;
-  expect.assertions(4);
+  expect.assertions(6);
   const task = composeWithChain([
+    mapToNamedResponseAndInputs('projectsPagedSkipped2',
+      ({apolloConfig, projects}) => {
+        return queryPageContainer(
+          {apolloConfig, regionConfig: {}},
+          {
+            pageSize,
+            // No page argument, so skip
+            typeName: 'project',
+            name: 'projectsPaginated',
+            filterObjsByConfig: ({regionConfig}, objs) => objs,
+            outputParams: projectOutputParams,
+            normalizeProps: props => {
+              return props;
+            }
+          },
+          {idIn: R.map(R.prop('id'), projects)}
+        );
+      }
+    ),
+    mapToNamedResponseAndInputs('projectsPagedSkipped',
+      ({apolloConfig, projects}) => {
+        return queryPageContainer(
+          {apolloConfig: mergeDeep(apolloConfig, {options: {skip: true}}), regionConfig: {}},
+          {
+            pageSize,
+            page: 10,
+            typeName: 'project',
+            name: 'projectsPaginated',
+            filterObjsByConfig: ({regionConfig}, objs) => objs,
+            outputParams: projectOutputParams,
+            normalizeProps: props => {
+              return props;
+            }
+          },
+          {idIn: R.map(R.prop('id'), projects)}
+        );
+      }
+    ),
     mapToNamedResponseAndInputs('projectsPaged10',
       ({apolloConfig, projects}) => {
         return queryPageContainer(
@@ -85,7 +123,8 @@ test('queryPageContainer', done => {
           },
           {idIn: R.map(R.prop('id'), projects)}
         );
-      }),
+      }
+    ),
     mapToNamedResponseAndInputs('projectsPaged1',
       ({apolloConfig, projects}) => {
         return queryPageContainer(
@@ -120,11 +159,13 @@ test('queryPageContainer', done => {
   ])({});
   const errors = [];
   task.run().listen(defaultRunConfig({
-    onResolved: ({projectsPaged1, projectsPaged10}) => {
+    onResolved: ({projectsPaged1, projectsPaged10, projectsPagedSkipped,projectsPagedSkipped2 }) => {
       expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged1))).toEqual(1);
       expect(reqStrPathThrowing('data.projectsPaginated.pages', projectsPaged1)).toEqual(10);
       expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged10))).toEqual(1);
       expect(reqStrPathThrowing('data.projectsPaginated.hasNext', projectsPaged10)).toEqual(false);
+      expect(projectsPagedSkipped.skip).toBeTruthy()
+      expect(projectsPagedSkipped2.skip).toBeTruthy()
     }
   }, errors, done));
 }, 100000);

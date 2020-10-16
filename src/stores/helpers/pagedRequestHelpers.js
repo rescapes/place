@@ -18,7 +18,7 @@ import {
   makeQueryContainer,
   nameComponent
 } from 'rescape-apollo';
-import {capitalize, reqPathThrowing, strPathOr, toArrayIfNot} from 'rescape-ramda';
+import {capitalize, mergeDeep, reqPathThrowing, strPathOr, toArrayIfNot} from 'rescape-ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
 import {loggers} from 'rescape-log';
@@ -104,7 +104,7 @@ export const queryUsingPaginationContainer = v(R.curry((
                 // Pass the combined previous results
                 {previousPages},
                 // Skip the first page + 1-based index
-                R.merge(props, {pageSize: pageSizeOrDefault, page: page+2})
+                R.merge(props, {pageSize: pageSizeOrDefault, page: page + 2})
               );
             });
           },
@@ -188,7 +188,17 @@ export const queryPageContainer = v(R.curry((
     // Default to propsPageSize then pageSize then 100
     const pageSizeOrDefault = propsPageSize || pageSize || 100;
     const pageOrDefault = propsPage || page;
-    if (!pageOrDefault) {
+    const updatedApolloConfig = mergeDeep(
+      apolloConfig,
+      {
+        options:
+          {
+            // Skip if we're already skipping or no page is given
+            skip: strPathOr(false, 'options.skip', apolloConfig) || !pageOrDefault
+          }
+      }
+    );
+    if (!strPathOr(false, 'options.skip', updatedApolloConfig) && !pageOrDefault) {
       throw new Error(`Neither props.page nor queryConfig.page was specified. Props: ${inspect(props)}`);
     }
     const className = capitalize(typeName);
@@ -200,7 +210,7 @@ export const queryPageContainer = v(R.curry((
     // Run a query for each page (based on the result of the first query)
     return _paginatedQueryContainer(
       {
-        apolloConfig,
+        apolloConfig: updatedApolloConfig,
         regionConfig
       },
       {
@@ -270,7 +280,7 @@ export const _paginatedQueryContainer = (
         hasPrev: 1,
         objects: outputParams
       },
-      readInputTypeMapper,
+      readInputTypeMapper
     },
     R.merge({page, pageSize}, props)
   );
@@ -368,7 +378,7 @@ export const accumulatedSinglePageQueryContainer = (
         }
       )(page);
     }
-  ])(props)
+  ])(props);
 };
 
 /**
