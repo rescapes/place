@@ -35,7 +35,7 @@ import {
 import {createUserRegionWithDefaults, mutateSampleUserStateWithProjectAndRegionTask} from '../userStateStore.sample';
 import moment from 'moment';
 import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample';
-import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {regionOutputParamsMinimized} from '../../..';
 
 describe('userRegionStore', () => {
@@ -71,7 +71,7 @@ describe('userRegionStore', () => {
       // Get the authenticated user
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       // Authenticate
@@ -117,7 +117,7 @@ describe('userRegionStore', () => {
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
@@ -160,7 +160,7 @@ describe('userRegionStore', () => {
         });
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
+        ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask
@@ -267,7 +267,7 @@ describe('userRegionStore', () => {
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',

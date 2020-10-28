@@ -21,7 +21,7 @@ import * as R from 'ramda';
 import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore';
 import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample';
 import {of} from 'folktale/concurrency/task';
-import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 
 const someProjectKeys = ['id', 'key', 'geojson'];
 describe('projectStore', () => {
@@ -34,7 +34,7 @@ describe('projectStore', () => {
       ),
       // Get the current user
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {})
+        ({apolloClient}) => currentUserQueryContainer({apolloClient}, userOutputParams, {})
       ),
       () => testAuthTask
     ])().run().listen(defaultRunConfig({
@@ -85,7 +85,7 @@ describe('projectStore', () => {
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',

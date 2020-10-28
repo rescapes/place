@@ -40,7 +40,7 @@ import {testAuthTask} from '../../../helpers/testHelpers';
 import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
-import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {userStateRegionMutationContainer, userStateRegionOutputParams} from './userStateRegionStore';
 import {projectOutputParams, projectOutputParamsMinimized} from '../../..';
 
@@ -73,7 +73,7 @@ describe('userProjectStore', () => {
         });
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
+        ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask
@@ -119,7 +119,7 @@ describe('userProjectStore', () => {
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
@@ -160,7 +160,7 @@ describe('userProjectStore', () => {
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
@@ -295,7 +295,7 @@ describe('userProjectStore', () => {
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',

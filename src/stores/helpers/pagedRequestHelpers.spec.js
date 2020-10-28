@@ -21,7 +21,7 @@ import {createSampleProjectsContainer} from '../scopeStores/project/projectStore
 import * as R from 'ramda';
 import {projectOutputParams} from '../scopeStores/project/projectStore';
 import {testAuthTask} from '../../helpers/testHelpers';
-import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 
 test('queryUsingPaginationContainer', done => {
   const task = composeWithChain([
@@ -47,7 +47,7 @@ test('queryUsingPaginationContainer', done => {
     ),
     mapToNamedPathAndInputs('user', 'data.currentUser',
       ({apolloConfig}) => {
-        return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+        return currentUserQueryContainer(apolloConfig, userOutputParams, {});
       }
     ),
     mapToNamedResponseAndInputs('apolloConfig',
@@ -148,7 +148,7 @@ test('queryPageContainer', done => {
     ),
     mapToNamedPathAndInputs('user', 'data.currentUser',
       ({apolloConfig}) => {
-        return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+        return currentUserQueryContainer(apolloConfig, userOutputParams, {});
       }
     ),
     mapToNamedResponseAndInputs('apolloConfig',

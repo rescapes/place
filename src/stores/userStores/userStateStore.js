@@ -18,7 +18,7 @@ import {
   createReadInputTypeMapper,
   filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
-  getRenderPropFunction, makeCurrentUserQueryContainer,
+  getRenderPropFunction, currentUserQueryContainer,
   makeMutationRequestContainer,
   makeMutationWithClientDirectiveContainer,
   makeQueryContainer,
@@ -281,7 +281,7 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
       },
       // Get the current user
       props => {
-        return makeCurrentUserQueryContainer(apolloConfig, {id: 1}, props);
+        return currentUserQueryContainer(apolloConfig, {id: 1}, props);
       }
     ])(props);
   }),

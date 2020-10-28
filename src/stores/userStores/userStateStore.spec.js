@@ -29,15 +29,15 @@ import {
 } from './userStateStore';
 import {mutateSampleUserStateWithProjectAndRegionTask} from './userStateStore.sample';
 import {testAuthTask} from '../../helpers/testHelpers';
-import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 
 
 describe('userStore', () => {
-  test('makeCurrentUserQueryContainer', done => {
+  test('currentUserQueryContainer', done => {
     const someUserKeys = ['id', 'email', 'username'];
     const errors = [];
     R.composeK(
-      ({apolloClient}) => makeCurrentUserQueryContainer({apolloClient}, userOutputParams, {}),
+      ({apolloClient}) => currentUserQueryContainer({apolloClient}, userOutputParams, {}),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
         () => testAuthTask
       )
@@ -76,7 +76,7 @@ describe('userStore', () => {
       ),
       mapMonadByConfig({name: 'user', strPath: 'data.currentUser'},
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapMonadByConfig({name: 'apolloConfig'},
@@ -115,7 +115,7 @@ describe('userStore', () => {
       ),
       mapMonadByConfig({name: 'user', strPath: 'data.currentUser'},
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapMonadByConfig({name: 'apolloConfig'},
@@ -182,7 +182,7 @@ describe('userStore', () => {
       ),
       mapMonadByConfig({name: 'user', strPath: 'data.currentUser'},
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapMonadByConfig({name: 'apolloConfig'},
@@ -243,7 +243,7 @@ describe('userStore', () => {
         });
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloConfig}) => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
+        ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask

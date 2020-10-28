@@ -11,7 +11,7 @@ import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs, 
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
 import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
 import {of} from 'folktale/concurrency/task';
-import {expectKeys, makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {expectKeys, currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample';
 
 /**
@@ -59,7 +59,7 @@ describe('mapboxStore', () => {
         ({apolloConfig, userState}) => R.ifElse(
           R.identity,
           userState => of({data: {currentUser: R.prop('user', userState)}}),
-          () => makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {})
+          () => currentUserQueryContainer(apolloConfig, userOutputParams, {})
         )(userState)
       ),
       mapToNamedResponseAndInputs('void',

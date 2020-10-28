@@ -14,7 +14,7 @@ import {
 import * as R from 'ramda';
 import {userStateProjectOutputParams, userStateProjectsQueryContainer} from './userStateProjectStore';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../userStateStore.sample';
-import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import {
   makeProjectsQueryContainer,
@@ -126,7 +126,7 @@ describe('userStateHelpers', () => {
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',

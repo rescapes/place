@@ -25,7 +25,7 @@ import {
   regionQueryVariationContainers
 } from './regionStore';
 import {createSampleRegionContainer, createSampleRegionsContainer} from './regionStore.sample';
-import {makeCurrentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {of} from 'folktale/concurrency/task';
 
 const someRegionKeys = ['id', 'key', 'geojson', 'data'];
@@ -109,7 +109,7 @@ describe('regionStore', () => {
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
-          return makeCurrentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
