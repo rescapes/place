@@ -132,3 +132,7 @@ export {
 
 export {activityOutputParamsFragment, isActive} from './stores/userStores/activityStore';
 export {selectionOutputParamsFragment, isSelected} from './stores/userStores/selectionStore';
+
+export {
+  testAuthTask, testNoAuthTask, testConfig
+} from './helpers/testHelpers';

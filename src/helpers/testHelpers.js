@@ -43,3 +43,4 @@ export const testConfig = {
  * Returns an object {apolloClient:An authorized client}
  */
 export const testAuthTask = createAuthTask(testConfig);
+export const testNoAuthTask = createNoAuthTask(testConfig);

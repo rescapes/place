@@ -234,7 +234,6 @@ export const createCacheOnlyPropsForUserState = props => {
   return createCacheOnlyProps({name: 'userStore', cacheIdProps, cacheOnlyObjs}, props);
 };
 
-
 /**
  * Queries userState for the current user as identified by the apollo client.
  * @param {Object} apolloClient The Apollo Client

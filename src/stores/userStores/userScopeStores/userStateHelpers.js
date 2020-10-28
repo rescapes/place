@@ -604,7 +604,7 @@ export const findUserScopeInstance = (
   props) => {
   return R.compose(
     ({userScopes, scopeInstance}) => {
-      return R.find(
+      return scopeInstance && R.find(
         userScope => {
           // Find a userScope.scope instance id that matches scopeIntances's id
           return R.eqProps(
