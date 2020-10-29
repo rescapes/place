@@ -242,7 +242,7 @@ export const createCacheOnlyPropsForUserState = props => {
  * user state has passes a certain predicate
  * @returns {Task|Just<Object>} A Task containing the single item user state response {data: {usersStates: []}}
  */
-export const makeCurrentUserStateQueryContainer = v(R.curry(
+export const currentUserStateQueryContainer = v(R.curry(
   (apolloConfig, {outputParams}, props) => {
     return composeWithComponentMaybeOrTaskChain([
       response => {
@@ -291,7 +291,7 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
       outputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape()]
-  ], 'makeCurrentUserStateQueryContainer');
+  ], 'currentUserStateQueryContainer');
 
 /**
  * Admin only. Queries userState. This will fail unless the apollo client is authenticated to an admin
@@ -300,7 +300,7 @@ export const makeCurrentUserStateQueryContainer = v(R.curry(
  * @param {Object} userStateArguments Arguments for the UserState query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.userStates or errors in obj.errors
  */
-export const makeAdminUserStateQueryContainer = v(R.curry(
+export const adminUserStateQueryContainer = v(R.curry(
   (apolloConfig, {outputParams}, props) => {
     return makeQueryContainer(
       apolloConfig,
@@ -314,7 +314,7 @@ export const makeAdminUserStateQueryContainer = v(R.curry(
       outputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape().isRequired]
-  ], 'makeAdminUserStateQueryContainer');
+  ], 'adminUserStateQueryContainer');
 
 /**
  * Normalized project props for for mutation
@@ -344,7 +344,7 @@ export const normalizeUserStatePropsForMutating = userState => {
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip = false, outputParams}, props) => {
+export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false, outputParams}, props) => {
     return makeMutationRequestContainer(
       R.merge(
         apolloConfig,
@@ -394,7 +394,7 @@ export const makeUserStateMutationContainer = v(R.curry((apolloConfig, {skip = f
     })],
     ['props', PropTypes.shape().isRequired]
   ],
-  'makeUserStateMutationContainer'
+  'userStateMutationContainer'
 );
 
 /***
@@ -513,7 +513,7 @@ export const deleteScopeObjectsContainer = (
           R.identity,
           userState => {
             const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
-            return makeUserStateMutationContainer(
+            return userStateMutationContainer(
               apolloConfig,
               // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
               {outputParams: omitClientFields(userStateOutputParamsFull())},

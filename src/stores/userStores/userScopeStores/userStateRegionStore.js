@@ -14,8 +14,8 @@ import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
 import {makeRegionsQueryContainer, regionOutputParamsMinimized} from '../../scopeStores/region/regionStore';
 import {
-  makeUserStateScopeObjsMutationContainer,
-  makeUserStateScopeObjsQueryContainer, userScopeOrNullAndProps
+  userStateScopeObjsMutationContainer,
+  userStateScopeObjsQueryContainer, userScopeOrNullAndProps
 } from './userStateHelpers';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
@@ -61,7 +61,7 @@ export const userStateRegionOutputParams = (explicitRegionOuputParams = regionOu
 export const userStateRegionsQueryContainer = v(R.curry(
   ({apolloConfig}, {userRegionOutputParams: explicitUserRegionOutputParams}, propSets) => {
     const scopeName = 'region';
-    return makeUserStateScopeObjsQueryContainer(
+    return userStateScopeObjsQueryContainer(
       apolloConfig,
       {
         scopeQueryContainer: makeRegionsQueryContainer,
@@ -117,7 +117,7 @@ export const userStateRegionsQueryContainer = v(R.curry(
  */
 export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRegionOutputParams}, propSets) => {
     const scopeName = 'region';
-    return makeUserStateScopeObjsMutationContainer(
+    return userStateScopeObjsMutationContainer(
       apolloConfig,
       {
         scopeQueryContainer: makeRegionsQueryContainer,

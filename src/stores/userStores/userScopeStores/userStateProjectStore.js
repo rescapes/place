@@ -14,8 +14,8 @@ import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
 import {makeProjectsQueryContainer, projectOutputParamsMinimized} from '../../scopeStores/project/projectStore';
 import {
-  makeUserStateScopeObjsMutationContainer,
-  makeUserStateScopeObjsQueryContainer,
+  userStateScopeObjsMutationContainer,
+  userStateScopeObjsQueryContainer,
   userScopeOrNullAndProps
 } from './userStateHelpers';
 import {
@@ -78,7 +78,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
     userProjectOutputParams: explicitUserProjectOutputParams
   }, propSets) => {
     const scopeName = 'project';
-    return makeUserStateScopeObjsQueryContainer(
+    return userStateScopeObjsQueryContainer(
       apolloConfig,
       {
         scopeQueryContainer: makeProjectsQueryContainer,
@@ -128,7 +128,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
  */
 export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userProjectOutputParams}, propSets) => {
     const scopeName = 'project';
-    return makeUserStateScopeObjsMutationContainer(
+    return userStateScopeObjsMutationContainer(
       apolloConfig,
       {
         scopeName,

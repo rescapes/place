@@ -24,7 +24,7 @@ import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {compact, mergeDeepAll, pickDeepPaths, reqStrPath, reqStrPathThrowing, strPathOr} from 'rescape-ramda';
 import {makeRegionsQueryContainer} from '../scopeStores/region/regionStore';
-import {makeCurrentUserStateQueryContainer} from '../userStores/userStateStore';
+import {currentUserStateQueryContainer} from '../userStores/userStateStore';
 import {makeProjectsQueryContainer} from '../scopeStores/project/projectStore';
 
 
@@ -390,7 +390,7 @@ const _makeCurrentUserStateQueryResolveMapboxContainer = (apolloConfig, outputPa
     },
     // Query for the user state by id
     props => {
-      return makeCurrentUserStateQueryContainer(
+      return currentUserStateQueryContainer(
         R.merge(apolloConfig, {
           options: {
             variables: props => {

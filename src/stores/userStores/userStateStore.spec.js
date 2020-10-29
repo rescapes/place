@@ -22,9 +22,9 @@ import {
 import {expectKeys, expectKeysAtPath} from 'rescape-ramda';
 import * as R from 'ramda';
 import {
-  makeAdminUserStateQueryContainer,
-  makeCurrentUserStateQueryContainer,
-  makeUserStateMutationContainer,
+  adminUserStateQueryContainer,
+  currentUserStateQueryContainer,
+  userStateMutationContainer,
   userStateOutputParamsFull
 } from './userStateStore';
 import {mutateSampleUserStateWithProjectAndRegionTask} from './userStateStore.sample';
@@ -56,7 +56,7 @@ describe('userStore', () => {
     R.composeK(
       mapMonadByConfig({name: 'userStates'},
         ({apolloConfig}) => {
-          return makeCurrentUserStateQueryContainer(
+          return currentUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
             {}
@@ -96,7 +96,7 @@ describe('userStore', () => {
     const someUserStateKeys = ['user.id', 'data.userRegions.0.region.id'];
     composeWithChainMDeep(1, [
       ({apolloConfig, user}) => {
-        return makeAdminUserStateQueryContainer(
+        return adminUserStateQueryContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFull()},
           {user: R.pick(['id'], user)}
@@ -130,7 +130,7 @@ describe('userStore', () => {
     );
   }, 200000);
 
-  test('makeUserStateMutationContainer', done => {
+  test('userStateMutationContainer', done => {
     const errors = [];
     const someUserStateKeysWithCacheKeys = [
       'id',
@@ -142,7 +142,7 @@ describe('userStore', () => {
     composeWithChain([
       mapMonadByConfig({name: 'userStateSecond', strPath: 'data.userStates.0'},
         ({apolloConfig, mutatedUserStateSecond}) => {
-          return makeAdminUserStateQueryContainer(
+          return adminUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
             {id: reqStrPathThrowing('id', mutatedUserStateSecond)}
@@ -162,7 +162,7 @@ describe('userStore', () => {
       ),
       mapMonadByConfig({name: 'userStateFirst', strPath: 'data.userStates.0'},
         ({apolloConfig, mutatedUserStateFirst}) => {
-          return makeAdminUserStateQueryContainer(
+          return adminUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
             {id: reqStrPathThrowing('id', mutatedUserStateFirst)}
@@ -197,7 +197,7 @@ describe('userStore', () => {
     }, errors, done));
   });
 
-  test('makeUserStateMutationWithCacheValuesContainer', done => {
+  test('userStateMutationWithCacheValuesContainer', done => {
     const errors = [];
     const someUserStateKeys = ['id', 'data.userRegions.0.region.id', 'data.userProjects.0.project.id'];
 
@@ -205,7 +205,7 @@ describe('userStore', () => {
       // Query again to make sure we get the cache-only data
       mapToNamedPathAndInputs('user', 'data.userStates.0',
         ({apolloConfig, userState}) => {
-          return makeCurrentUserStateQueryContainer(
+          return currentUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
             R.pick(['id'], userState)
@@ -225,7 +225,7 @@ describe('userStore', () => {
             // Just include the id and the userProjects
             pickDeepPaths(['id', 'data.userProjects'], userState)
           );
-          return makeUserStateMutationContainer(
+          return userStateMutationContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
             props

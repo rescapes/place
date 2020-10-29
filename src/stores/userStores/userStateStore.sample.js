@@ -18,7 +18,7 @@ import {
   reqStrPathThrowing
 } from 'rescape-ramda';
 import {
-  makeUserStateMutationContainer, userScopeOutputParamsFragmentDefaultOnlyIds,
+  userStateMutationContainer, userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateMutateOutputParams,
   userStateOutputParamsFullMetaOnlyScopeIds
 } from './userStateStore';
@@ -40,7 +40,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
     // Set the user state of the given user to the region and project
     mapToNamedPathAndInputs('userState', 'data.mutate.userState',
       ({apolloConfig, user, region, project}) => {
-        return makeUserStateMutationContainer(
+        return userStateMutationContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
           createSampleUserStateProps({user, regions: [region], projects: [project]})
@@ -90,7 +90,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     // Set the user state of the given user to the region and project
     mapToNamedPathAndInputs('userState', 'data.mutate.userState',
       ({apolloConfig, user, regions, projects}) => {
-        return makeUserStateMutationContainer(
+        return userStateMutationContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
           createSampleUserStateProps({user, regions, projects})

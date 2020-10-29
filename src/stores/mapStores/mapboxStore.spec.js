@@ -2,7 +2,7 @@ import {testAuthTask} from '../../helpers/testHelpers';
 import moment from 'moment';
 import {
   deleteSampleUserStateScopeObjectsContainer,
-  makeCurrentUserStateQueryContainer,
+  currentUserStateQueryContainer,
   userStateOutputParamsFull
 } from '../userStores/userStateStore';
 import {makeMapboxQueryContainer} from '../mapStores/mapboxStore';
@@ -85,7 +85,7 @@ describe('mapboxStore', () => {
 
       // Get the current user state
       mapToNamedResponseAndInputs('userStateResponse',
-        ({apolloConfig}) => makeCurrentUserStateQueryContainer(
+        ({apolloConfig}) => currentUserStateQueryContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFull()},
           {}

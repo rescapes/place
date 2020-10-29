@@ -27,8 +27,8 @@ import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {
   deleteSampleUserStateScopeObjectsContainer,
-  makeCurrentUserStateQueryContainer,
-  makeUserStateMutationContainer,
+  currentUserStateQueryContainer,
+  userStateMutationContainer,
   userStateMutateOutputParams,
   userStateOutputParamsOnlyIds
 } from '../userStateStore';
@@ -88,7 +88,7 @@ describe('userRegionStore', () => {
     }, errors, done));
   });
 
-  test('makeUserRegionQueryTaskWithRegionFilter', done => {
+  test('userRegionQueryTaskWithRegionFilter', done => {
     expect.assertions(1);
     const errors = [];
     const someRegionKeys = ['id'];
@@ -224,7 +224,7 @@ describe('userRegionStore', () => {
       // Resolve the user state
       mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
         ({apolloConfig, userState}) => {
-          return makeUserStateMutationContainer(
+          return userStateMutationContainer(
             apolloConfig,
             {outputParams: userStateMutateOutputParams},
             R.over(R.lensPath(['data', 'userRegions']), () => [], userState)
@@ -262,7 +262,7 @@ describe('userRegionStore', () => {
       // Resolve the user state
       mapToNamedPathAndInputs('userState', 'data.userStates.0',
         ({apolloConfig}) => {
-          return makeCurrentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
+          return currentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
         }
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',

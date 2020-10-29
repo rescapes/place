@@ -1,6 +1,6 @@
 import {
   findUserScopeInstance,
-  makeUserStateScopeObjsQueryContainer,
+  userStateScopeObjsQueryContainer,
   matchingUserStateScopeInstance,
   matchingUserStateScopeInstances
 } from './userStateHelpers';
@@ -81,7 +81,7 @@ describe('userStateHelpers', () => {
     );
   });
 
-  test('makeUserStateScopeObjsQueryContainer', done => {
+  test('userStateScopeObjsQueryContainer', done => {
     expect.assertions(2);
     const errors = [];
     const someProjectKeys = ['id', 'key', 'name'];
@@ -92,7 +92,7 @@ describe('userStateHelpers', () => {
         // Get the name since it will be Shrangrila29 or whatever
         const projectNames = R.map(R.prop('name'), projects);
         const scopeName = 'project';
-        return makeUserStateScopeObjsQueryContainer(
+        return userStateScopeObjsQueryContainer(
           apolloConfig,
           {
             scopeQueryContainer: makeProjectsQueryContainer,

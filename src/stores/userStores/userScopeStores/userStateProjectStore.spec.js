@@ -27,7 +27,7 @@ import {
 import * as R from 'ramda';
 import {
   deleteSampleUserStateScopeObjectsContainer,
-  makeCurrentUserStateQueryContainer,
+  currentUserStateQueryContainer,
   userStateOutputParamsOnlyIds
 } from '../userStateStore';
 import moment from 'moment';
@@ -280,7 +280,7 @@ describe('userProjectStore', () => {
       // Resolve the user state
       mapToNamedPathAndInputs('userState', 'data.userStates.0',
         ({apolloConfig}) => {
-          return makeCurrentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
+          return currentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
         }
       ),
       // Set the UserState, returns previous values and {userState, project, region}

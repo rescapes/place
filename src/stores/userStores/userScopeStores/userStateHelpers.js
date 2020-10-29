@@ -16,22 +16,25 @@ import {
   compact,
   mergeDeep,
   mergeDeepAll,
-  omitDeepBy,
   onlyOneThrowing,
-  pickDeepPaths, renameKey,
-  reqPathThrowing, reqStrPathThrowing,
-  strPathOr, toNamedResponseAndInputs
+  pickDeepPaths,
+  renameKey,
+  reqPathThrowing,
+  reqStrPathThrowing,
+  strPathOr,
+  toNamedResponseAndInputs
 } from 'rescape-ramda';
 import {
   composePropsFilterIntoApolloConfigOptionsVariables,
   composeWithComponentMaybeOrTaskChain,
-  containerForApolloType, filterOutReadOnlyVersionProps,
-  getRenderPropFunction, makeMutationRequestContainer,
+  containerForApolloType,
+  filterOutReadOnlyVersionProps,
+  getRenderPropFunction,
   makeQueryContainer,
   nameComponent
 } from 'rescape-apollo';
 import PropTypes from 'prop-types';
-import {makeCurrentUserStateQueryContainer, makeUserStateMutationContainer} from '../../userStores/userStateStore';
+import {currentUserStateQueryContainer, userStateMutationContainer} from '../../userStores/userStateStore';
 
 /**
  * returns userState.data.user[Project|Region]` based on scopeName = 'project' \ 'region'
@@ -77,7 +80,7 @@ const hasScopeParams = scope => {
  * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {data: usersScopeName: [...]}}
  * where ScopeName is the capitalized and pluralized version of scopeName (e.g. region is Regions)
  */
-export const makeUserStateScopeObjsQueryContainer = v(R.curry(
+export const userStateScopeObjsQueryContainer = v(R.curry(
   (apolloConfig,
    {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    props) => {
@@ -105,12 +108,12 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       // where scope names is 'Regions', 'Projects', etc
       nameComponent('queryUserStates', props => {
         const userPropPaths = ['id', 'user.id'];
-        // Use makeCurrentUserStateQueryContainer unless user params are specified.
+        // Use currentUserStateQueryContainer unless user params are specified.
         // Only admins can query for other users (to be controlled on the server)
         const userState = strPathOr({}, 'userState', props);
         const queryContainer = R.any(p => strPathOr(null, p, userState), userPropPaths) ?
           makeQueryContainer :
-          makeCurrentUserStateQueryContainer;
+          currentUserStateQueryContainer;
 
         return queryContainer(
           mergeDeep(
@@ -170,7 +173,7 @@ export const makeUserStateScopeObjsQueryContainer = v(R.curry(
       }),
       scope: PropTypes.shape()
     })]
-  ], 'makeUserStateScopeObjsQueryContainer'
+  ], 'userStateScopeObjsQueryContainer'
 );
 
 /**
@@ -246,13 +249,13 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
  * createUserState|updateUserState: {userState: {data: [userScopeName]: [...]}}}}
  * where userScopeName is the capitalized and pluralized version of scopeName (e.g. region is UserRegions)
  */
-export const makeUserStateScopeObjsMutationContainer = v(R.curry(
+export const userStateScopeObjsMutationContainer = v(R.curry(
   (apolloConfig,
    {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    {userState, userScope, render}) => {
 
     if (!userScope) {
-      return makeUserStateMutationContainer(
+      return userStateMutationContainer(
         apolloConfig,
         {
           // Skip if we don't have the variable ready
@@ -316,7 +319,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
           }
         )(userState);
         // Save the changes to the userScope objs
-        return makeUserStateMutationContainer(
+        return userStateMutationContainer(
           apolloConfig,
           {
             // Skip if we don't have the variable ready
@@ -337,7 +340,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
          }) => {
           // Query for the userScope instance by id to see if the userState already contains the userScope object
           // UserState defaults to the current user
-          return makeUserStateScopeObjsQueryContainer(
+          return userStateScopeObjsQueryContainer(
             apolloConfig,
             {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
             {
@@ -380,7 +383,7 @@ export const makeUserStateScopeObjsMutationContainer = v(R.curry(
       // Not required when setting up mutation
       userScope: PropTypes.shape({})
     })]
-  ], 'makeUserStateScopeObjsMutationContainer');
+  ], 'userStateScopeObjsMutationContainer');
 
 /**
  * Given resolved objects from the user state about the scope and further arguments to filter those scope objects,
@@ -475,7 +478,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
                 {
                   options: {
                     // If userScopeObjs is null, it means a dependent query is not ready
-                    // See makeUserStateScopeObjsQueryContainer for an example
+                    // See userStateScopeObjsQueryContainer for an example
                     // If it is simply empty, we still want to query
                     skip: !userScopeObjs
                   }
