@@ -1,6 +1,6 @@
 {
   "name": "rescape-place",
-  "version": "0.0.317",
+  "version": "0.0.318",
   "description": "Apollo-backed place schema",
   "main": "lib/index.js",
   "module": "src/index.js",
