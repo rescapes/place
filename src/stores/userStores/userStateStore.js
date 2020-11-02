@@ -165,7 +165,16 @@ export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScope
  */
 export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
   ...userScopeOutputParamsFragmentDefaultOnlyIds('region'),
-  ...userScopeOutputParamsFragmentDefaultOnlyIds('project', {project: {locations: {id: 1}}})
+  ...userScopeOutputParamsFragmentDefaultOnlyIds(
+    'project',
+    // Include the project's region id and locations' ids
+    {
+      project: {
+        region: {id: 1},
+        locations: {id: 1}
+      }
+    }
+  )
 });
 
 export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;

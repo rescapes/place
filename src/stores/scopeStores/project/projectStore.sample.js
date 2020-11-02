@@ -57,6 +57,8 @@ export const createSampleProjectContainer = ({apolloConfig, locationsContainer},
                 }
               }]
             },
+            // locations from locationsContainer. Will be overridden by props.locations
+            // if the latter is specified
             locations,
             data: {
               // Limits the possible locations by query

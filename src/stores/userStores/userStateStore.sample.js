@@ -110,7 +110,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                 key: projectKey,
                 name: capitalize(projectKey),
                 user: R.pick(['id'], user),
-                locations: R.pick(['id'], locations)
+                locations: R.map(R.pick(['id']), locations)
               }
             )
           )({apolloConfig, user, projectKey}),

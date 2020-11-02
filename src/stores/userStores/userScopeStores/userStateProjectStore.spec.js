@@ -208,7 +208,11 @@ describe('userProjectStore', () => {
               // We only need each project id back from userState.data.userProjects: [...]
               // and anything we want to merge with the updates
               userProjectOutputParams: {
-                project: {id: 1, locations: {id: 1}},
+                project: {
+                  id: 1,
+                  region: {id: 1},
+                  locations: {id: 1}
+                },
                 // The output of the existing (isSelected: false) will be overwritten by our new value
                 // It doesn't matter if we query for this or not since it will be overwritten
                 ...selectionOutputParamsFragment,
@@ -237,7 +241,11 @@ describe('userProjectStore', () => {
             {
               // We only need each project id back from userState.data.userProjects: [...]
               userProjectOutputParams: {
-                project: {id: 1, locations: {id: 1}},
+                project: {
+                  id: 1,
+                  region: {id: 1},
+                  locations: {id: 1}
+                },
                 ...selectionOutputParamsFragment,
                 ...activityOutputParamsFragment
               }
@@ -306,7 +314,7 @@ describe('userProjectStore', () => {
       onResolved:
         ({project, userState, undefinedUserProject}) => {
           expect(strPathOr(null, 'data.userProjects.0.project.id', userState)).toEqual(project.id);
-          expect(R.propOr(false, 'skip', undefinedUserProject)).toBeTruthy()
+          expect(R.propOr(false, 'skip', undefinedUserProject)).toBeTruthy();
           done();
         }
     }, errors, done));
