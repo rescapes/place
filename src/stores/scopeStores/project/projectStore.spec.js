@@ -22,6 +22,7 @@ import {makeProjectMutationContainer, projectQueryVariationContainers} from './p
 import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample';
 import {of} from 'folktale/concurrency/task';
 import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {createSampleLocationsContainer} from '../location/locationStore.sample';
 
 const someProjectKeys = ['id', 'key', 'geojson'];
 describe('projectStore', () => {
@@ -30,13 +31,18 @@ describe('projectStore', () => {
     const errors = [];
     composeWithChain([
       mapToNamedPathAndInputs('project', 'data.createProject.project',
-        ({apolloClient, userId}) => createSampleProjectContainer({apolloClient}, {user: {id: userId}})
+        ({apolloConfig, userId}) => createSampleProjectContainer(
+          {apolloConfig, locationsContainer: createSampleLocationsContainer},
+          {user: {id: userId}}
+        )
       ),
       // Get the current user
       mapToNamedPathAndInputs('userId', 'data.currentUser.id',
-        ({apolloClient}) => currentUserQueryContainer({apolloClient}, userOutputParams, {})
+        ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
-      () => testAuthTask
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => testAuthTask
+      )
     ])().run().listen(defaultRunConfig({
       onResolved:
         response => {

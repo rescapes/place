@@ -44,11 +44,25 @@ export const projectOutputParamsMinimized = {
   updatedAt: 1
 };
 
+export const projectOutputParamsMinimizedWithLocations = {
+  id: 1,
+  key: 1,
+  name: 1,
+  locations: {
+    id: 1
+  },
+  createdAt: 1,
+  updatedAt: 1
+};
+
 export const projectOutputParams = {
   id: 1,
   deleted: 1,
   key: 1,
   name: 1,
+  locations: {
+    id: 1
+  },
   geojson: {
     type: 1,
     features: {

@@ -43,6 +43,7 @@ import {activityOutputParamsFragment} from '../activityStore';
 import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {userStateRegionMutationContainer, userStateRegionOutputParams} from './userStateRegionStore';
 import {projectOutputParams, projectOutputParamsMinimized} from '../../..';
+import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -253,7 +254,7 @@ describe('userProjectStore', () => {
       // Save another test project
       mapToNamedPathAndInputs('project', 'data.createProject.project',
         ({apolloConfig, userState}) => {
-          return createSampleProjectContainer(apolloConfig, {
+          return createSampleProjectContainer({apolloConfig, createSampleLocationsContainer}, {
               key: projectKey,
               name: projectName,
               user: {id: reqStrPathThrowing('user.id', userState)}

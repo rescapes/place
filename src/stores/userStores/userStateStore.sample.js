@@ -26,6 +26,7 @@ import {createSampleProjectContainer} from '../scopeStores/project/projectStore.
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample';
 import * as R from 'ramda';
 import {of} from 'folktale/concurrency/task';
+import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample';
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -50,7 +51,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
     // Create a sample project
     mapToNamedPathAndInputs('project', 'data.mutate.project',
       ({apolloConfig, user, userState}) => {
-        return createSampleProjectContainer(apolloConfig, {
+        return createSampleProjectContainer({apolloConfig, createSampleLocationsContainer}, {
             key: projectKey,
             name: capitalize(projectKey),
             user: userState ? R.prop('user', userState) : user
@@ -103,7 +104,9 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         return R.traverse(
           of,
           projectKey => mapWithArgToPath('data.mutate.project',
-            ({apolloConfig, user, projectKey}) => createSampleProjectContainer(apolloConfig, {
+            ({apolloConfig, user, projectKey}) => createSampleProjectContainer(
+              {apolloConfig},
+              {
                 key: projectKey,
                 name: capitalize(projectKey),
                 user: R.pick(['id'], user),

@@ -12,6 +12,7 @@ import {fromPromised, of} from 'folktale/concurrency/task';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers';
+import {createSampleLocationsContainer} from '../location/locationStore.sample';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -26,55 +27,69 @@ import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers';
 
 /**
  * Creates a sample project. first if it exists
- * @params apolloConfig
+ * @params {Object} config
+ * @params {Object} apolloConfig
+ * @params {Function} locationsContainer Optional function to create locations for the project
  * @params {Object} props Overrides the defauls. {user: {id}} is required
  * @params {Object} props.user
  * @params {Number} props.user.id Required
  * @return {Object} {data: project: {...}}
  */
-export const createSampleProjectContainer = (apolloConfig, props) => {
+export const createSampleProjectContainer = ({apolloConfig, locationsContainer}, props) => {
   const now = moment().format('HH-mm-ss-SSS');
   return composeWithChain([
-    ({props}) => makeProjectMutationContainer(
-      apolloConfig,
-      {outputParams: projectOutputParams},
-      mergeDeep(
-        {
-          key: `downtownPincher${now}`,
-          name: ` Downtown Pincher Creek${now}`,
-          geojson: {
-            'type': 'FeatureCollection',
-            'features': [{
-              "type": "Feature",
-              id: 'rel/99999',
-              "geometry": {
-                "type": "Polygon",
-                "coordinates": [[[49.54147, -114.17439], [49.42996, -114.17439], [49.42996, -113.72635], [49.54147, -113.72635], [49.54147, -114.174390]]]
-              }
-            }]
-          },
-          data: {
-            // Limits the possible locations by query
-            locations: {
-              params: {
-                city: 'Pincher Creek',
-                state: 'Alberta',
-                country: 'Canada'
-              }
+    ({apolloConfig, props, locations}) => {
+      return makeProjectMutationContainer(
+        apolloConfig,
+        {outputParams: projectOutputParams},
+        mergeDeep(
+          {
+            key: `downtownPincher${now}`,
+            name: ` Downtown Pincher Creek${now}`,
+            geojson: {
+              'type': 'FeatureCollection',
+              'features': [{
+                "type": "Feature",
+                id: 'rel/99999',
+                "geometry": {
+                  "type": "Polygon",
+                  "coordinates": [[[49.54147, -114.17439], [49.42996, -114.17439], [49.42996, -113.72635], [49.54147, -113.72635], [49.54147, -114.174390]]]
+                }
+              }]
             },
-            mapbox: {
-              viewport: {
-                latitude: 49.54147,
-                longitude: -114.17439,
-                zoom: 7
+            locations,
+            data: {
+              // Limits the possible locations by query
+              locations: {
+                params: {
+                  city: 'Pincher Creek',
+                  state: 'Alberta',
+                  country: 'Canada'
+                }
+              },
+              mapbox: {
+                viewport: {
+                  latitude: 49.54147,
+                  longitude: -114.17439,
+                  zoom: 7
+                }
               }
             }
           },
-          // This would the locations selected for the project within the confines of the query above
-          locations: []
-        },
-        props
-      )
+          props
+        )
+      );
+    },
+
+    // Create sample locations (optional)
+    mapToNamedResponseAndInputs('locations',
+      ({apolloConfig}) => {
+        return R.ifElse(
+          R.identity,
+          f => f(apolloConfig, {}, {}),
+          () => of([])
+        )(locationsContainer);
+      }
     ),
     // Delete all projects of this user
     mapToNamedResponseAndInputs('deletedSamples',
@@ -96,7 +111,7 @@ export const createSampleProjectContainer = (apolloConfig, props) => {
         );
       }
     )
-  ])({props});
+  ])({apolloConfig, props});
 };
 
 /**
@@ -117,7 +132,7 @@ export const createSampleProjectsContainer = v((apolloConfig, props) => {
         R.times(() => {
           return composeWithChain([
             () => {
-              return createSampleProjectContainer(apolloConfig, {
+              return createSampleProjectContainer({apolloConfig, createSampleLocationsContainer}, {
                   key: `test${moment().format('HH-mm-ss-SSS')}`,
                   user: {
                     id: reqStrPathThrowing('user.id', props)

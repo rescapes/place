@@ -75,7 +75,8 @@ describe('variedRequestHelpers', () => {
                       // Search by whatever props are passed into locationFilter
                       return R.propOr(null, 'projectFilter', props);
                     },
-                    errorPolicy: 'all', partialRefetch: true
+                    errorPolicy: 'all',
+                    partialRefetch: true
                   }
                 }
               ), regionConfig: {}
