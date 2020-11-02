@@ -55,6 +55,7 @@ export {
 export {
   projectOutputParams,
   projectOutputParamsMinimized,
+  projectOutputParamsMinimizedWithLocations,
   makeProjectMutationContainer,
   makeProjectsQueryContainer,
   projectReadInputTypeMapper,

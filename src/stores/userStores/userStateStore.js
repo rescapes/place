@@ -44,7 +44,7 @@ import {
   composeWithChain,
   mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs,
+  mapToNamedResponseAndInputs, mergeDeep,
   reqStrPathThrowing,
   strPathOr
 } from 'rescape-ramda';
@@ -141,7 +141,7 @@ export const userStateOutputParamsFullMetaOnlyScopeIds = () => {
  * The project property represents a single project and the other properties represent the relationship
  * between the user and the project. This can be properties that are stored on the server or only in cache.
  * @param {String} scopeName 'project' or 'region'
- * @param {Object} [userScopeOutputParams] Defaults to {project: {id: 1, deleted: 1}} We include deleted
+ * @param {Object} [userScopeOutputParams] Defaults to {} deep merged with {project: {id: 1, deleted: 1}} We include deleted
  * for the odd case that the userState has maintained references to deleted scope instances. The Server
  * returns deleted instances when they are referenced.
  */
@@ -149,7 +149,10 @@ export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScope
   const capitalized = capitalize((scopeName));
   return {
     [`user${capitalized}s`]: R.merge({
-        [scopeName]: R.propOr({id: 1, deleted: true}, scopeName, userScopeOutputParams)
+        [scopeName]: mergeDeep(
+          {id: 1, deleted: true},
+          R.propOr({}, scopeName, userScopeOutputParams)
+        )
       },
       R.omit([scopeName], userScopeOutputParams)
     )
@@ -162,7 +165,7 @@ export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScope
  */
 export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
   ...userScopeOutputParamsFragmentDefaultOnlyIds('region'),
-  ...userScopeOutputParamsFragmentDefaultOnlyIds('project')
+  ...userScopeOutputParamsFragmentDefaultOnlyIds('project', {project: {locations: {id: 1}}})
 });
 
 export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
