@@ -80,8 +80,7 @@ export {
   currentUserStateQueryContainer,
   userScopeOutputParamsFragmentDefaultOnlyIds,
   deleteSampleUserStateScopeObjectsContainer,
-  userStateOutputParamsFullMetaOnlyScopeIds,
-  userScopeProjectOutputParamsFragmentOnlyIds
+  userStateOutputParamsFullMetaOnlyScopeIds
 } from './stores/userStores/userStateStore';
 
 export {
