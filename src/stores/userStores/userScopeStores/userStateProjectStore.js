@@ -12,11 +12,11 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
-import {makeProjectsQueryContainer, projectOutputParamsMinimized} from '../../scopeStores/project/projectStore';
+import {makeProjectsQueryContainer} from '../../scopeStores/project/projectStore';
 import {
+  userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
-  userStateScopeObjsQueryContainer,
-  userScopeOrNullAndProps
+  userStateScopeObjsQueryContainer
 } from './userStateHelpers';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
@@ -27,8 +27,6 @@ import {projectOutputParams} from '../../../stores/scopeStores/project/projectSt
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
 import {renameKey} from 'rescape-ramda';
-import {filterOutReadOnlyVersionProps} from 'rescape-apollo';
-import {regionOutputParamsMinimized, userStateRegionOutputParams} from '../../..';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType

@@ -100,20 +100,21 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     ),
     // Create sample projects
     mapToNamedResponseAndInputs('projects',
-      ({apolloConfig, user, locations, projectKeys}) => {
+      ({apolloConfig, user, regions, locations, projectKeys}) => {
         return R.traverse(
           of,
           projectKey => mapWithArgToPath('data.mutate.project',
-            ({apolloConfig, user, projectKey}) => createSampleProjectContainer(
+            ({apolloConfig, user, regions, locations, projectKey}) => createSampleProjectContainer(
               {apolloConfig},
               {
                 key: projectKey,
                 name: capitalize(projectKey),
                 user: R.pick(['id'], user),
+                region: R.pick(['id'], R.head(regions)),
                 locations: R.map(R.pick(['id']), locations)
               }
             )
-          )({apolloConfig, user, projectKey}),
+          )({apolloConfig, user, regions, locations, projectKey}),
           projectKeys
         );
       }
@@ -140,7 +141,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
 
     // Create sample locations (optional)
     mapToNamedResponseAndInputs('locations',
-      ({apolloConfig, user}) => {
+      ({apolloConfig}) => {
         return R.ifElse(
           R.identity,
           f => f(apolloConfig, {}, {}),

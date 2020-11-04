@@ -52,6 +52,7 @@ import {selectionOutputParamsFragment} from './selectionStore';
 import {activityOutputParamsFragment} from './activityStore';
 import {of} from 'folktale/concurrency/task';
 import moment from 'moment';
+import {userStateProjectOutputParamsFragmentDefaultOnlyIds} from './userScopeStores/userStateProjectStore';
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = ['user'];
@@ -159,23 +160,17 @@ export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScope
   };
 };
 
+
+
 /**
  * User state output params with id-only scope output params. Should be used for mutations and common cases when
  * only the scope ids of the user state are needed (because scope instances are already loaded, for instance)
  */
 export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
   ...userScopeOutputParamsFragmentDefaultOnlyIds('region'),
-  ...userScopeOutputParamsFragmentDefaultOnlyIds(
-    'project',
-    // Include the project's region id and locations' ids
-    {
-      project: {
-        region: {id: 1},
-        locations: {id: 1}
-      }
-    }
-  )
+  ...userScopeOutputParamsFragmentDefaultOnlyIds('project')
 });
+
 
 export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
 

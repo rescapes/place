@@ -25,7 +25,7 @@ import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [
-  'user', 'locations'
+  'user', 'locations', 'region'
 ];
 
 // Every complex input type needs a type specified in graphql. Our type names are
