@@ -166,13 +166,15 @@ export const makeProjectMutationContainer = v(R.curry((
   props
 ) => {
   return makeMutationRequestContainer(
-    apolloConfig,
+    // if apolloConfig.options.variables is defined, call it and then call normalizeProjectPropsForMutating
+    composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProjectPropsForMutating),
     {
       name: 'project',
       outputParams
     },
     R.over(
       // If projectPropsPath is null, over will operate on props
+      // TODO prefer using the variables function to pick the project from props and remove this option
       R.lensPath(projectPropsPath ? R.split('.', projectPropsPath) : []),
       project => {
         return normalizeProjectPropsForMutating(project);

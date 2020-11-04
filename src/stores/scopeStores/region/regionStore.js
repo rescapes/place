@@ -12,10 +12,12 @@
 import * as R from 'ramda';
 import {
   composePropsFilterIntoApolloConfigOptionsVariables,
-  createReadInputTypeMapper, filterOutNullDeleteProps,
+  createReadInputTypeMapper,
+  filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
-  makeQueryContainer, relatedObjectsToIdForm,
+  makeQueryContainer,
+  relatedObjectsToIdForm,
   versionOutputParamsMixin
 } from 'rescape-apollo';
 import {v} from 'rescape-validate';
@@ -151,7 +153,8 @@ export const normalizeRegionPropsForMutating = region => {
  */
 export const makeRegionMutationContainer = v(R.curry(
   (apolloConfig, {outputParams = regionOutputParamsMinimized}, props) => makeMutationRequestContainer(
-    apolloConfig,
+    // if apolloConfig.options.variables is defined, call it and then call normalizeRegionPropsForMutating
+    composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeRegionPropsForMutating),
     {
       name: 'region',
       outputParams
