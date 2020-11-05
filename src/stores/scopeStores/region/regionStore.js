@@ -159,13 +159,7 @@ export const makeRegionMutationContainer = v(R.curry(
       name: 'region',
       outputParams
     },
-    R.over(
-      R.propOr(false, 'region', props) ? R.lensProp('region') : R.lensPath([]),
-      region => {
-        return normalizeRegionPropsForMutating(region);
-      },
-      props
-    )
+    props
   )
 ), [
   ['apolloConfig', PropTypes.shape().isRequired],

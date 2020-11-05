@@ -156,7 +156,14 @@ export const normalizeProjectPropsForMutating = project => {
  * path separates it, such as 'project'
  * @param {Object} props Object matching the shape of a project or matching the shape of the project at projectPropsPath.
  * E.g. {id: 1, city: "Stavanger", data: {foo: 2}}
- * or {project: {id: 1, city: "Stavanger", data: {foo: 2}}} where projectPropsPath = 'project'
+ * Optionally specify the region props at props.project or similar in order to pass other props through the container
+ *  @param {Object} [props.project] Optional to use as the props to save if passing other props through the container.
+ *  If you use this option you must specify in apolloConfig
+ *  {
+ *     variables: (props) => {
+ *      return R.propOr({}, 'project', props);
+ *    }
+ *  }
  *  @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
@@ -172,15 +179,7 @@ export const makeProjectMutationContainer = v(R.curry((
       name: 'project',
       outputParams
     },
-    R.over(
-      // If projectPropsPath is null, over will operate on props
-      // TODO prefer using the variables function to pick the project from props and remove this option
-      R.lensPath(projectPropsPath ? R.split('.', projectPropsPath) : []),
-      project => {
-        return normalizeProjectPropsForMutating(project);
-      },
-      props
-    )
+    props
   );
 }), [
   ['apolloConfig', PropTypes.shape().isRequired],
