@@ -137,3 +137,7 @@ export {selectionOutputParamsFragment, isSelected} from './stores/userStores/sel
 export {
   testAuthTask, testNoAuthTask, testConfig
 } from './helpers/testHelpers';
+
+export {
+  createPropertiesFilter
+} from './helpers/filterHelpers'

@@ -142,7 +142,7 @@ export const userStateOutputParamsFullMetaOnlyScopeIds = () => {
  * The project property represents a single project and the other properties represent the relationship
  * between the user and the project. This can be properties that are stored on the server or only in cache.
  * @param {String} scopeName 'project' or 'region'
- * @param {Object} [userScopeOutputParams] Defaults to {} deep merged with {project: {id: 1, deleted: 1}} We include deleted
+ * @param {Object} [userScopeOutputParams] Defaults to {} deep merged with {[scopeName]: {id: 1, deleted: 1}} We include deleted
  * for the odd case that the userState has maintained references to deleted scope instances. The Server
  * returns deleted instances when they are referenced.
  */

@@ -12,7 +12,7 @@ import {
   createAuthTask, createNoAuthTask,
   defaultSettingsCacheIdProps,
   defaultSettingsCacheOnlyObjs,
-  defaultSettingsOutputParams,
+  defaultSettingsOutputParams, defaultSettingsTypenames,
   defaultStateLinkResolvers,
   writeConfigToServerAndCache
 } from 'rescape-apollo';
@@ -27,7 +27,11 @@ export const testConfig = {
   settingsConfig: {
     settingsOutputParams: defaultSettingsOutputParams,
     cacheOnlyObjs: defaultSettingsCacheOnlyObjs,
-    cacheIdProps: defaultSettingsCacheIdProps
+    cacheIdProps: defaultSettingsCacheIdProps,
+    // This is used to help an unauthenticated user write default settings to the cache
+    // If we make it possible to query the settings without authenticating (it should be),
+    // we can get rid of this
+    defaultSettingsTypenames,
   },
   apollo: {
     writeDefaultsCreator: writeConfigToServerAndCache,

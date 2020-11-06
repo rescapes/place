@@ -2,7 +2,7 @@ import {
   findUserScopeInstance,
   userStateScopeObjsQueryContainer,
   matchingUserStateScopeInstance,
-  matchingUserStateScopeInstances
+  matchingUserStateScopeInstances, userScopeState
 } from './userStateHelpers';
 import {
   composeWithChain, defaultRunConfig, expectKeysAtPath,
@@ -167,4 +167,4 @@ describe('userStateHelpers', () => {
     }, {userState, region: {id: 'fred'}});
     expect(notFound).toEqual(undefined);
   });
-});
+})
