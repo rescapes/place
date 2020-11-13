@@ -9,36 +9,6 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-export {makeFeaturesByTypeSelector, makeGeojsonSelector, makeMarkersByTypeSelector} from './selectors/geojsonSelectors';
-export {mapboxSelector, viewportSelector} from './selectors/mapboxSelectors';
-export {
-  activeUserRegionsSelector,
-  activeUserSelectedRegionsSelector,
-  regionIdsSelector,
-  regionSelector,
-  regionsSelector
-} from './selectors/regionSelectors';
-export {mapboxSettingsSelector, settingsSelector} from './selectors/settingsSelectors';
-export {
-  makeActiveUserAndSettingsSelector,
-  makeActiveUserRegionsAndSettingsSelector,
-  makeActiveUserSelectedRegionAndSettingsSelector
-} from './selectors/storeSelectors';
-export {
-  browserDimensionsSelector,
-  makeBrowserProportionalDimensionsSelector,
-  makeMergeDefaultStyleWithProps
-} from './selectors/styleSelectors';
-export {
-  activeUsersSelector,
-  activeUserSelectedRegionSelector,
-  activeUserValueSelector,
-  userRegionsSelector,
-  userResolvedRegionsSelector,
-  userSelectedRegionSelector,
-  userSelector,
-  usersSelector
-} from './selectors/userSelectors';
 export {
   makeMapboxQueryContainer,
   makeRegionMutationTask,
