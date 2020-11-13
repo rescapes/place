@@ -10,7 +10,7 @@
  */
 import * as R from 'ramda';
 import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers';
-import {capitalize, mergeDeep, strPathOr} from 'rescape-ramda';
+import {capitalize, strPathOr} from 'rescape-ramda';
 import {
   composePropsFilterIntoApolloConfigOptionsVariables,
   containerForApolloType,

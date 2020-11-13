@@ -25,7 +25,8 @@ import {
 import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample';
 import * as R from 'ramda';
-import {of} from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task';
+const {of} = T
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample';
 
 /***

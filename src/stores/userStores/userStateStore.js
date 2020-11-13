@@ -11,14 +11,16 @@
 
 import * as R from 'ramda';
 import {
-  addMutateKeyToMutationResponse, composePropsFilterIntoApolloConfigOptionsVariables,
+  addMutateKeyToMutationResponse,
+  composePropsFilterIntoApolloConfigOptionsVariables,
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   createCacheOnlyProps,
   createReadInputTypeMapper,
+  currentUserQueryContainer,
   filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
-  getRenderPropFunction, currentUserQueryContainer,
+  getRenderPropFunction,
   makeMutationRequestContainer,
   makeMutationWithClientDirectiveContainer,
   makeQueryContainer,
@@ -44,15 +46,17 @@ import {
   composeWithChain,
   mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs, mergeDeep,
+  mapToNamedResponseAndInputs,
+  mergeDeep,
   reqStrPathThrowing,
   strPathOr
 } from 'rescape-ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
 import {activityOutputParamsFragment} from './activityStore';
-import {of} from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task';
 import moment from 'moment';
-import {userStateProjectOutputParamsFragmentDefaultOnlyIds} from './userScopeStores/userStateProjectStore';
+
+const {of} = T
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = ['user'];
@@ -66,13 +70,12 @@ export const userStateReadInputTypeMapper = createReadInputTypeMapper(
   'userState', R.concat(['data'], RELATED_PROPS)
 );
 
-
 /**
  * Creates userState output params
  * @param userScopeFragmentOutputParams Object keyed by 'region', 'project', etc with
  * the output params those should return within userState.data.[userRegions|userProject|...]
  * @return {*} The complete UserState output params
- * @return {*{}}
+ * @return {Object} The params
  */
 export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
   return ({
@@ -86,7 +89,6 @@ export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
 /**
  * User state output params with full scope output params. This should only be used for querying when values of the scope
  * instances are needed beyond the ids
- * @param {Object} outputParams
  * @return {{data: {userProjects: *, userRegions: *}, id: number, user: {id: number}}}
  */
 export const userStateOutputParamsFull = () => {

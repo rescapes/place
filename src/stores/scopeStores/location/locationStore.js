@@ -21,8 +21,9 @@ import {mapToNamedPathAndInputs} from 'rescape-ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
 import {locationOutputParams, locationOutputParamsMinimized} from './locationOutputParams';
-import {of} from 'folktale/concurrency/task';
-import {queryVariationContainers} from 'rescape-place';
+import T from 'folktale/concurrency/task';
+const {of} = T
+import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 
 
 // Don't include intersections where because they are can be created when we create of update locations

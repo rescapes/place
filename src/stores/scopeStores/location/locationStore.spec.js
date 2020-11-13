@@ -11,7 +11,8 @@
 
 import moment from 'moment';
 import {testAuthTask} from '../../../helpers/testHelpers';
-import {of} from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task';
+const {of} = T
 import * as R from 'ramda';
 import {
   deleteLocationsContainer,

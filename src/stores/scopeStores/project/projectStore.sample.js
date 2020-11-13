@@ -8,7 +8,8 @@ import {
 } from 'rescape-ramda';
 import * as R from 'ramda';
 import moment from 'moment';
-import {fromPromised, of} from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task';
+const {fromPromised, of} = T
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers';

@@ -36,7 +36,7 @@ import {createUserRegionWithDefaults, mutateSampleUserStateWithProjectAndRegionT
 import moment from 'moment';
 import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample';
 import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
-import {regionOutputParamsMinimized} from '../../..';
+import {regionOutputParamsMinimized} from '../../scopeStores/region/regionStore';
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {

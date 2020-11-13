@@ -1,7 +1,8 @@
 import {makeLocationMutationContainer} from './locationStore';
 import {composeWithChain, reqStrPathThrowing, traverseReduce} from 'rescape-ramda';
 import * as R from 'ramda';
-import {fromPromised, of} from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task';
+const {fromPromised, of} = T
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';
 import {locationOutputParamsMinimized} from './locationOutputParams';

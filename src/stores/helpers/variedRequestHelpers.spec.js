@@ -25,7 +25,8 @@ import {
 import {testAuthTask} from '../../helpers/testHelpers';
 import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample';
 import {projectReadInputTypeMapper} from '../scopeStores/project/projectStore';
-import {of} from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task';
+const {of} = T
 import * as R from 'ramda';
 
 describe('variedRequestHelpers', () => {

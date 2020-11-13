@@ -10,7 +10,8 @@ import * as R from 'ramda';
 import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs, strPathOr} from 'rescape-ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
 import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
-import {of} from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task';
+const {of} = T
 import {expectKeys, currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample';
 

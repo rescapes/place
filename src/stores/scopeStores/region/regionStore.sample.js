@@ -6,7 +6,8 @@ import {
   reqStrPathThrowing,
   traverseReduce
 } from 'rescape-ramda';
-import {fromPromised, of} from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task';
+const {fromPromised, of} = T
 import moment from 'moment';
 import {v} from 'rescape-validate';
 import PropTypes from 'prop-types';

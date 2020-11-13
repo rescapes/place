@@ -10,8 +10,8 @@
  */
 
 import {
-  userStateOutputParamsCreator,
-  userStateProjectMutationContainer, userStateProjectOutputParams,
+  userStateProjectMutationContainer,
+  userStateProjectOutputParams,
   userStateProjectsQueryContainer
 } from './userStateProjectStore';
 import {
@@ -26,8 +26,8 @@ import {
 } from 'rescape-ramda';
 import * as R from 'ramda';
 import {
-  deleteSampleUserStateScopeObjectsContainer,
   currentUserStateQueryContainer,
+  deleteSampleUserStateScopeObjectsContainer,
   userStateOutputParamsOnlyIds
 } from '../userStateStore';
 import moment from 'moment';
@@ -41,8 +41,7 @@ import {createSampleProjectContainer} from '../../scopeStores/project/projectSto
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
 import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
-import {userStateRegionMutationContainer, userStateRegionOutputParams} from './userStateRegionStore';
-import {projectOutputParams, projectOutputParamsMinimized} from '../../..';
+import {projectOutputParamsMinimized} from '../../scopeStores/project/projectStore';
 import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample';
 
 describe('userProjectStore', () => {

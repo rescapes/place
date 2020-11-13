@@ -1,27 +1,31 @@
 import {
   findUserScopeInstance,
-  userStateScopeObjsQueryContainer,
   matchingUserStateScopeInstance,
-  matchingUserStateScopeInstances, userScopeState
+  matchingUserStateScopeInstances,
+  userStateScopeObjsQueryContainer
 } from './userStateHelpers';
 import {
-  composeWithChain, defaultRunConfig, expectKeysAtPath,
+  composeWithChain,
+  defaultRunConfig,
+  expectKeysAtPath,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
   strPathOr
 } from 'rescape-ramda';
 import * as R from 'ramda';
-import {userStateProjectOutputParams, userStateProjectsQueryContainer} from './userStateProjectStore';
+import {userStateProjectOutputParams} from './userStateProjectStore';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../userStateStore.sample';
 import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import {
   makeProjectsQueryContainer,
+} from '../../scopeStores/project/projectStore';
+import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
-  userStateOutputParamsCreator
-} from '../../..';
-import {userStateReadInputTypeMapper} from '../userStateStore';
+  userStateOutputParamsCreator,
+  userStateReadInputTypeMapper
+} from '../userStateStore';
 
 describe('userStateHelpers', () => {
   const userState = {

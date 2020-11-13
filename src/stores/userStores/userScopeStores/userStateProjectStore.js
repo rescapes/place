@@ -12,7 +12,7 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from 'rescape-validate';
-import {makeProjectsQueryContainer} from '../../scopeStores/project/projectStore';
+import {makeProjectsQueryContainer, projectOutputParams} from '../../scopeStores/project/projectStore';
 import {
   userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
@@ -23,7 +23,6 @@ import {
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore';
-import {projectOutputParams} from '../../../stores/scopeStores/project/projectStore';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
 import {renameKey} from 'rescape-ramda';

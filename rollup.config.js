@@ -1,14 +1,12 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import babel from 'rollup-plugin-babel';
-import replace from 'rollup-plugin-replace';
-import {terser} from 'rollup-plugin-terser';
 import commonjs from 'rollup-plugin-commonjs';
 import pkg from './package.json';
 import * as R from 'ramda';
 
 const config = {
   input: [
-    'src/index.js',
+    'src/index.mjs',
   ],
   plugins: []
 };
@@ -21,7 +19,8 @@ const externals = [
   'numeral',
   'parse-decimal-number',
   'moment',
-  'graphql-geojson'
+  'graphql-geojson',
+  'fast-json-stable-stringify'
 ];
 
 const configs = R.map(c => {
@@ -51,6 +50,7 @@ const configs = R.map(c => {
     ])
   },
   // ES
+  /*
   {
     output: {
       dir: 'esm',
@@ -69,7 +69,6 @@ const configs = R.map(c => {
   },
 
   // ES for Browsers
-  /*
   {
     output: {
       dir: 'esm',

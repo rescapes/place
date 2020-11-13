@@ -11,7 +11,8 @@
 
 import * as R from 'ramda';
 import moment from 'moment';
-import {of} from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task';
+const {of} = T
 import {composeWithChain, reqPathThrowing} from 'rescape-ramda';
 
 /**
