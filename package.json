@@ -1,13 +1,13 @@
 {
-  "name": "@rescapes/rescape-place",
-  "version": "0.0.340",
+  "name": "@rescapes/place",
+  "version": "0.0.341",
   "description": "Apollo-backed place schema",
   "main": "./src/index.mjs",
   "module": "./src/index.mjs",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git@github.com:rescapes/rescape-place.git"
+    "url": "git@github.com:rescapes/place.git"
   },
   "author": "calocan <andy@likuski.org>",
   "license": "MIT",
@@ -58,6 +58,13 @@
     "request": "^2.88.2"
   },
   "devDependencies": {
+    "@rescapes/apollo": "^0.1.249",
+    "@rescapes/geospatial-sankey": "^0.7.56",
+    "@rescapes/helpers": "^1.1.99",
+    "@rescapes/helpers-component": "^1.5.129",
+    "@rescapes/log": "^0.1.21",
+    "@rescapes/ramda": "^1.6.161",
+    "@rescapes/validate": "^1.2.23",
     "babelrc-rollup": "^3.0.0",
     "cross-env": "^7.0.2",
     "dotenv": "8.2.0",
@@ -81,13 +88,6 @@
     "promise": "8.1.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "rescape-apollo": "^0.1.249",
-    "rescape-geospatial-sankey": "^0.7.56",
-    "rescape-helpers": "^1.1.99",
-    "rescape-helpers-component": "^1.5.129",
-    "rescape-log": "^0.1.21",
-    "rescape-ramda": "^1.6.161",
-    "rescape-validate": "^1.2.23",
     "rollup": "^2.33.1",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-commonjs": "10.1.0",
@@ -99,13 +99,13 @@
     "rollup-plugin-terser": "^7.0.2"
   },
   "peerDependencies": {
-    "rescape-apollo": ">=0.1.249",
-    "rescape-geospatial-sankey": ">=0.7.56",
-    "rescape-helpers": ">=1.1.99",
-    "rescape-helpers-component": ">=1.5.129",
-    "rescape-log": ">=0.1.21",
-    "rescape-ramda": ">=1.6.161",
-    "rescape-validate": ">=1.2.23"
+    "@rescapes/apollo": "^0.1.249",
+    "@rescapes/geospatial-sankey": "^0.7.56",
+    "@rescapes/helpers": "^1.1.99",
+    "@rescapes/helpers-component": "^1.5.129",
+    "@rescapes/log": "^0.1.21",
+    "@rescapes/ramda": "^1.6.161",
+    "@rescapes/validate": "^1.2.23"
   },
   "jest": {
     "modulePaths": [
