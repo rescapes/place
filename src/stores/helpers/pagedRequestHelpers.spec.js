@@ -16,12 +16,12 @@ import {
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs, mergeDeep,
   reqStrPathThrowing
-} from 'rescape-ramda';
+} from '@rescapes/ramda';
 import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample';
 import * as R from 'ramda';
 import {projectOutputParams} from '../scopeStores/project/projectStore';
 import {testAuthTask} from '../../helpers/testHelpers';
-import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 
 test('queryUsingPaginationContainer', done => {
   const task = composeWithChain([

@@ -10,8 +10,8 @@
  */
 
 import * as R from 'ramda';
-import {strPathOr} from 'rescape-ramda';
-import {v} from 'rescape-validate';
+import {strPathOr} from '@rescapes/ramda';
+import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 
 

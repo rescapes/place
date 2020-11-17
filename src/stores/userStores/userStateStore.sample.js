@@ -16,7 +16,7 @@ import {
   mapToNamedResponseAndInputs,
   mapWithArgToPath,
   reqStrPathThrowing
-} from 'rescape-ramda';
+} from '@rescapes/ramda';
 import {
   userStateMutationContainer, userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateMutateOutputParams,

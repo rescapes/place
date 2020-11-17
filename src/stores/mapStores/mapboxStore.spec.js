@@ -7,12 +7,12 @@ import {
 } from '../userStores/userStateStore';
 import {makeMapboxQueryContainer} from '../mapStores/mapboxStore';
 import * as R from 'ramda';
-import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs, strPathOr} from 'rescape-ramda';
+import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs, strPathOr} from '@rescapes/ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams';
 import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
 import T from 'folktale/concurrency/task';
 const {of} = T
-import {expectKeys, currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {expectKeys, currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample';
 
 /**

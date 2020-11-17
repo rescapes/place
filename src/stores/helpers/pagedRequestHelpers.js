@@ -17,11 +17,11 @@ import {
   getRenderPropFunction,
   makeQueryContainer,
   nameComponent
-} from 'rescape-apollo';
-import {capitalize, mergeDeep, reqPathThrowing, strPathOr, toArrayIfNot} from 'rescape-ramda';
+} from '@rescapes/apollo';
+import {capitalize, mergeDeep, reqPathThrowing, strPathOr, toArrayIfNot} from '@rescapes/ramda';
 import PropTypes from 'prop-types';
-import {v} from 'rescape-validate';
-import {loggers} from 'rescape-log';
+import {v} from '@rescapes/validate';
+import {loggers} from '@rescapes/log';
 
 const log = loggers.get('rescapeDefault');
 

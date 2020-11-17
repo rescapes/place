@@ -23,7 +23,7 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
   strPathOr
-} from 'rescape-ramda';
+} from '@rescapes/ramda';
 import * as R from 'ramda';
 import {
   currentUserStateQueryContainer,
@@ -40,7 +40,7 @@ import {testAuthTask} from '../../../helpers/testHelpers';
 import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
-import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {projectOutputParamsMinimized} from '../../scopeStores/project/projectStore';
 import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample';
 

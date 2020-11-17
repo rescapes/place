@@ -12,11 +12,11 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
   strPathOr
-} from 'rescape-ramda';
+} from '@rescapes/ramda';
 import * as R from 'ramda';
 import {userStateProjectOutputParams} from './userStateProjectStore';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../userStateStore.sample';
-import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import {
   makeProjectsQueryContainer,

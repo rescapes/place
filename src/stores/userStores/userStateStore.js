@@ -28,8 +28,8 @@ import {
   omitClientFields,
   relatedObjectsToIdForm,
   versionOutputParamsMixin
-} from 'rescape-apollo';
-import {v} from 'rescape-validate';
+} from '@rescapes/apollo';
+import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {
   regionOutputParams,
@@ -50,7 +50,7 @@ import {
   mergeDeep,
   reqStrPathThrowing,
   strPathOr
-} from 'rescape-ramda';
+} from '@rescapes/ramda';
 import {selectionOutputParamsFragment} from './selectionStore';
 import {activityOutputParamsFragment} from './activityStore';
 import T from 'folktale/concurrency/task';

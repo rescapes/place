@@ -19,8 +19,8 @@ import {
   makeQueryContainer,
   relatedObjectsToIdForm,
   versionOutputParamsMixin
-} from 'rescape-apollo';
-import {v} from 'rescape-validate';
+} from '@rescapes/apollo';
+import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
 

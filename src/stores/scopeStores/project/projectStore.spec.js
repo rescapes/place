@@ -15,14 +15,14 @@ import {
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
-} from 'rescape-ramda';
+} from '@rescapes/ramda';
 import {testAuthTask} from '../../../helpers/testHelpers';
 import * as R from 'ramda';
 import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore';
 import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample';
 import T from 'folktale/concurrency/task';
 const {of} = T
-import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {createSampleLocationsContainer} from '../location/locationStore.sample';
 
 const someProjectKeys = ['id', 'key', 'geojson'];

@@ -10,7 +10,7 @@
  */
 
 import * as R from 'ramda';
-import {v} from 'rescape-validate';
+import {v} from '@rescapes/validate';
 import {
   capitalize,
   compact,
@@ -23,7 +23,7 @@ import {
   reqStrPathThrowing,
   strPathOr,
   toNamedResponseAndInputs
-} from 'rescape-ramda';
+} from '@rescapes/ramda';
 import {
   composePropsFilterIntoApolloConfigOptionsVariables,
   composeWithComponentMaybeOrTaskChain,
@@ -32,7 +32,7 @@ import {
   getRenderPropFunction,
   makeQueryContainer,
   nameComponent
-} from 'rescape-apollo';
+} from '@rescapes/apollo';
 import PropTypes from 'prop-types';
 import {currentUserStateQueryContainer, userStateMutationContainer} from '../../userStores/userStateStore';
 

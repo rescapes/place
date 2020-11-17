@@ -11,7 +11,7 @@
 
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
-import {v} from 'rescape-validate';
+import {v} from '@rescapes/validate';
 import {makeProjectsQueryContainer, projectOutputParams} from '../../scopeStores/project/projectStore';
 import {
   userScopeOrNullAndProps,
@@ -25,7 +25,7 @@ import {
 } from '../userStateStore';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
-import {renameKey} from 'rescape-ramda';
+import {renameKey} from '@rescapes/ramda';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType

@@ -18,8 +18,8 @@ import {
   mapToNamedResponseAndInputs,
   pickDeepPaths,
   reqStrPathThrowing
-} from 'rescape-ramda';
-import {expectKeys, expectKeysAtPath} from 'rescape-ramda';
+} from '@rescapes/ramda';
+import {expectKeys, expectKeysAtPath} from '@rescapes/ramda';
 import * as R from 'ramda';
 import {
   adminUserStateQueryContainer,
@@ -29,7 +29,7 @@ import {
 } from './userStateStore';
 import {mutateSampleUserStateWithProjectAndRegionTask} from './userStateStore.sample';
 import {testAuthTask} from '../../helpers/testHelpers';
-import {currentUserQueryContainer, userOutputParams} from 'rescape-apollo';
+import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 
 
 describe('userStore', () => {

@@ -19,10 +19,10 @@ import {
   getRenderPropFunction,
   makeMutationRequestContainer,
   makeSettingsQueryContainer
-} from 'rescape-apollo';
-import {v} from 'rescape-validate';
+} from '@rescapes/apollo';
+import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
-import {compact, mergeDeepAll, pickDeepPaths, reqStrPath, reqStrPathThrowing, strPathOr} from 'rescape-ramda';
+import {compact, mergeDeepAll, pickDeepPaths, reqStrPath, reqStrPathThrowing, strPathOr} from '@rescapes/ramda';
 import {makeRegionsQueryContainer} from '../scopeStores/region/regionStore';
 import {currentUserStateQueryContainer} from '../userStores/userStateStore';
 import {makeProjectsQueryContainer} from '../scopeStores/project/projectStore';

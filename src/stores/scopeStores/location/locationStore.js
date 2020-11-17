@@ -16,10 +16,10 @@ import {
   createReadInputTypeMapper,
   makeMutationRequestContainer,
   makeQueryContainer
-} from 'rescape-apollo';
-import {mapToNamedPathAndInputs} from 'rescape-ramda';
+} from '@rescapes/apollo';
+import {mapToNamedPathAndInputs} from '@rescapes/ramda';
 import PropTypes from 'prop-types';
-import {v} from 'rescape-validate';
+import {v} from '@rescapes/validate';
 import {locationOutputParams, locationOutputParamsMinimized} from './locationOutputParams';
 import T from 'folktale/concurrency/task';
 const {of} = T

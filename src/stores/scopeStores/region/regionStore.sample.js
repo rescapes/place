@@ -5,11 +5,11 @@ import {
   mergeDeep,
   reqStrPathThrowing,
   traverseReduce
-} from 'rescape-ramda';
+} from '@rescapes/ramda';
 import T from 'folktale/concurrency/task';
 const {fromPromised, of} = T
 import moment from 'moment';
-import {v} from 'rescape-validate';
+import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import * as R from 'ramda';
 import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers';

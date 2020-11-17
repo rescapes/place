@@ -10,7 +10,7 @@
  */
 
 import * as R from 'ramda';
-import {v} from 'rescape-validate';
+import {v} from '@rescapes/validate';
 import {
   composePropsFilterIntoApolloConfigOptionsVariables,
   createReadInputTypeMapper, filterOutNullDeleteProps,
@@ -18,7 +18,7 @@ import {
   makeMutationRequestContainer,
   makeQueryContainer, relatedObjectsToIdForm,
   versionOutputParamsMixin
-} from 'rescape-apollo';
+} from '@rescapes/apollo';
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers';

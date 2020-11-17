@@ -26,7 +26,7 @@ import {
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
-} from 'rescape-ramda';
+} from '@rescapes/ramda';
 import {createSampleLocationContainer, createSampleLocationsContainer} from './locationStore.sample';
 
 const someLocationKeys = ['name', 'key', 'data'];

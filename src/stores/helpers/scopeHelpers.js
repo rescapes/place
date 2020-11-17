@@ -13,7 +13,7 @@ import * as R from 'ramda';
 import moment from 'moment';
 import T from 'folktale/concurrency/task';
 const {of} = T
-import {composeWithChain, reqPathThrowing} from 'rescape-ramda';
+import {composeWithChain, reqPathThrowing} from '@rescapes/ramda';
 
 /**
  * Queries using the queryContainer and deletes using the mutateContainer with each result

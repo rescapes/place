@@ -1,9 +1,9 @@
 import {makeLocationMutationContainer} from './locationStore';
-import {composeWithChain, reqStrPathThrowing, traverseReduce} from 'rescape-ramda';
+import {composeWithChain, reqStrPathThrowing, traverseReduce} from '@rescapes/ramda';
 import * as R from 'ramda';
 import T from 'folktale/concurrency/task';
 const {fromPromised, of} = T
-import {v} from 'rescape-validate';
+import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {locationOutputParamsMinimized} from './locationOutputParams';
 

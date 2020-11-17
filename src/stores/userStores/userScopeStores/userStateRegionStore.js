@@ -11,7 +11,7 @@
 
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
-import {v} from 'rescape-validate';
+import {v} from '@rescapes/validate';
 import {makeRegionsQueryContainer, regionOutputParamsMinimized} from '../../scopeStores/region/regionStore';
 import {
   userStateScopeObjsMutationContainer,
@@ -24,8 +24,8 @@ import {
 import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore';
 import {selectionOutputParamsFragment} from '../selectionStore';
 import {activityOutputParamsFragment} from '../activityStore';
-import {renameKey} from 'rescape-ramda';
-import {filterOutReadOnlyVersionProps} from 'rescape-apollo';
+import {renameKey} from '@rescapes/ramda';
+import {filterOutReadOnlyVersionProps} from '@rescapes/apollo';
 
 export const userStateRegionOutputParams = (explicitRegionOuputParams = regionOutputParams) => R.mergeAll([
   {

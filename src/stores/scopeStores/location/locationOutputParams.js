@@ -1,4 +1,4 @@
-import {versionOutputParamsMixin} from 'rescape-apollo';
+import {versionOutputParamsMixin} from '@rescapes/apollo';
 
 export const locationOutputParamsMinimized = {
   id: true,

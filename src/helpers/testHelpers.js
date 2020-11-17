@@ -15,7 +15,7 @@ import {
   defaultSettingsOutputParams, defaultSettingsTypenames,
   defaultStateLinkResolvers,
   writeConfigToServerAndCache
-} from 'rescape-apollo';
+} from '@rescapes/apollo';
 import settings from './privateSettings';
 import {cacheOptions} from '../config';
 
