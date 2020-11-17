@@ -1,6 +1,6 @@
 {
   "name": "rescape-place",
-  "version": "0.0.337",
+  "version": "0.0.338",
   "description": "Apollo-backed place schema",
   "main": "./src/index.mjs",
   "module": "./src/index.mjs",
@@ -19,8 +19,6 @@
     "clean": "rimraf lib esm coverage",
     "lint": "eslint src",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "yarn test -- --watch",
-    "test:cov": "yarn test -- --coverage",
     "build": "rollup -c",
     "prepare": "cross-env ENABLE_INTEGRATION_TESTS=false yarn run clean",
     "docs:clean": "rimraf _book",
