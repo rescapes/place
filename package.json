@@ -1,13 +1,13 @@
 {
-  "name": "rescape-place",
-  "version": "0.0.338",
+  "name": "@rescapes/rescape-place",
+  "version": "0.0.339",
   "description": "Apollo-backed place schema",
   "main": "./src/index.mjs",
   "module": "./src/index.mjs",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git@github.com:calocan/rescape-place.git"
+    "url": "git@github.com:rescapes/rescape-place.git"
   },
   "author": "calocan <andy@likuski.org>",
   "license": "MIT",
