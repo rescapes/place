@@ -34,7 +34,7 @@ import {
   nameComponent
 } from '@rescapes/apollo';
 import PropTypes from 'prop-types';
-import {currentUserStateQueryContainer, userStateMutationContainer} from '../../userStores/userStateStore';
+import {currentUserStateQueryContainer, userStateMutationContainer} from '../../userStores/userStateStore.js';
 
 /**
  * returns userState.data.user[Project|Region]` based on scopeName = 'project' \ 'region'

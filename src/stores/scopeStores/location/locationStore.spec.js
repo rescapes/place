@@ -10,7 +10,7 @@
  */
 
 import moment from 'moment';
-import {testAuthTask} from '../../../helpers/testHelpers';
+import {testAuthTask} from '../../../helpers/testHelpers.js';
 import T from 'folktale/concurrency/task';
 const {of} = T
 import * as R from 'ramda';
@@ -18,7 +18,7 @@ import {
   deleteLocationsContainer,
   locationQueryVariationContainers,
   makeLocationMutationContainer
-} from './locationStore';
+} from './locationStore.js';
 import {
   composeWithChain,
   defaultRunConfig,
@@ -27,7 +27,7 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from '@rescapes/ramda';
-import {createSampleLocationContainer, createSampleLocationsContainer} from './locationStore.sample';
+import {createSampleLocationContainer, createSampleLocationsContainer} from './locationStore.sample.js';
 
 const someLocationKeys = ['name', 'key', 'data'];
 

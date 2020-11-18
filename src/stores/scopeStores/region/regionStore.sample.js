@@ -1,4 +1,4 @@
-import {makeRegionMutationContainer, makeRegionsQueryContainer, regionOutputParams} from './regionStore';
+import {makeRegionMutationContainer, makeRegionsQueryContainer, regionOutputParams} from './regionStore.js';
 import {
   composeWithChain,
   mapToNamedResponseAndInputs,
@@ -12,7 +12,7 @@ import moment from 'moment';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import * as R from 'ramda';
-import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers';
+import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers.js';
 
 /**
  * Created by Andy Likuski on 2019.01.22

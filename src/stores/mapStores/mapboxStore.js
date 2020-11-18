@@ -23,9 +23,9 @@ import {
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {compact, mergeDeepAll, pickDeepPaths, reqStrPath, reqStrPathThrowing, strPathOr} from '@rescapes/ramda';
-import {makeRegionsQueryContainer} from '../scopeStores/region/regionStore';
-import {currentUserStateQueryContainer} from '../userStores/userStateStore';
-import {makeProjectsQueryContainer} from '../scopeStores/project/projectStore';
+import {makeRegionsQueryContainer} from '../scopeStores/region/regionStore.js';
+import {currentUserStateQueryContainer} from '../userStores/userStateStore.js';
+import {makeProjectsQueryContainer} from '../scopeStores/project/projectStore.js';
 
 
 /**

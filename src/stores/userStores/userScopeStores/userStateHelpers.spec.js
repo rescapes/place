@@ -3,7 +3,7 @@ import {
   matchingUserStateScopeInstance,
   matchingUserStateScopeInstances,
   userStateScopeObjsQueryContainer
-} from './userStateHelpers';
+} from './userStateHelpers.js';
 import {
   composeWithChain,
   defaultRunConfig,
@@ -14,18 +14,18 @@ import {
   strPathOr
 } from '@rescapes/ramda';
 import * as R from 'ramda';
-import {userStateProjectOutputParams} from './userStateProjectStore';
-import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../userStateStore.sample';
+import {userStateProjectOutputParams} from './userStateProjectStore.js';
+import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../userStateStore.sample.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
-import {testAuthTask} from '../../../helpers/testHelpers';
+import {testAuthTask} from '../../../helpers/testHelpers.js';
 import {
   makeProjectsQueryContainer,
-} from '../../scopeStores/project/projectStore';
+} from '../../scopeStores/project/projectStore.js';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
-} from '../userStateStore';
+} from '../userStateStore.js';
 
 describe('userStateHelpers', () => {
   const userState = {

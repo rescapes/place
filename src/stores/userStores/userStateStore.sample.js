@@ -21,13 +21,13 @@ import {
   userStateMutationContainer, userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateMutateOutputParams,
   userStateOutputParamsFullMetaOnlyScopeIds
-} from './userStateStore';
-import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample';
-import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample';
+} from './userStateStore.js';
+import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample.js';
+import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample.js';
 import * as R from 'ramda';
 import T from 'folktale/concurrency/task';
 const {of} = T
-import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample';
+import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
 
 /***
  * Helper to create scope objects and set the user state to them

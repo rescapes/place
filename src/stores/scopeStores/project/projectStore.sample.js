@@ -1,4 +1,4 @@
-import {makeProjectMutationContainer, makeProjectsQueryContainer, projectOutputParams} from './projectStore';
+import {makeProjectMutationContainer, makeProjectsQueryContainer, projectOutputParams} from './projectStore.js';
 import {
   composeWithChain,
   mapToNamedResponseAndInputs,
@@ -12,8 +12,8 @@ import T from 'folktale/concurrency/task';
 const {fromPromised, of} = T
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
-import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers';
-import {createSampleLocationsContainer} from '../location/locationStore.sample';
+import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers.js';
+import {createSampleLocationsContainer} from '../location/locationStore.sample.js';
 
 /**
  * Created by Andy Likuski on 2019.01.22

@@ -1,19 +1,19 @@
-import {testAuthTask} from '../../helpers/testHelpers';
+import {testAuthTask} from '../../helpers/testHelpers.js';
 import moment from 'moment';
 import {
   deleteSampleUserStateScopeObjectsContainer,
   currentUserStateQueryContainer,
   userStateOutputParamsFull
-} from '../userStores/userStateStore';
-import {makeMapboxQueryContainer} from '../mapStores/mapboxStore';
+} from '../userStores/userStateStore.js';
+import {makeMapboxQueryContainer} from '../mapStores/mapboxStore.js';
 import * as R from 'ramda';
 import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs, strPathOr} from '@rescapes/ramda';
-import {mapboxOutputParamsFragment} from './mapboxOutputParams';
-import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings';
+import {mapboxOutputParamsFragment} from './mapboxOutputParams.js';
+import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings.js';
 import T from 'folktale/concurrency/task';
 const {of} = T
 import {expectKeys, currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
-import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample';
+import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample.js';
 
 /**
  * Created by Andy Likuski on 2018.12.31

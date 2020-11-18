@@ -8,13 +8,13 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import {queryVariationContainers} from './variedRequestHelpers';
+import {queryVariationContainers} from './variedRequestHelpers.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {
   makeProjectsQueryContainer,
   projectOutputParams,
   projectOutputParamsMinimized
-} from '../../stores/scopeStores/project/projectStore';
+} from '../../stores/scopeStores/project/projectStore.js';
 import {
   composeWithChain,
   defaultRunConfig,
@@ -22,9 +22,9 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from '@rescapes/ramda';
-import {testAuthTask} from '../../helpers/testHelpers';
-import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample';
-import {projectReadInputTypeMapper} from '../scopeStores/project/projectStore';
+import {testAuthTask} from '../../helpers/testHelpers.js';
+import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample.js';
+import {projectReadInputTypeMapper} from '../scopeStores/project/projectStore.js';
 import T from 'folktale/concurrency/task';
 const {of} = T
 import * as R from 'ramda';

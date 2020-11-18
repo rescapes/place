@@ -20,8 +20,8 @@ import {
   versionOutputParamsMixin
 } from '@rescapes/apollo';
 import PropTypes from 'prop-types';
-import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams';
-import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
+import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams.js';
+import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [

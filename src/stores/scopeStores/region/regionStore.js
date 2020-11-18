@@ -22,7 +22,7 @@ import {
 } from '@rescapes/apollo';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
-import {queryVariationContainers} from '../../helpers/variedRequestHelpers';
+import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [];

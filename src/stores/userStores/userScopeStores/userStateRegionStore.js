@@ -12,18 +12,18 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
-import {makeRegionsQueryContainer, regionOutputParamsMinimized} from '../../scopeStores/region/regionStore';
+import {makeRegionsQueryContainer, regionOutputParamsMinimized} from '../../scopeStores/region/regionStore.js';
 import {
   userStateScopeObjsMutationContainer,
   userStateScopeObjsQueryContainer, userScopeOrNullAndProps
-} from './userStateHelpers';
+} from './userStateHelpers.js';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator, userStateReadInputTypeMapper
-} from '../userStateStore';
-import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore';
-import {selectionOutputParamsFragment} from '../selectionStore';
-import {activityOutputParamsFragment} from '../activityStore';
+} from '../userStateStore.js';
+import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore.js';
+import {selectionOutputParamsFragment} from '../selectionStore.js';
+import {activityOutputParamsFragment} from '../activityStore.js';
 import {renameKey} from '@rescapes/ramda';
 import {filterOutReadOnlyVersionProps} from '@rescapes/apollo';
 

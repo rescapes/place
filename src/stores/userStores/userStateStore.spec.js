@@ -26,9 +26,9 @@ import {
   currentUserStateQueryContainer,
   userStateMutationContainer,
   userStateOutputParamsFull
-} from './userStateStore';
-import {mutateSampleUserStateWithProjectAndRegionTask} from './userStateStore.sample';
-import {testAuthTask} from '../../helpers/testHelpers';
+} from './userStateStore.js';
+import {mutateSampleUserStateWithProjectAndRegionTask} from './userStateStore.sample.js';
+import {testAuthTask} from '../../helpers/testHelpers.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 
 

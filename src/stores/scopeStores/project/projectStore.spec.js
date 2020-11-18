@@ -16,14 +16,14 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from '@rescapes/ramda';
-import {testAuthTask} from '../../../helpers/testHelpers';
+import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
-import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore';
-import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample';
+import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore.js';
+import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample.js';
 import T from 'folktale/concurrency/task';
 const {of} = T
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
-import {createSampleLocationsContainer} from '../location/locationStore.sample';
+import {createSampleLocationsContainer} from '../location/locationStore.sample.js';
 
 const someProjectKeys = ['id', 'key', 'geojson'];
 describe('projectStore', () => {

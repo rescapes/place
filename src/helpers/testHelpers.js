@@ -16,8 +16,8 @@ import {
   defaultStateLinkResolvers,
   writeConfigToServerAndCache
 } from '@rescapes/apollo';
-import settings from './privateSettings';
-import {cacheOptions} from '../config';
+import settings from './privateSettings.js';
+import {cacheOptions} from '../config.js';
 
 /**
  * The config for test. We add some cache only properties to

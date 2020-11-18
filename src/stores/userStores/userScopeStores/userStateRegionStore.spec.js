@@ -13,7 +13,7 @@ import {
   userStateRegionMutationContainer,
   userStateRegionOutputParams,
   userStateRegionsQueryContainer
-} from './userStateRegionStore';
+} from './userStateRegionStore.js';
 import {
   composeWithChainMDeep,
   defaultRunConfig,
@@ -23,7 +23,7 @@ import {
   mapToNamedResponseAndInputs,
   strPathOr
 } from '@rescapes/ramda';
-import {testAuthTask} from '../../../helpers/testHelpers';
+import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
 import {
   deleteSampleUserStateScopeObjectsContainer,
@@ -31,12 +31,12 @@ import {
   userStateMutationContainer,
   userStateMutateOutputParams,
   userStateOutputParamsOnlyIds
-} from '../userStateStore';
-import {createUserRegionWithDefaults, mutateSampleUserStateWithProjectAndRegionTask} from '../userStateStore.sample';
+} from '../userStateStore.js';
+import {createUserRegionWithDefaults, mutateSampleUserStateWithProjectAndRegionTask} from '../userStateStore.sample.js';
 import moment from 'moment';
-import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample';
+import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
-import {regionOutputParamsMinimized} from '../../scopeStores/region/regionStore';
+import {regionOutputParamsMinimized} from '../../scopeStores/region/regionStore.js';
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {

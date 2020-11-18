@@ -16,11 +16,11 @@ export {
   regionMapboxOutputParamsCreator,
   scopeObjMapboxOutputParamsCreator,
   userStateMapboxOutputParamsCreator
-} from './stores/mapStores/mapboxStore';
+} from './stores/mapStores/mapboxStore.js';
 
 export {
   mapboxOutputParamsFragment
-} from './stores/mapStores/mapboxOutputParams';
+} from './stores/mapStores/mapboxOutputParams.js';
 
 export {
   projectOutputParams,
@@ -30,7 +30,7 @@ export {
   makeProjectsQueryContainer,
   projectReadInputTypeMapper,
   projectQueryVariationContainers
-} from './stores/scopeStores/project/projectStore';
+} from './stores/scopeStores/project/projectStore.js';
 export {
   regionOutputParams,
   regionOutputParamsMinimized,
@@ -38,7 +38,7 @@ export {
   makeRegionMutationContainer,
   makeRegionsQueryContainer,
   regionQueryVariationContainers
-} from './stores/scopeStores/region/regionStore';
+} from './stores/scopeStores/region/regionStore.js';
 
 export {
   userStateMutationContainer,
@@ -51,63 +51,63 @@ export {
   userScopeOutputParamsFragmentDefaultOnlyIds,
   deleteSampleUserStateScopeObjectsContainer,
   userStateOutputParamsFullMetaOnlyScopeIds
-} from './stores/userStores/userStateStore';
+} from './stores/userStores/userStateStore.js';
 
 export {
   userStateRegionsQueryContainer,
   userStateRegionMutationContainer,
   userStateRegionOutputParams
-} from './stores/userStores/userScopeStores/userStateRegionStore';
+} from './stores/userStores/userScopeStores/userStateRegionStore.js';
 
 export {
   userStateProjectsQueryContainer,
   userStateProjectMutationContainer,
   userStateProjectOutputParams
-} from './stores/userStores/userScopeStores/userStateProjectStore';
+} from './stores/userStores/userScopeStores/userStateProjectStore.js';
 
 export {
   queryUsingPaginationContainer,
   accumulatedSinglePageQueryContainer
-} from './stores/helpers/pagedRequestHelpers';
+} from './stores/helpers/pagedRequestHelpers.js';
 
 export {
   typePoliciesConfig
-} from './config';
+} from './config.js';
 
 export {
   createUserProjectWithDefaults,
   createUserRegionWithDefaults,
   mutateSampleUserStateWithProjectAndRegionTask,
   mutateSampleUserStateWithProjectsAndRegionsContainer
-} from './stores/userStores/userStateStore.sample';
+} from './stores/userStores/userStateStore.sample.js';
 
-export {queryVariationContainers, variationContainerAuthDependency} from './stores/helpers/variedRequestHelpers';
+export {queryVariationContainers, variationContainerAuthDependency} from './stores/helpers/variedRequestHelpers.js';
 
 export {
   queryAndDeleteIfFoundContainer
-} from './stores/helpers/scopeHelpers';
+} from './stores/helpers/scopeHelpers.js';
 
 export {
   createSampleProjectContainer,
   createSampleProjectsContainer
-} from './stores/scopeStores/project/projectStore.sample';
+} from './stores/scopeStores/project/projectStore.sample.js';
 
 export {
   createSampleRegionContainer,
   createSampleRegionsContainer
-} from './stores/scopeStores/region/regionStore.sample';
+} from './stores/scopeStores/region/regionStore.sample.js';
 
 export {
   matchingUserStateScopeInstances, matchingUserStateScopeInstance, findUserScopeInstance
-} from './stores/userStores/userScopeStores/userStateHelpers';
+} from './stores/userStores/userScopeStores/userStateHelpers.js';
 
-export {activityOutputParamsFragment, isActive} from './stores/userStores/activityStore';
-export {selectionOutputParamsFragment, isSelected} from './stores/userStores/selectionStore';
+export {activityOutputParamsFragment, isActive} from './stores/userStores/activityStore.js';
+export {selectionOutputParamsFragment, isSelected} from './stores/userStores/selectionStore.js';
 
 export {
   testAuthTask, testNoAuthTask, testConfig
-} from './helpers/testHelpers';
+} from './helpers/testHelpers.js';
 
 export {
   createPropertiesFilter
-} from './helpers/filterHelpers'
+} from './helpers/filterHelpers.js'

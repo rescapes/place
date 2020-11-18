@@ -16,15 +16,15 @@ import {
   mapToNamedResponseAndInputs,
   reqStrPathThrowing
 } from '@rescapes/ramda';
-import {testAuthTask} from '../../../helpers/testHelpers';
+import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
 import {
   makeRegionMutationContainer,
   makeRegionsQueryContainer,
   regionOutputParams,
   regionQueryVariationContainers
-} from './regionStore';
-import {createSampleRegionContainer, createSampleRegionsContainer} from './regionStore.sample';
+} from './regionStore.js';
+import {createSampleRegionContainer, createSampleRegionsContainer} from './regionStore.sample.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import T from 'folktale/concurrency/task';
 const {of} = T

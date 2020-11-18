@@ -35,12 +35,12 @@ import {
   regionOutputParams,
   regionOutputParamsMinimized,
   regionReadInputTypeMapper
-} from '../scopeStores/region/regionStore';
+} from '../scopeStores/region/regionStore.js';
 import {
   projectOutputParams,
   projectOutputParamsMinimized,
   projectReadInputTypeMapper
-} from '../scopeStores/project/projectStore';
+} from '../scopeStores/project/projectStore.js';
 import {
   capitalize,
   composeWithChain,
@@ -51,8 +51,8 @@ import {
   reqStrPathThrowing,
   strPathOr
 } from '@rescapes/ramda';
-import {selectionOutputParamsFragment} from './selectionStore';
-import {activityOutputParamsFragment} from './activityStore';
+import {selectionOutputParamsFragment} from './selectionStore.js';
+import {activityOutputParamsFragment} from './activityStore.js';
 import T from 'folktale/concurrency/task';
 import moment from 'moment';
 

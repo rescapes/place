@@ -13,7 +13,7 @@ import {
   userStateProjectMutationContainer,
   userStateProjectOutputParams,
   userStateProjectsQueryContainer
-} from './userStateProjectStore';
+} from './userStateProjectStore.js';
 import {
   composeWithChain,
   composeWithChainMDeep,
@@ -29,20 +29,20 @@ import {
   currentUserStateQueryContainer,
   deleteSampleUserStateScopeObjectsContainer,
   userStateOutputParamsOnlyIds
-} from '../userStateStore';
+} from '../userStateStore.js';
 import moment from 'moment';
 import {
   createUserProjectWithDefaults,
   mutateSampleUserStateWithProjectAndRegionTask,
   mutateSampleUserStateWithProjectsAndRegionsContainer
-} from '../userStateStore.sample';
-import {testAuthTask} from '../../../helpers/testHelpers';
-import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample';
-import {selectionOutputParamsFragment} from '../selectionStore';
-import {activityOutputParamsFragment} from '../activityStore';
+} from '../userStateStore.sample.js';
+import {testAuthTask} from '../../../helpers/testHelpers.js';
+import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample.js';
+import {selectionOutputParamsFragment} from '../selectionStore.js';
+import {activityOutputParamsFragment} from '../activityStore.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
-import {projectOutputParamsMinimized} from '../../scopeStores/project/projectStore';
-import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample';
+import {projectOutputParamsMinimized} from '../../scopeStores/project/projectStore.js';
+import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample.js';
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
