@@ -25,7 +25,7 @@ import {
 import {testAuthTask} from '../../helpers/testHelpers.js';
 import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample.js';
 import {projectReadInputTypeMapper} from '../scopeStores/project/projectStore.js';
-import T from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task/index.js';
 const {of} = T
 import * as R from 'ramda';
 

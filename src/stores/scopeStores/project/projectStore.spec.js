@@ -20,7 +20,7 @@ import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
 import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore.js';
 import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample.js';
-import T from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task/index.js';
 const {of} = T
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {createSampleLocationsContainer} from '../location/locationStore.sample.js';

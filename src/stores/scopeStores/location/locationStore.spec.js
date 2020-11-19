@@ -11,7 +11,7 @@
 
 import moment from 'moment';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
-import T from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task/index.js';
 const {of} = T
 import * as R from 'ramda';
 import {

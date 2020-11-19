@@ -21,7 +21,7 @@ import {mapToNamedPathAndInputs} from '@rescapes/ramda';
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
 import {locationOutputParams, locationOutputParamsMinimized} from './locationOutputParams.js';
-import T from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task/index.js';
 const {of} = T
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
 

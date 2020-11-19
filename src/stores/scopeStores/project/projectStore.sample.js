@@ -8,7 +8,7 @@ import {
 } from '@rescapes/ramda';
 import * as R from 'ramda';
 import moment from 'moment';
-import T from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task/index.js';
 const {fromPromised, of} = T
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';

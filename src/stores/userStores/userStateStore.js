@@ -53,7 +53,7 @@ import {
 } from '@rescapes/ramda';
 import {selectionOutputParamsFragment} from './selectionStore.js';
 import {activityOutputParamsFragment} from './activityStore.js';
-import T from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task/index.js';
 import moment from 'moment';
 
 const {of} = T

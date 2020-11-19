@@ -12,9 +12,9 @@ const config = {
 };
 const externals = [
   'symbol-observable',
-  'folktale/concurrency/task',
-  'folktale/result',
-  'folktale/maybe',
+  'folktale/concurrency/task/index.js',
+  'folktale/result/index.js',
+  'folktale/maybe/index.js',
   'reselect',
   'numeral',
   'parse-decimal-number',

@@ -6,7 +6,7 @@ import {
   reqStrPathThrowing,
   traverseReduce
 } from '@rescapes/ramda';
-import T from 'folktale/concurrency/task';
+import T from 'folktale/concurrency/task/index.js';
 const {fromPromised, of} = T
 import moment from 'moment';
 import {v} from '@rescapes/validate';
