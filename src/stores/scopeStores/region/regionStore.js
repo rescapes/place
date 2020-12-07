@@ -11,7 +11,7 @@
 
 import * as R from 'ramda';
 import {
-  composePropsFilterIntoApolloConfigOptionsVariables,
+  composeFuncAtPathIntoApolloConfig,
   createReadInputTypeMapper,
   filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
@@ -90,7 +90,7 @@ const normalizeRegionPropsForQuerying = region => {
  */
 export const makeRegionsQueryContainer = v(R.curry(({apolloConfig, regionConfig}, {outputParams}, props) => {
     return makeQueryContainer(
-      composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeRegionPropsForQuerying),
+      composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeRegionPropsForQuerying),
       {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams},
       props
     );
@@ -154,7 +154,7 @@ export const normalizeRegionPropsForMutating = region => {
 export const makeRegionMutationContainer = v(R.curry(
   (apolloConfig, {outputParams = regionOutputParamsMinimized}, props) => makeMutationRequestContainer(
     // if apolloConfig.options.variables is defined, call it and then call normalizeRegionPropsForMutating
-    composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeRegionPropsForMutating),
+    composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeRegionPropsForMutating),
     {
       name: 'region',
       outputParams

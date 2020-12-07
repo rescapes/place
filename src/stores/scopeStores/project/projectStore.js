@@ -12,7 +12,7 @@
 import * as R from 'ramda';
 import {v} from '@rescapes/validate';
 import {
-  composePropsFilterIntoApolloConfigOptionsVariables,
+  composeFuncAtPathIntoApolloConfig,
   createReadInputTypeMapper, filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
@@ -110,7 +110,7 @@ export const normalizeProjectPropsForQuerying = project => {
  */
 export const makeProjectsQueryContainer = v(R.curry(({apolloConfig, regionConfig}, {outputParams}, props) => {
     return makeQueryContainer(
-      composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProjectPropsForQuerying),
+      composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeProjectPropsForQuerying),
       {name: 'projects', readInputTypeMapper: projectReadInputTypeMapper, outputParams},
       props
     );
@@ -174,7 +174,7 @@ export const makeProjectMutationContainer = v(R.curry((
 ) => {
   return makeMutationRequestContainer(
     // if apolloConfig.options.variables is defined, call it and then call normalizeProjectPropsForMutating
-    composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProjectPropsForMutating),
+    composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeProjectPropsForMutating),
     {
       name: 'project',
       outputParams

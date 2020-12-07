@@ -25,7 +25,7 @@ import {
   toNamedResponseAndInputs
 } from '@rescapes/ramda';
 import {
-  composePropsFilterIntoApolloConfigOptionsVariables,
+  composeFuncAtPathIntoApolloConfig,
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   filterOutReadOnlyVersionProps,
@@ -472,7 +472,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
         const scopeProps = R.prop(scopeName, userScope);
         return scopeQueryContainer(
           {
-            apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(
+            apolloConfig: composeFuncAtPathIntoApolloConfig(
               R.mergeDeepRight(
                 apolloConfig,
                 {
@@ -484,6 +484,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
                   }
                 }
               ),
+              'options.variables',
               _props => {
                 // If there is not a previous filter, filter
                 return R.when(

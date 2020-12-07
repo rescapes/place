@@ -20,6 +20,10 @@ enzyme.configure({adapter: new Adapter()});
 
 Error.stackTraceLimit = Infinity;
 
+global.navigator = {
+  userAgent: 'node.js'
+};
+
 // https://github.com/facebook/jest/issues/3251
 process.on('unhandledRejection', reason => {
   throw reason
