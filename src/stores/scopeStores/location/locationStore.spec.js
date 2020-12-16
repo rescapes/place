@@ -12,7 +12,8 @@
 import moment from 'moment';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import T from 'folktale/concurrency/task/index.js';
-const {of} = T
+
+const {of} = T;
 import * as R from 'ramda';
 import {
   deleteLocationsContainer,
@@ -76,7 +77,9 @@ describe('locationStore', () => {
         }
       ),
       mapToNamedResponseAndInputs('locations',
-        ({apolloConfig, user}) => createSampleLocationsContainer(apolloConfig, {}, {})
+        ({apolloConfig, user}) => {
+          return createSampleLocationsContainer(apolloConfig, {}, {});
+        }
       ),
       mapToNamedResponseAndInputs('deleted',
         // Delete all locations
@@ -104,7 +107,7 @@ describe('locationStore', () => {
   test('makeLocationMutationContainer', done => {
     expect.assertions(1);
     const errors = [];
-    const now = moment().format('MMMM Do YYYY, h:mm:ss')
+    const now = moment().format('MMMM Do YYYY, h:mm:ss');
     composeWithChain([
       mapToNamedPathAndInputs('location', 'data.createLocation.location',
         ({apolloConfig}) => createSampleLocationContainer(apolloConfig, {key: `cool${now}`, name: `cool${now}`})

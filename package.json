@@ -65,6 +65,7 @@
     "@rescapes/log": "^0.1.21",
     "@rescapes/ramda": "^1.6.161",
     "@rescapes/validate": "^1.2.23",
+    "@testing-library/react": "^11.2.2",
     "babelrc-rollup": "^3.0.0",
     "cross-env": "^7.0.2",
     "dotenv": "8.2.0",
