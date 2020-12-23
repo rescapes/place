@@ -11,6 +11,7 @@
 import {typePoliciesConfig as typePoliciesConfigRescapeApollo, typePoliciesWithMergeObjects} from '@rescapes/apollo';
 import {userStateStorePoliciesConfig} from './stores/userStores/userStateStore.js';
 import * as R from 'ramda'
+import {regionTypePolicy} from './stores/scopeStores/region/regionStore';
 
 /**
  * Combines the Apollo typePolicies with local ones
@@ -19,6 +20,7 @@ import * as R from 'ramda'
  */
 export const typePoliciesConfig = (callerConfig= []) => {
   return R.concat([
+      regionTypePolicy,
       ...typePoliciesConfigRescapeApollo,
       ...userStateStorePoliciesConfig
     ],
@@ -28,7 +30,7 @@ export const typePoliciesConfig = (callerConfig= []) => {
 
 export const cacheOptions = {
   typePolicies: typePoliciesWithMergeObjects(
-    typePoliciesConfig
+    typePoliciesConfig()
   )
 };
 
