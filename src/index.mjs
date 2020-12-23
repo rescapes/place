@@ -37,7 +37,8 @@ export {
   regionReadInputTypeMapper,
   makeRegionMutationContainer,
   makeRegionsQueryContainer,
-  regionQueryVariationContainers
+  regionQueryVariationContainers,
+  regionTypePolicy
 } from './stores/scopeStores/region/regionStore.js';
 
 export {

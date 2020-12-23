@@ -27,6 +27,8 @@ import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [];
 
+export const regionTypePolicy = {type: 'RegionType', fields: ['data']};
+
 // Every complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
 // Following this location.data is represented as follows:

@@ -10,15 +10,21 @@
  */
 import {typePoliciesConfig as typePoliciesConfigRescapeApollo, typePoliciesWithMergeObjects} from '@rescapes/apollo';
 import {userStateStorePoliciesConfig} from './stores/userStores/userStateStore.js';
+import * as R from 'ramda'
 
 /**
  * Combines the Apollo typePolicies with local ones
- * @type {f1}
+ * @param {[Object]} callerConfig List of type policies from the caller to concat
+ * @returns {[Object]} Returns the combined typePoliciesConfig
  */
-export const typePoliciesConfig = [
-  ...typePoliciesConfigRescapeApollo,
-  ...userStateStorePoliciesConfig
-];
+export const typePoliciesConfig = (callerConfig= []) => {
+  return R.concat([
+      ...typePoliciesConfigRescapeApollo,
+      ...userStateStorePoliciesConfig
+    ],
+    callerConfig
+  );
+};
 
 export const cacheOptions = {
   typePolicies: typePoliciesWithMergeObjects(
