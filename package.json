@@ -1,6 +1,6 @@
 {
   "name": "@rescapes/place",
-  "version": "0.0.343",
+  "version": "0.0.344",
   "description": "Apollo-backed place schema",
   "main": "./src/index.mjs",
   "module": "./src/index.mjs",
@@ -65,13 +65,14 @@
     "@rescapes/log": "^0.1.21",
     "@rescapes/ramda": "^1.6.161",
     "@rescapes/validate": "^1.2.23",
+    "@testing-library/react": "^11.2.2",
     "babelrc-rollup": "^3.0.0",
     "cross-env": "^7.0.2",
     "dotenv": "8.2.0",
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.5",
     "enzyme-wait": "^1.0.9",
-    "eslint": "7.13.0",
+    "eslint": "7.15.0",
     "eslint-loader": "4.0.2",
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-react": "^7.21.5",
@@ -108,15 +109,9 @@
     "@rescapes/validate": "^1.2.23"
   },
   "jest": {
-    "modulePaths": [
-      "<rootDir>/src"
-    ],
+    "modulePaths": [],
     "collectCoverageFrom": [
       "src/**/*.{js,jsx,mjs}"
-    ],
-    "setupFiles": [],
-    "setupFilesAfterEnv": [
-      "<rootDir>/config/jestsetup.js"
     ],
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
@@ -125,12 +120,12 @@
     "testEnvironment": "jest-environment-node",
     "testURL": "http://localhost",
     "transform": {},
+    "setupFilesAfterEnv": [
+      "<rootDir>/config/jestsetup.js"
+    ],
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs)$"
     ],
-    "moduleNameMapper": {
-      "^react-native$": "react-native-web"
-    },
     "moduleFileExtensions": [
       "web.js",
       "js",
@@ -139,6 +134,9 @@
       "jsx",
       "node",
       "mjs"
-    ]
+    ],
+    "globals": {
+      "window": {}
+    }
   }
 }

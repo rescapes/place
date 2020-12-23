@@ -12,7 +12,7 @@ import * as R from 'ramda';
 import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers.js';
 import {capitalize, strPathOr} from '@rescapes/ramda';
 import {
-  composePropsFilterIntoApolloConfigOptionsVariables,
+  composeFuncAtPathIntoApolloConfig,
   containerForApolloType,
   getRenderPropFunction
 } from '@rescapes/apollo';
@@ -69,8 +69,9 @@ export const queryVariationContainers = R.curry((
                 return queryPageContainer(
                   // Update apolloConfig so that props.objects are passed to the optional options.variables function
                   {
-                    apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(
+                    apolloConfig: composeFuncAtPathIntoApolloConfig(
                       apolloConfig,
+                      'options.variables',
                       normalizeProps
                     ),
                     regionConfig: regionConfig || {}
@@ -97,7 +98,7 @@ export const queryVariationContainers = R.curry((
               () => {
                 return queryUsingPaginationContainer(
                   {
-                    apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProps),
+                    apolloConfig: composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeProps),
                     regionConfig: regionConfig || {}
                   },
                   R.omit(['readInputTypeMapper'],
@@ -124,7 +125,7 @@ export const queryVariationContainers = R.curry((
                 // Perform the normal query
                 return queryContainer(
                   {
-                    apolloConfig: composePropsFilterIntoApolloConfigOptionsVariables(apolloConfig, normalizeProps),
+                    apolloConfig: composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeProps),
                     regionConfig
                   },
                   R.mergeAll([queryConfig, args]),

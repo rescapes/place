@@ -11,8 +11,7 @@
 
 import * as R from 'ramda';
 import {
-  addMutateKeyToMutationResponse,
-  composePropsFilterIntoApolloConfigOptionsVariables,
+  addMutateKeyToMutationResponse, composeFuncAtPathIntoApolloConfig,
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   createCacheOnlyProps,
@@ -268,8 +267,9 @@ export const currentUserStateQueryContainer = v(R.curry(
         const user = strPathOr(null, 'data.currentUser', response);
         // Get the current user state
         return makeQueryContainer(
-          composePropsFilterIntoApolloConfigOptionsVariables(
+          composeFuncAtPathIntoApolloConfig(
             apolloConfig,
+            'options.variables',
             props => {
               // Merge any other props (usually null) with current user
               return R.merge(
