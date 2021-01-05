@@ -39,7 +39,7 @@ describe('userStore', () => {
     R.composeK(
       ({apolloClient}) => currentUserQueryContainer({apolloClient}, userOutputParams, {}),
       mapToNamedPathAndInputs('apolloClient', 'apolloClient',
-        () => testAuthTask
+        () => testAuthTask()
       )
     )().run().listen(defaultRunConfig({
       onResolved:
@@ -80,7 +80,7 @@ describe('userStore', () => {
         }
       ),
       mapMonadByConfig({name: 'apolloConfig'},
-        () => testAuthTask
+        () => testAuthTask()
       )
     )({}).run().listen(
       defaultRunConfig({
@@ -119,7 +119,7 @@ describe('userStore', () => {
         }
       ),
       mapMonadByConfig({name: 'apolloConfig'},
-        () => testAuthTask
+        () => testAuthTask()
       )
     ])({}).run().listen(
       defaultRunConfig({
@@ -186,7 +186,7 @@ describe('userStore', () => {
         }
       ),
       mapMonadByConfig({name: 'apolloConfig'},
-        () => testAuthTask
+        () => testAuthTask()
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
@@ -246,7 +246,7 @@ describe('userStore', () => {
         ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:

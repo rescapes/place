@@ -134,7 +134,7 @@ describe('userStateHelpers', () => {
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:

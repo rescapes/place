@@ -94,7 +94,7 @@ describe('mapboxStore', () => {
       ),
       // Authenticate
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     )().run().listen(defaultRunConfig({
       onResolved:

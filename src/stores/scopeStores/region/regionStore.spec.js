@@ -38,7 +38,7 @@ describe('regionStore', () => {
       mapToNamedPathAndInputs('region', 'data.createRegion.region',
         ({apolloClient}) => createSampleRegionContainer({apolloClient})
       ),
-      () => testAuthTask
+      () => testAuthTask()
     )().run().listen(defaultRunConfig({
       onResolved:
         response => {
@@ -59,7 +59,7 @@ describe('regionStore', () => {
         ({apolloConfig}) => createSampleRegionContainer(apolloConfig)
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     )().run().listen(defaultRunConfig({
       onResolved:
@@ -115,7 +115,7 @@ describe('regionStore', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return testAuthTask;
+          return testAuthTask();
         }
       )
     ])({});

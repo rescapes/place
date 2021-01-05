@@ -87,7 +87,7 @@ describe('locationStore', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return testAuthTask;
+          return testAuthTask();
         }
       )
     ])({});
@@ -117,7 +117,7 @@ describe('locationStore', () => {
         ({apolloConfig}) => deleteLocationsContainer(apolloConfig, {}, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:

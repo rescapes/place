@@ -77,7 +77,7 @@ describe('userRegionStore', () => {
       // Authenticate
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return testAuthTask;
+          return testAuthTask();
         }
       )
     )({}).run().listen(defaultRunConfig({
@@ -122,7 +122,7 @@ describe('userRegionStore', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return testAuthTask;
+          return testAuthTask();
         }
       )
     ])({}).run().listen(defaultRunConfig({
@@ -163,7 +163,7 @@ describe('userRegionStore', () => {
         ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     )({}).run().listen(defaultRunConfig({
       onResolved:
@@ -271,7 +271,7 @@ describe('userRegionStore', () => {
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     )({}).run().listen(defaultRunConfig({
       onResolved:

@@ -52,7 +52,7 @@ test('queryUsingPaginationContainer', done => {
     ),
     mapToNamedResponseAndInputs('apolloConfig',
       ({}) => {
-        return testAuthTask;
+        return testAuthTask();
       }
     )
   ])({});
@@ -153,7 +153,7 @@ test('queryPageContainer', done => {
     ),
     mapToNamedResponseAndInputs('apolloConfig',
       ({}) => {
-        return testAuthTask;
+        return testAuthTask();
       }
     )
   ])({});

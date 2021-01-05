@@ -42,7 +42,7 @@ describe('projectStore', () => {
         ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     ])().run().listen(defaultRunConfig({
       onResolved:
@@ -97,7 +97,7 @@ describe('projectStore', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return testAuthTask;
+          return testAuthTask();
         }
       )
     ])({});

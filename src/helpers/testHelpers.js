@@ -46,5 +46,5 @@ export const testConfig = {
  * Task to return and authorized client for tests
  * Returns an object {apolloClient:An authorized client}
  */
-export const testAuthTask = createTestAuthTask(testConfig);
-export const testNoAuthTask = createTestNoAuthTask(testConfig);
+export const testAuthTask = () => createTestAuthTask(testConfig);
+export const testNoAuthTask = () => createTestNoAuthTask(testConfig);

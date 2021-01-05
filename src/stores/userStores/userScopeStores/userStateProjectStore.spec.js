@@ -76,8 +76,8 @@ describe('userProjectStore', () => {
         ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
-      )
+        () => testAuthTask())
+
     ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
@@ -123,7 +123,7 @@ describe('userProjectStore', () => {
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
@@ -165,7 +165,7 @@ describe('userProjectStore', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return testAuthTask;
+          return testAuthTask();
         }
       )
     )({}).run().listen(defaultRunConfig({
@@ -307,7 +307,7 @@ describe('userProjectStore', () => {
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask
+        () => testAuthTask()
       )
     )({}).run().listen(defaultRunConfig({
       onResolved:

@@ -118,7 +118,7 @@ describe('variedRequestHelpers', () => {
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
-          return testAuthTask;
+          return testAuthTask();
         }
       )
     ])({});
