@@ -21,7 +21,7 @@ import {
   filterOutReadOnlyVersionProps,
   getRenderPropFunction,
   makeMutationRequestContainer,
-  makeMutationWithClientDirectiveContainer,
+  makeCacheMutationContainer,
   makeQueryContainer,
   mergeCacheable,
   omitClientFields,
@@ -375,7 +375,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false
               const propsWithCacheOnlyItems = mergeCacheable({idPathLookup: userStateDataTypeIdPathLookup}, userState, props);
 
               // Mutate the cache to save settings to the database that are not stored on the server
-              makeMutationWithClientDirectiveContainer(
+              makeCacheMutationContainer(
                 R.merge(apolloConfig, {store}),
                 {
                   name: 'userState',

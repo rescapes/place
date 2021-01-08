@@ -14,7 +14,7 @@ import {
   defaultSettingsCacheOnlyObjs,
   defaultSettingsOutputParams, defaultSettingsTypenames,
   defaultStateLinkResolvers,
-  writeConfigToServerAndCache
+  writeConfigToServerAndCacheContainer
 } from '@rescapes/apollo';
 import settings from './privateSettings.js';
 import {cacheOptions} from '../config.js';
@@ -34,7 +34,7 @@ export const testConfig = {
     defaultSettingsTypenames,
   },
   apollo: {
-    writeDefaultsCreator: writeConfigToServerAndCache,
+    writeDefaultsCreator: writeConfigToServerAndCacheContainer,
     stateLinkResolvers: defaultStateLinkResolvers,
     // typePolicies config combines type policies
     cacheOptions
