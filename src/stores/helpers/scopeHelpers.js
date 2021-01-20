@@ -12,39 +12,49 @@
 import * as R from 'ramda';
 import moment from 'moment';
 import T from 'folktale/concurrency/task/index.js';
-const {of} = T
+
+const {of} = T;
 import {composeWithChain, reqPathThrowing} from '@rescapes/ramda';
+import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
 
 /**
  * Queries using the queryContainer and deletes using the mutateContainer with each result
  * of the queryContainer
- * @param {String} queryName Used to find the query response objects
- * @param {Function} queryContainer Called with props
- * @param {Function} mutateContainer Called with each result of queryContainer
+ * @param {Object} apolloConfig Used only for the mutationContainer. The queryContainer must
+ * already be seeded with this since query container arguments are more variable
+ * @param {Object} config
+ * @param {String} config.queryName Used to find the query response objects
+ * @param {Function} config.queryContainer Called with props
+ * @param {String} config.responsePath path to return from each mutation (e.g. 'data.mutate.project')
+ * @param {Function} config.mutateContainer Called with apolloConfig, {} (empty dict), and each props for result of queryContainer
  * in {data: [queryName]: [...]}
  * @param props
  * @return {*}
  */
 export const queryAndDeleteIfFoundContainer = (
-  {queryName, queryContainer, mutateContainer},
+  apolloConfig,
+  {queryName, queryContainer, mutateContainer, responsePath},
   props
 ) => {
-  return composeWithChain([
+  return composeWithComponentMaybeOrTaskChain([
     response => {
       const objectsToDelete = reqPathThrowing(['data', queryName], response);
-      return R.traverse(
-        of,
-        obj => {
-          return mutateContainer(
-            R.compose(
+      return callMutationNTimesAndConcatResponses(
+        apolloConfig,
+        {
+          items: objectsToDelete,
+          mutationContainer: mutateContainer,
+          responsePath,
+          propVariationFunc: ({item, ...props}) => {
+            return R.compose(
               // And the deleted datetime to now
-              prps => R.set(R.lensProp('deleted'), moment().toISOString(true), prps),
+              o => R.set(R.lensProp('deleted'), moment().toISOString(true), o),
               // Just pass the id
               o => R.pick(['id'], o)
-            )(obj)
-          );
+            )(item);
+          }
         },
-        objectsToDelete
+        props
       );
     },
     props => {

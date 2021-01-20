@@ -7,11 +7,18 @@ import {
 } from '../userStores/userStateStore.js';
 import {makeMapboxQueryContainer} from '../mapStores/mapboxStore.js';
 import * as R from 'ramda';
-import {defaultRunConfig, mapToNamedPathAndInputs, mapToNamedResponseAndInputs, strPathOr} from '@rescapes/ramda';
+import {
+  composeWithChain,
+  defaultRunConfig, mapToMergedResponseAndInputs,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs,
+  strPathOr
+} from '@rescapes/ramda';
 import {mapboxOutputParamsFragment} from './mapboxOutputParams.js';
 import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings.js';
 import T from 'folktale/concurrency/task/index.js';
-const {of} = T
+
+const {of} = T;
 import {expectKeys, currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample.js';
 
@@ -30,12 +37,12 @@ describe('mapboxStore', () => {
     const someMapboxKeys = ['data.mapbox.viewport.extent'];
     const errors = [];
     expect.assertions(1);
-    R.composeK(
+    composeWithChain([
       // Now that we have a user, region, and project, we query
       ({apolloConfig, user, regions, projects}) => {
         return makeMapboxQueryContainer(
           apolloConfig,
-          mapboxOutputParamsFragment,
+          {outputParams: mapboxOutputParamsFragment},
           {
             settings: {key: rescapePlaceDefaultSettingsKey},
             user: {id: parseInt(user.id)},
@@ -46,15 +53,16 @@ describe('mapboxStore', () => {
       },
 
       // Set the UserState
-      ({apolloConfig, user}) => {
-        const now = moment().format('HH-mm-ss-SSS');
-        return mutateSampleUserStateWithProjectsAndRegionsContainer({
-          apolloConfig,
-          user,
-          regionKeys: [`testAntarctica${now}`],
-          projectKeys: [`testRefrost${now}`, `testPoleVault${now}`]
-        });
-      },
+      mapToMergedResponseAndInputs(
+        ({apolloConfig, user}) => {
+          const now = moment().format('HH-mm-ss-SSS');
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(apolloConfig, {
+            user,
+            regionKeys: [`testAntarctica${now}`],
+            projectKeys: [`testRefrost${now}`, `testPoleVault${now}`]
+          });
+        }
+      ),
       // Get the current user if we didn't get a userState
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig, userState}) => R.ifElse(
@@ -69,14 +77,15 @@ describe('mapboxStore', () => {
           return R.ifElse(
             R.identity,
             userState => deleteSampleUserStateScopeObjectsContainer(
-              apolloConfig,
-              userState,
-              {
-                project: {
-                  keyContains: 'testRefrost'
-                },
-                region: {
-                  keyContains: 'testAntarctica'
+              apolloConfig, {}, {
+                userState,
+                scopeParams: {
+                  project: {
+                    keyContains: 'testRefrost'
+                  },
+                  region: {
+                    keyContains: 'testAntarctica'
+                  }
                 }
               }
             ),
@@ -96,7 +105,7 @@ describe('mapboxStore', () => {
       mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask()
       )
-    )().run().listen(defaultRunConfig({
+    ])().run().listen(defaultRunConfig({
       onResolved:
         response => {
           expectKeys(someMapboxKeys, response);

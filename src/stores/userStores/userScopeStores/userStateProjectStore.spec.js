@@ -18,7 +18,7 @@ import {
   composeWithChain,
   composeWithChainMDeep,
   defaultRunConfig,
-  expectKeysAtPath,
+  expectKeysAtPath, mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
@@ -109,14 +109,16 @@ describe('userProjectStore', () => {
       },
       // Set the UserState, returns previous values and {userState, projects, regions}
       // where project and region are scope instances of userState
-      ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectsAndRegionsContainer({
-          apolloConfig,
-          user: R.pick(['id'], user),
-          regionKeys: ['earth'],
-          projectKeys: ['shrangrila', 'pangea']
-        });
-      },
+      mapToMergedResponseAndInputs(
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig, {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila', 'pangea']
+            });
+        }
+      ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
           return currentUserQueryContainer(apolloConfig, userOutputParams, {});
@@ -199,7 +201,7 @@ describe('userProjectStore', () => {
         }
       ),
       // Modify the new project in the UserState
-      mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
+      mapToNamedPathAndInputs('userState', 'data.mutate.userState',
         ({apolloConfig, userState, project}) => {
           return userStateProjectMutationContainer(
             apolloConfig,
@@ -233,7 +235,7 @@ describe('userProjectStore', () => {
         }
       ),
       // Add the new project to the UserState
-      mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
+      mapToNamedPathAndInputs('userState', 'data.mutate.userState',
         ({apolloConfig, userState, project}) => {
           return userStateProjectMutationContainer(
             apolloConfig,
@@ -261,7 +263,9 @@ describe('userProjectStore', () => {
       // Save another test project
       mapToNamedPathAndInputs('project', 'data.createProject.project',
         ({apolloConfig, userState}) => {
-          return createSampleProjectContainer({apolloConfig, createSampleLocationsContainer}, {
+          return createSampleProjectContainer(apolloConfig,
+            {locationsContainer: createSampleLocationsContainer},
+            {
               key: projectKey,
               name: projectName,
               user: {id: reqStrPathThrowing('user.id', userState)}
@@ -271,15 +275,16 @@ describe('userProjectStore', () => {
       ),
       // Remove all the projects from the user state
       // Resolve the user state
-      mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
+      mapToNamedPathAndInputs('userState', 'data.mutate.userState',
         ({apolloConfig, userState}) => {
           return deleteSampleUserStateScopeObjectsContainer(
-            apolloConfig,
-            userState,
-            {
-              project: {
-                // Remove all projects
-                keyContains: ''
+            apolloConfig, {}, {
+              userState,
+              scopeProps: {
+                project: {
+                  // Remove all projects
+                  keyContains: ''
+                }
               }
             }
           );

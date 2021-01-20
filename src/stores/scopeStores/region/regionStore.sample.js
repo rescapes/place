@@ -7,12 +7,14 @@ import {
   traverseReduce
 } from '@rescapes/ramda';
 import T from 'folktale/concurrency/task/index.js';
-const {fromPromised, of} = T
+
+const {fromPromised, of} = T;
 import moment from 'moment';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import * as R from 'ramda';
 import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers.js';
+import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -28,14 +30,15 @@ import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers.js';
 
 /**
  * Creates a sample region
- * @params apolloClient
+ * @params {Object} apolloConfig
+ * @params {Object} [apolloConfig.apolloClient} Required for task requests
  * @params {Object} props Optional overrides to defaults
  * @return {Object} {data: region: {...}}}
  */
-export const createSampleRegionContainer = ({apolloClient}, props = {}) => {
+export const createSampleRegionContainer = (apolloConfig, {}, props = {}) => {
   // Create the prop function and pass it sample props to return a Task
   return makeRegionMutationContainer(
-    {apolloClient},
+    apolloConfig,
     {outputParams: regionOutputParams},
     mergeDeep({
         key: 'testPincherCreek',
@@ -83,43 +86,42 @@ export const createSampleRegionContainer = ({apolloClient}, props = {}) => {
  * @return Task resolving to a list of 10 regions
  */
 export const createSampleRegionsContainer = v((apolloConfig, props) => {
-  return composeWithChain([
-    ({props}) => traverseReduce(
-      (regions, region) => {
-        return R.concat(regions, [reqStrPathThrowing('data.createRegion.region', region)]);
-      },
-      of([]),
-      R.times(() => {
-        return composeWithChain([
-          () => {
-            return createSampleRegionContainer(apolloConfig, {
-                key: `test${moment().format('HH-mm-ss-SSS')}`
-              }
-            );
-          },
-          () => fromPromised(() => new Promise(r => setTimeout(r, 100)))()
-        ])();
-      }, 10)
-    ),
-    mapToNamedResponseAndInputs('deleted',
-      ({props}) => {
-        // Delete existing test regions for the test user
-        return queryAndDeleteIfFoundContainer(
-          {
-            queryName: 'regions',
-            queryContainer: makeRegionsQueryContainer(
-              {apolloConfig},
-              {outputParams: regionOutputParams}
-            ),
-            mutateContainer: makeRegionMutationContainer(apolloConfig, {})
-          },
-          {
-            keyContains: 'test'
+  return composeWithComponentMaybeOrTaskChain([
+    response => {
+      return callMutationNTimesAndConcatResponses(
+        apolloConfig,
+        {
+          count: 10,
+          mutationContainer: createSampleRegionContainer,
+          responsePath: 'data.createRegion.region',
+          propVariationFunc: props => {
+            return {
+              key: `test${moment().format('HH-mm-ss-SSS')}`
+            };
           }
-        );
-      }
-    )
-  ])({props});
+        },
+        props
+      );
+    },
+    props => {
+      // Delete existing test regions for the test user
+      return queryAndDeleteIfFoundContainer(
+        apolloConfig,
+        {
+          queryName: 'regions',
+          queryContainer: makeRegionsQueryContainer(
+            {apolloConfig},
+            {outputParams: regionOutputParams}
+          ),
+          mutateContainer: makeRegionMutationContainer,
+          responsePath: 'data.mutate.region'
+        },
+        {
+          keyContains: 'test'
+        }
+      );
+    }
+  ])(props);
 }, [
   ['apolloConfig', PropTypes.shape({}).isRequired],
   ['props', PropTypes.shape({

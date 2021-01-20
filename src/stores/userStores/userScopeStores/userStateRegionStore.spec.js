@@ -245,14 +245,16 @@ describe('userRegionStore', () => {
       mapToMergedResponseAndInputs(
         ({apolloConfig, userState}) => {
           return deleteSampleUserStateScopeObjectsContainer(
-            apolloConfig,
-            userState,
+            apolloConfig, {},
             {
-              region: {
-                keyContains: 'test'
-              },
-              project: {
-                keyContains: 'test'
+              userState,
+              scopeProps: {
+                region: {
+                  keyContains: 'test'
+                },
+                project: {
+                  keyContains: 'test'
+                }
               }
             }
           );

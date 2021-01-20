@@ -26,7 +26,13 @@ import {createSampleProjectContainer} from '../scopeStores/project/projectStore.
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample.js';
 import * as R from 'ramda';
 import T from 'folktale/concurrency/task/index.js';
-const {of} = T
+import {
+  callMutationNTimesAndConcatResponses,
+  composeWithComponentMaybeOrTaskChain,
+  mapTaskOrComponentToNamedResponseAndInputs
+} from '@rescapes/apollo';
+
+const {of} = T;
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
 
 /***
@@ -52,7 +58,9 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
     // Create a sample project
     mapToNamedPathAndInputs('project', 'data.mutate.project',
       ({apolloConfig, user, userState}) => {
-        return createSampleProjectContainer({apolloConfig, createSampleLocationsContainer}, {
+        return createSampleProjectContainer(apolloConfig,
+          {locationsContainer: createSampleLocationsContainer},
+          {
             key: projectKey,
             name: capitalize(projectKey),
             user: userState ? R.prop('user', userState) : user
@@ -76,22 +84,26 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
 
 /***
  * Helper to create scope objects and set the user state to them
- * @param {Object} apolloClient The apolloClient
- * @param {Object} user A real user object
- * @param [{String}] regionKeys Region keys to use to make sample regions
- * @param [{String}] projectKeys Project keys to use to make sample projects
- * @param {Function} locationsContainer Optional function to create locations
+ * @param {Object} apolloConfig
+ * @param {Object} config
+ * @param {Object} config.user A real user object
+ * @param [{String}] config.regionKeys Region keys to use to make sample regions
+ * @param [{String}] config.projectKeys Project keys to use to make sample projects
+ * @param {Function} config.locationsContainer Optional function to create locations
  * This function expects two arguments, apolloConfig and props.
  * Props will be based in as {user: {id: user.id}}
- * @returns {Task<Object>} Task resolving to {projects, regions, userState}
+ * @param {Function} config.render
+ * @returns {Task<Object>} Task resolving to {projects, regions, userState} for apollo client, apollo component
+ * for components
  */
 export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
-  {apolloConfig, user, regionKeys, projectKeys, locationsContainer}
+  apolloConfig,
+  {user, regionKeys, projectKeys, locationsContainer, render}
 ) => {
-  return composeWithChain([
+  return composeWithComponentMaybeOrTaskChain([
     // Set the user state of the given user to the region and project
-    mapToNamedPathAndInputs('userState', 'data.mutate.userState',
-      ({apolloConfig, user, regions, projects}) => {
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userState',
+      ({user, regions, projects}) => {
         return userStateMutationContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
@@ -99,50 +111,56 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         );
       }
     ),
+
     // Create sample projects
-    mapToNamedResponseAndInputs('projects',
-      ({apolloConfig, user, regions, locations, projectKeys}) => {
-        return R.traverse(
-          of,
-          projectKey => mapWithArgToPath('data.mutate.project',
-            ({apolloConfig, user, regions, locations, projectKey}) => createSampleProjectContainer(
-              {apolloConfig},
-              {
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projects',
+      ({locations, regions}) => {
+        return callMutationNTimesAndConcatResponses(
+          apolloConfig,
+          {
+            items: projectKeys,
+            mutationContainer: (apolloConfig, {}, props) => {
+              return createSampleProjectContainer(apolloConfig, {locationsContainer}, props);
+            },
+            responsePath: 'data.mutate.project',
+            propVariationFunc: ({item: projectKey}) => {
+              return {
                 key: projectKey,
                 name: capitalize(projectKey),
                 user: R.pick(['id'], user),
                 region: R.pick(['id'], R.head(regions)),
                 locations: R.map(R.pick(['id']), locations)
-              }
-            )
-          )({apolloConfig, user, regions, locations, projectKey}),
-          projectKeys
-        );
-      }
-    ),
-
-    // Create sample regions
-    mapToNamedResponseAndInputs('regions',
-      ({apolloConfig, regionKeys}) => {
-        return R.traverse(
-          of,
-          regionKey => mapWithArgToPath('data.mutate.region',
-            ({apolloConfig, regionKey}) => {
-              return createSampleRegionContainer(apolloConfig, {
-                  key: regionKey,
-                  name: capitalize(regionKey)
-                }
-              );
+              };
             }
-          )({apolloConfig, regionKey}),
-          regionKeys
+          },
+          {regions, locations}
+        );
+      }
+    ),
+    // Create sample regions
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'regions',
+      () => {
+        return callMutationNTimesAndConcatResponses(
+          apolloConfig,
+          {
+            items: regionKeys,
+            mutationContainer: createSampleRegionContainer,
+            responsePath: 'data.mutate.region',
+            propVariationFunc: ({item: regionKey}) => {
+              return {
+                key: regionKey,
+                name: capitalize(regionKey)
+              };
+            }
+          },
+          {}
         );
       }
     ),
 
-    // Create sample locations (optional)
-    mapToNamedResponseAndInputs('locations',
-      ({apolloConfig}) => {
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'locations',
+      // Create sample locations (optional)
+      ({locationsContainer}) => {
         return R.ifElse(
           R.identity,
           f => f(apolloConfig, {}, {}),
@@ -150,8 +168,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         )(locationsContainer);
       }
     )
-
-  ])({apolloConfig, user, regionKeys, projectKeys});
+  ])({user, regionKeys, projectKeys, locationsContainer, render});
 };
 /**
  * Populates the UserRegion properties with defaults based on the region's properties

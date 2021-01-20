@@ -26,7 +26,8 @@ import {
   mergeCacheable,
   omitClientFields,
   relatedObjectsToIdForm,
-  versionOutputParamsMixin
+  versionOutputParamsMixin,
+  callMutationNTimesAndConcatResponses, mapTaskOrComponentToNamedResponseAndInputs
 } from '@rescapes/apollo';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
@@ -55,7 +56,7 @@ import {activityOutputParamsFragment} from './activityStore.js';
 import T from 'folktale/concurrency/task/index.js';
 import moment from 'moment';
 
-const {of} = T
+const {of} = T;
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = ['user'];
@@ -160,7 +161,6 @@ export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScope
     )
   };
 };
-
 
 
 /**
@@ -410,50 +410,81 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false
  * Deletes the scope instances created by mutateSampleUserStateWithProjectAndRegionTask,
  * both the references in userState and the instances themselves
  * @param apolloConfig
- * @param userState
- * @param {Object} scopeProps Keyed by 'region' and 'project'. Values are search props for
+ * @param {Object} config
+ * @param {Object} props
+ * @param {Object} props.userState
+ * @param {Object} props.scopeProps Keyed by 'region' and 'project'. Values are search props for
  * regions and projects of the userState to remove.
+ * @param {Object} [props.render] The render function for component requests
  * E.g. {region: {keyContains: 'test'}, project: {keyContains: 'test'}}
  * @return {*}
  */
-export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, userState, scopeProps) => {
-  return composeWithChain([
-    ({clearedScopeObjsUserState}) => of(clearedScopeObjsUserState),
-    mapToMergedResponseAndInputs(
-      // clearedScopeObjsUserState is the userState with the regions cleared
-      ({apolloConfig, clearedScopeObjsUserState}) => {
-        const userState = reqStrPathThrowing('data.mutate.userState', clearedScopeObjsUserState);
+export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, {}, {userState, scopeProps, render}) => {
+  return composeWithComponentMaybeOrTaskChain([
+    ({deletedRegions, deletedProjects}) => {
+      return containerForApolloType(
+        apolloConfig,
+        {
+          render: getRenderPropFunction({render}),
+          // Override the data with the consolidated mapbox
+          response: {deletedRegions, deletedProjects}
+        }
+      );
+    },
+    // clearedScopeObjsUserState is the userState with the regions cleared
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedProjects',
+      ({userState, deletedRegions, clearedScopeObjsUserState}) => {
         const user = reqStrPathThrowing('user', userState);
         return R.ifElse(
           R.identity,
-          project => deleteProjectsContainer(
-            apolloConfig,
-            {
-              // Only allow deleting projects owned by userState.user
-              // Also Clear the userState of these projects
-              userState
-            },
-            R.merge(
-              project,
-              // Only allow deleting projects owned by this user
-              {user: R.pick(['id'], user)}
-            )
-          ),
-          _ => of({clearedScopeObjsUserState})
+          project => {
+            return deleteProjectsContainer(
+              apolloConfig,
+              {
+                // Only allow deleting projects owned by userState.user
+                // Also Clear the userState of these projects
+                userState
+              },
+              R.merge(
+                project,
+                // Only allow deleting projects owned by this user
+                {user: R.pick(['id'], user)}
+              )
+            );
+          },
+          _ => {
+            return containerForApolloType(
+              apolloConfig,
+              {
+                render: getRenderPropFunction({render}),
+                // Override the data with the consolidated mapbox
+                response: {clearedScopeObjsUserState}
+              }
+            );
+          }
         )(strPathOr(null, 'project', scopeProps));
-      }
-    ),
+      }),
 
-    mapToMergedResponseAndInputs(
-      ({apolloConfig, userState}) => {
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedRegions',
+      ({userState}) => {
         return R.ifElse(
           R.identity,
-          region => deleteRegionsContainer(apolloConfig, {userState}, region),
-          _ => of({clearedScopeObjsUserState: {data: {mutate: {userState}}}})
+          region => {
+            return deleteRegionsContainer(apolloConfig, {}, {userState, scopeProps: region, render});
+          },
+          _ => {
+            return containerForApolloType(
+              apolloConfig,
+              {
+                render: getRenderPropFunction({render}),
+                // Override the data with the consolidated mapbox
+                response: {clearedScopeObjsUserState: {data: {mutate: {userState}}}}
+              }
+            );
+          }
         )(strPathOr(null, 'region', scopeProps));
-      }
-    )
-  ])({apolloConfig, userState});
+      })
+  ])({userState, render});
 };
 
 
@@ -467,74 +498,82 @@ export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, userSta
  * @param {Object} scopeConfig.readInputTypeMapper
  * @param {Object} scopeConfig.scopeName e.g. 'project' or 'region'
  * @param {Object} scopeConfig.scopeProps The scope props to match test the scope, such as {keyContains: 'test'}
- * @param {Object} userState The user state for which to delete scope objects
+ * @param {Object} props.userState The user state for which to delete scope objects
+ * @param {Function} [props.render] Render function, required for component requests
  * @return {Object} {deleted[scope name]s: deleted objects, clearedScopeObjsUserState: Response after mutating the
  * user state to clear the scope instances. In the form {data: {mutate|updateUserState: {...}}}
  */
 export const deleteScopeObjectsContainer = (
   apolloConfig,
   {outputParams, readInputTypeMapper, scopeName, scopeProps},
-  userState
+  {userState, render}
 ) => {
   const capitalized = capitalize(scopeName);
-  return composeWithChain([
+  return composeWithComponentMaybeOrTaskChain([
     // Delete those test scope objects
-    mapToNamedResponseAndInputs(`deleted${capitalized}s`,
-      ({apolloConfig, scopeObjsToDelete}) => {
-        return R.traverse(
-          of,
-          scopeObj => {
-            return makeMutationRequestContainer(
-              apolloConfig,
-              {
-                name: scopeName,
-                outputParams: {id: 1}
-              },
-              R.compose(
-                // And the deleted datetime
-                R.set(R.lensProp('deleted'), moment().toISOString(true)),
-                // Just pass the id
-                R.pick(['id'])
-              )(scopeObj)
-            );
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'clearedScopeObjsUserState',
+      ({userStateResponse, scopeObjsToDeleteResponse, userState}) => {
+      const scopeObjsToDelete = strPathOr([], `data.${scopeName}s`, scopeObjsToDeleteResponse);
+      return callMutationNTimesAndConcatResponses(
+        apolloConfig,
+        {
+          items: scopeObjsToDelete,
+          mutationContainer: makeMutationRequestContainer,
+          responsePath: `data.mutate.${scopeName}`,
+          propVariationFunc: ({item}) => {
+            return R.compose(
+              // And the deleted datetime
+              item => R.set(R.lensProp('deleted'), moment().toISOString(true), item),
+              // Just pass the id
+              item => R.pick(['id'], item)
+            )(item);
           },
-          scopeObjsToDelete
-        );
-      }),
-    // Get test scope objects to delete
-    mapToNamedPathAndInputs('scopeObjsToDelete', `data.${scopeName}s`,
-      ({apolloConfig}) => {
-        return makeQueryContainer(
-          apolloConfig,
-          {
-            name: `${scopeName}s`,
-            outputParams: outputParams,
-            readInputTypeMapper
-          },
-          scopeProps
-        );
-      }
-    ),
+          name: scopeName,
+          outputParams: {id: 1}
+        },
+        {}
+      );
+    }),
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'scopeObjsToDeleteResponse',
+    () => {
+      return makeQueryContainer(
+        apolloConfig,
+        {
+          name: `${scopeName}s`,
+          outputParams: outputParams,
+          readInputTypeMapper
+        },
+        scopeProps
+      );
+    }),
     // Remove existing scope objects from the userState if userState was given
-    mapToNamedResponseAndInputs('clearedScopeObjsUserState',
-      ({apolloConfig, userState}) => {
-        return R.ifElse(
-          R.identity,
-          userState => {
-            const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
-            return userStateMutationContainer(
-              apolloConfig,
-              // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
-              {outputParams: omitClientFields(userStateOutputParamsFull())},
-              modifiedUserState
-            );
-          },
-          () => of(null)
-        )(userState);
-      }
-    )
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'clearedScopeObjsUserState',
+    ({userState, render}) => {
+      return R.ifElse(
+        R.identity,
+        userState => {
+          const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
+          return userStateMutationContainer(
+            apolloConfig,
+            // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
+            {outputParams: omitClientFields(userStateOutputParamsFull())},
+            modifiedUserState
+          );
+        },
+        () => {
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction({render}),
+              // Override the data with the consolidated mapbox
+              response: null
+            }
+          );
+        }
+      )(userState);
+    })
   ])
-  (({apolloConfig, userState}));
+  ({userState, render});
 };
 
 /**
@@ -546,16 +585,16 @@ export const deleteScopeObjectsContainer = (
  * @param props
  * @return {Object} {deleteRegions: deleted region, clearedScopeObjsUserState: The user state post clearing}
  */
-export const deleteRegionsContainer = (apolloConfig, {userState = null}, props) => {
+export const deleteRegionsContainer = (apolloConfig, {}, {userState = null, scopeProps, render}) => {
   return deleteScopeObjectsContainer(
     apolloConfig,
     {
       outputParams: regionOutputParamsMinimized,
       readInputTypeMapper: regionReadInputTypeMapper,
       scopeName: 'region',
-      scopeProps: props
+      scopeProps
     },
-    userState
+    {userState, render}
   );
 };
 /**

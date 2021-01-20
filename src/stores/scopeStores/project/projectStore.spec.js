@@ -33,7 +33,8 @@ describe('projectStore', () => {
     composeWithChain([
       mapToNamedPathAndInputs('project', 'data.createProject.project',
         ({apolloConfig, userId}) => createSampleProjectContainer(
-          {apolloConfig, locationsContainer: createSampleLocationsContainer},
+          apolloConfig,
+          {locationsContainer: createSampleLocationsContainer},
           {user: {id: userId}}
         )
       ),

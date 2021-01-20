@@ -155,7 +155,8 @@ export const scopeObjMapboxOutputParamsCreator = (scopeName, mapboxOutputParamsF
  * The merge precedence is documented above
  *
  * @params {Object} apolloClient The Apollo Client
- * @params {Object} outputParams OutputParams Just the mapbox fragment. This will be used to create
+ * @params {Object} config
+ * @params {Object} config.outputParams OutputParams Just the mapbox fragment. This will be used to create
  * mapbox output params at various scope levels
  * @params {Object} propSets Arguments for each query as follows
  * @params {Object} propSets.settings Arguments to limit the settings to the global settings
@@ -167,7 +168,7 @@ export const scopeObjMapboxOutputParamsCreator = (scopeName, mapboxOutputParamsF
  * project queries are made
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
-export const makeMapboxQueryContainer = v(R.curry((apolloConfig, outputParams, props) => {
+export const makeMapboxQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return composeWithComponentMaybeOrTaskChain([
       settingsResponse => {
         if (!R.prop('data', settingsResponse)) {

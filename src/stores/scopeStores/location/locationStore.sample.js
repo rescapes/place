@@ -2,10 +2,12 @@ import {makeLocationMutationContainer} from './locationStore.js';
 import {composeWithChain, reqStrPathThrowing, traverseReduce} from '@rescapes/ramda';
 import * as R from 'ramda';
 import T from 'folktale/concurrency/task/index.js';
-const {fromPromised, of} = T
+
+const {fromPromised, of} = T;
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {locationOutputParamsMinimized} from './locationOutputParams.js';
+import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -26,25 +28,21 @@ import {locationOutputParamsMinimized} from './locationOutputParams.js';
  * @params {Number} props.user.id Required
  * @return {Object} {data: location: {...}}
  */
-export const createSampleLocationContainer = ({apolloClient}, props) => {
-  return composeWithChain([
-    props => {
-      return makeLocationMutationContainer(
-        {apolloClient},
-        {outputParams: locationOutputParamsMinimized},
-        R.merge(
-          {
-            "data": {
-              "example": {
-                "someData": true
-              }
-            }
-          },
-          props
-        )
-      );
-    }
-  ])(props);
+export const createSampleLocationContainer = ({apolloClient}, {}, props) => {
+  return makeLocationMutationContainer(
+    {apolloClient},
+    {outputParams: locationOutputParamsMinimized},
+    R.merge(
+      {
+        "data": {
+          "example": {
+            "someData": true
+          }
+        }
+      },
+      props
+    )
+  );
 };
 
 /**
@@ -60,23 +58,21 @@ export const createSampleLocationContainer = ({apolloClient}, props) => {
  * @return Task resolving to a list of 10 locations
  */
 export const createSampleLocationsContainer = v((apolloConfig, {count = 3}, props) => {
-  return traverseReduce(
-    (locations, location) => {
-      return R.concat(locations, [reqStrPathThrowing('data.createLocation.location', location)]);
+  return callMutationNTimesAndConcatResponses(
+    apolloConfig,
+    {
+      count,
+      mutationContainer: createSampleLocationContainer,
+      responsePath: 'data.mutate.location',
+      propVariationFunc: props => {
+        const item = reqStrPathThrowing('item', props);
+        return R.merge({
+          name: `Hillsborough${item} Rd`,
+          key: `hillsborough${item}Rd`
+        }, props || {});
+      }
     },
-    of([]),
-    R.times(i => {
-      return composeWithChain([
-        () => {
-          return createSampleLocationContainer(apolloConfig, R.merge({
-              name: `Hillsborough${i} Rd`,
-              key: `hillsborough${i}Rd`
-            }, props || {})
-          );
-        },
-        () => fromPromised(() => new Promise(r => setTimeout(r, 100)))()
-      ])();
-    }, count)
+    props
   );
 }, [
   ['apolloConfig', PropTypes.shape({}).isRequired],

@@ -7,7 +7,7 @@ import {
 import {
   composeWithChain,
   defaultRunConfig,
-  expectKeysAtPath,
+  expectKeysAtPath, mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
@@ -120,14 +120,15 @@ describe('userStateHelpers', () => {
       },
       // Set the UserState, returns previous values and {userState, projects, regions}
       // where project and region are scope instances of userState
+      mapToMergedResponseAndInputs(
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectsAndRegionsContainer({
-          apolloConfig,
+        return mutateSampleUserStateWithProjectsAndRegionsContainer(
+          apolloConfig, {
           user: R.pick(['id'], user),
           regionKeys: ['earth'],
           projectKeys: ['shrangrila', 'pangea']
         });
-      },
+      }),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
           return currentUserQueryContainer(apolloConfig, userOutputParams, {});

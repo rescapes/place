@@ -9,11 +9,13 @@ import {
 import * as R from 'ramda';
 import moment from 'moment';
 import T from 'folktale/concurrency/task/index.js';
-const {fromPromised, of} = T
+
+const {fromPromised, of} = T;
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers.js';
 import {createSampleLocationsContainer} from '../location/locationStore.sample.js';
+import {composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -31,15 +33,15 @@ import {createSampleLocationsContainer} from '../location/locationStore.sample.j
  * @params {Object} config
  * @params {Object} apolloConfig
  * @params {Function} locationsContainer Optional function to create locations for the project
- * @params {Object} props Overrides the defauls. {user: {id}} is required
+ * @params {Object} props Overrides the defaults. {user: {id}} is required
  * @params {Object} props.user
  * @params {Number} props.user.id Required
  * @return {Object} {data: project: {...}}
  */
-export const createSampleProjectContainer = ({apolloConfig, locationsContainer}, props) => {
+export const createSampleProjectContainer = (apolloConfig, {locationsContainer}, props) => {
   const now = moment().format('HH-mm-ss-SSS');
-  return composeWithChain([
-    ({apolloConfig, props, locations}) => {
+  return composeWithComponentMaybeOrTaskChain([
+    locations => {
       return makeProjectMutationContainer(
         apolloConfig,
         {outputParams: projectOutputParams},
@@ -85,36 +87,34 @@ export const createSampleProjectContainer = ({apolloConfig, locationsContainer},
     },
 
     // Create sample locations (optional)
-    mapToNamedResponseAndInputs('locations',
-      ({apolloConfig}) => {
-        return R.ifElse(
-          R.identity,
-          f => f(apolloConfig, {}, {}),
-          () => of([])
-        )(locationsContainer);
-      }
-    ),
+    () => {
+      return R.ifElse(
+        R.identity,
+        f => f(apolloConfig, {}, {}),
+        () => of([])
+      )(locationsContainer);
+    },
     // Delete all projects of this user
-    mapToNamedResponseAndInputs('deletedSamples',
-      ({props}) => {
-        return queryAndDeleteIfFoundContainer(
-          {
-            queryName: 'projects',
-            queryContainer: makeProjectsQueryContainer(
-              {apolloConfig},
-              {outputParams: projectOutputParams}
-            ),
-            mutateContainer: makeProjectMutationContainer(apolloConfig, {})
-          },
-          {
-            user: {
-              id: reqStrPathThrowing('user.id', props)
-            }
+    props => {
+      return queryAndDeleteIfFoundContainer(
+        apolloConfig,
+        {
+          queryName: 'projects',
+          queryContainer: makeProjectsQueryContainer(
+            {apolloConfig},
+            {outputParams: projectOutputParams}
+          ),
+          mutateContainer: makeProjectMutationContainer,
+          responsePath: 'data.mutate.project'
+        },
+        {
+          user: {
+            id: reqStrPathThrowing('user.id', props)
           }
-        );
-      }
-    )
-  ])({apolloConfig, props});
+        }
+      );
+    }
+  ])(props);
 };
 
 /**
@@ -135,7 +135,7 @@ export const createSampleProjectsContainer = v((apolloConfig, props) => {
         R.times(() => {
           return composeWithChain([
             () => {
-              return createSampleProjectContainer({apolloConfig, createSampleLocationsContainer}, {
+              return createSampleProjectContainer(apolloConfig, {locationsContainer: createSampleLocationsContainer}, {
                   key: `test${moment().format('HH-mm-ss-SSS')}`,
                   user: {
                     id: reqStrPathThrowing('user.id', props)
@@ -151,13 +151,15 @@ export const createSampleProjectsContainer = v((apolloConfig, props) => {
         ({props}) => {
           // Delete existing test projects for the test user
           return queryAndDeleteIfFoundContainer(
+            apolloConfig,
             {
               queryName: 'projects',
               queryContainer: makeProjectsQueryContainer(
                 {apolloConfig},
                 {outputParams: projectOutputParams}
               ),
-              mutateContainer: makeProjectMutationContainer(apolloConfig, {})
+              mutateContainer: makeProjectMutationContainer,
+              responsePath: 'data.mutate.project'
             },
             {
               keyContains: 'test',

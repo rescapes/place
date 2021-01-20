@@ -36,7 +36,7 @@ describe('regionStore', () => {
     const errors = [];
     R.composeK(
       mapToNamedPathAndInputs('region', 'data.createRegion.region',
-        ({apolloClient}) => createSampleRegionContainer({apolloClient})
+        ({apolloClient}) => createSampleRegionContainer({apolloClient}, {}, {})
       ),
       () => testAuthTask()
     )().run().listen(defaultRunConfig({
@@ -56,7 +56,7 @@ describe('regionStore', () => {
         {key: reqStrPathThrowing('key', region)}
       ),
       mapToNamedPathAndInputs('region', 'data.createRegion.region',
-        ({apolloConfig}) => createSampleRegionContainer(apolloConfig)
+        ({apolloConfig}) => createSampleRegionContainer(apolloConfig, {}, {})
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask()
