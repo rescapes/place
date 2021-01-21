@@ -12,18 +12,21 @@
 import moment from 'moment';
 import * as R from 'ramda';
 import {
+  callMutationNTimesAndConcatResponses,
   composeWithComponentMaybeOrTaskChain,
   createReadInputTypeMapper,
   makeMutationRequestContainer,
-  makeQueryContainer
+  makeQueryContainer,
+  mapTaskOrComponentToNamedResponseAndInputs
 } from '@rescapes/apollo';
-import {mapToNamedPathAndInputs} from '@rescapes/ramda';
+import {reqStrPathThrowing} from '@rescapes/ramda';
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
 import {locationOutputParams, locationOutputParamsMinimized} from './locationOutputParams.js';
 import T from 'folktale/concurrency/task/index.js';
-const {of} = T
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
+
+const {of} = T;
 
 
 // Don't include intersections where because they are can be created when we create of update locations
@@ -106,7 +109,7 @@ export const makeLocationMutationContainer = v(R.curry(
         // If locationPropsPath is null, over will operate on props
         R.lensPath(locationPropsPath ? R.split('.', locationPropsPath) : []),
         props => {
-          return props
+          return props;
         },
         props
       )
@@ -166,37 +169,41 @@ export const deleteLocationsContainer = (
 ) => {
   return composeWithComponentMaybeOrTaskChain([
     // Delete those test scope objects
-    ({apolloConfig, locations}) => {
-      return R.traverse(
-        of, // TODO doesn't work with components!
-        location => {
-          return makeLocationMutationContainer(
-            apolloConfig,
-            {
-              outputParams: {id: 1, deleted: 1}
-            },
-            R.compose(
-              // And the deleted datetime
-              R.set(R.lensProp('deleted'), moment().toISOString(true)),
-              // Just pass the id
-              R.pick(['id'])
-            )(location)
-          );
-        },
-        locations
-      );
-    },
-    // Get scope objects to delete
-    mapToNamedPathAndInputs('locations', 'data.locations',
-      ({apolloConfig}) => {
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedLocationResponse',
+      ({locationsResponse}) => {
+        const locations = reqStrPathThrowing('data.locations', locationsResponse)
+
+        return callMutationNTimesAndConcatResponses(
+          apolloConfig,
+          {
+            items: locations,
+            mutationContainer: makeLocationMutationContainer,
+            responsePath: 'data.mutate.location',
+            outputParams: {id: 1, deleted: 1},
+            propVariationFunc: ({item: location, props}) => {
+              return R.compose(
+                // And the deleted datetime
+                R.set(R.lensProp('deleted'), moment().toISOString(true)),
+                // Just pass the id
+                R.pick(['id'])
+              )(location);
+            }
+          },
+          props
+        );
+      }
+    ),
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'locationsResponse',
+      // Get scope objects to delete
+      ({props}) => {
         return queryLocationsContainer(
           {apolloConfig},
           {
-            outputParams: {id: 1}
+            outputParams: {id: 1, deleted: 1}
           },
           props
         );
       }
     )
-  ])(({apolloConfig, props}));
+  ])({props});
 };

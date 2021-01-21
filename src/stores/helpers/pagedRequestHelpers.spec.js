@@ -23,149 +23,151 @@ import {projectOutputParams} from '../scopeStores/project/projectStore.js';
 import {testAuthTask} from '../../helpers/testHelpers.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 
-test('queryUsingPaginationContainer', done => {
-  const task = composeWithChain([
-    ({apolloConfig, projects}) => {
-      return queryUsingPaginationContainer(
-        {apolloConfig, regionConfig: {}},
-        {
-          typeName: 'project',
-          name: 'projectsPaginated',
-          pageSize: 1,
-          outputParams: projectOutputParams,
-          normalizeProps: props => {
-            return props;
+describe('pagedRequestHelpers', () => {
+  test('queryUsingPaginationContainer', done => {
+    const task = composeWithChain([
+      ({apolloConfig, projects}) => {
+        return queryUsingPaginationContainer(
+          {apolloConfig, regionConfig: {}},
+          {
+            typeName: 'project',
+            name: 'projectsPaginated',
+            pageSize: 1,
+            outputParams: projectOutputParams,
+            normalizeProps: props => {
+              return props;
+            }
+          },
+          {
+            idIn: R.map(R.prop('id'), projects)
           }
-        },
-        {
-          idIn: R.map(R.prop('id'), projects)
+        );
+      },
+      mapToNamedResponseAndInputs('projects',
+        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
+      ),
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }
-      );
-    },
-    mapToNamedResponseAndInputs('projects',
-      ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
-    ),
-    mapToNamedPathAndInputs('user', 'data.currentUser',
-      ({apolloConfig}) => {
-        return currentUserQueryContainer(apolloConfig, userOutputParams, {});
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        ({}) => {
+          return testAuthTask();
+        }
+      )
+    ])({});
+    const errors = [];
+    task.run().listen(defaultRunConfig({
+      onResolved: projects => {
+        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projects))).toEqual(10);
       }
-    ),
-    mapToNamedResponseAndInputs('apolloConfig',
-      ({}) => {
-        return testAuthTask();
-      }
-    )
-  ])({});
-  const errors = [];
-  task.run().listen(defaultRunConfig({
-    onResolved: projects => {
-      expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projects))).toEqual(10);
-    }
-  }, errors, done));
-}, 100000);
+    }, errors, done));
+  }, 100000);
 
-test('queryPageContainer', done => {
-  const pageSize = 1;
-  expect.assertions(6);
-  const task = composeWithChain([
-    mapToNamedResponseAndInputs('projectsPagedSkipped2',
-      ({apolloConfig, projects}) => {
-        return queryPageContainer(
-          {apolloConfig, regionConfig: {}},
-          {
-            pageSize,
-            // No page argument, so skip
-            typeName: 'project',
-            name: 'projectsPaginated',
-            filterObjsByConfig: ({regionConfig}, objs) => objs,
-            outputParams: projectOutputParams,
-            normalizeProps: props => {
-              return props;
-            }
-          },
-          {idIn: R.map(R.prop('id'), projects)}
-        );
+  test('queryPageContainer', done => {
+    const pageSize = 1;
+    expect.assertions(6);
+    const task = composeWithChain([
+      mapToNamedResponseAndInputs('projectsPagedSkipped2',
+        ({apolloConfig, projects}) => {
+          return queryPageContainer(
+            {apolloConfig, regionConfig: {}},
+            {
+              pageSize,
+              // No page argument, so skip
+              typeName: 'project',
+              name: 'projectsPaginated',
+              filterObjsByConfig: ({regionConfig}, objs) => objs,
+              outputParams: projectOutputParams,
+              normalizeProps: props => {
+                return props;
+              }
+            },
+            {idIn: R.map(R.prop('id'), projects)}
+          );
+        }
+      ),
+      mapToNamedResponseAndInputs('projectsPagedSkipped',
+        ({apolloConfig, projects}) => {
+          return queryPageContainer(
+            {apolloConfig: mergeDeep(apolloConfig, {options: {skip: true}}), regionConfig: {}},
+            {
+              pageSize,
+              page: 10,
+              typeName: 'project',
+              name: 'projectsPaginated',
+              filterObjsByConfig: ({regionConfig}, objs) => objs,
+              outputParams: projectOutputParams,
+              normalizeProps: props => {
+                return props;
+              }
+            },
+            {idIn: R.map(R.prop('id'), projects)}
+          );
+        }
+      ),
+      mapToNamedResponseAndInputs('projectsPaged10',
+        ({apolloConfig, projects}) => {
+          return queryPageContainer(
+            {apolloConfig, regionConfig: {}},
+            {
+              pageSize,
+              page: 10,
+              typeName: 'project',
+              name: 'projectsPaginated',
+              filterObjsByConfig: ({regionConfig}, objs) => objs,
+              outputParams: projectOutputParams,
+              normalizeProps: props => {
+                return props;
+              }
+            },
+            {idIn: R.map(R.prop('id'), projects)}
+          );
+        }
+      ),
+      mapToNamedResponseAndInputs('projectsPaged1',
+        ({apolloConfig, projects}) => {
+          return queryPageContainer(
+            {apolloConfig, regionConfig: {}},
+            {
+              pageSize,
+              page: 1,
+              typeName: 'project',
+              name: 'projectsPaginated',
+              filterObjsByConfig: ({regionConfig}, objs) => objs,
+              outputParams: projectOutputParams,
+              normalizeProps: props => {
+                return props;
+              }
+            },
+            {idIn: R.map(R.prop('id'), projects)}
+          );
+        }),
+      mapToNamedResponseAndInputs('projects',
+        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
+      ),
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        ({}) => {
+          return testAuthTask();
+        }
+      )
+    ])({});
+    const errors = [];
+    task.run().listen(defaultRunConfig({
+      onResolved: ({projectsPaged1, projectsPaged10, projectsPagedSkipped, projectsPagedSkipped2}) => {
+        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged1))).toEqual(1);
+        expect(reqStrPathThrowing('data.projectsPaginated.pages', projectsPaged1)).toEqual(10);
+        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged10))).toEqual(1);
+        expect(reqStrPathThrowing('data.projectsPaginated.hasNext', projectsPaged10)).toEqual(false);
+        expect(projectsPagedSkipped.skip).toBeTruthy();
+        expect(projectsPagedSkipped2.skip).toBeTruthy();
       }
-    ),
-    mapToNamedResponseAndInputs('projectsPagedSkipped',
-      ({apolloConfig, projects}) => {
-        return queryPageContainer(
-          {apolloConfig: mergeDeep(apolloConfig, {options: {skip: true}}), regionConfig: {}},
-          {
-            pageSize,
-            page: 10,
-            typeName: 'project',
-            name: 'projectsPaginated',
-            filterObjsByConfig: ({regionConfig}, objs) => objs,
-            outputParams: projectOutputParams,
-            normalizeProps: props => {
-              return props;
-            }
-          },
-          {idIn: R.map(R.prop('id'), projects)}
-        );
-      }
-    ),
-    mapToNamedResponseAndInputs('projectsPaged10',
-      ({apolloConfig, projects}) => {
-        return queryPageContainer(
-          {apolloConfig, regionConfig: {}},
-          {
-            pageSize,
-            page: 10,
-            typeName: 'project',
-            name: 'projectsPaginated',
-            filterObjsByConfig: ({regionConfig}, objs) => objs,
-            outputParams: projectOutputParams,
-            normalizeProps: props => {
-              return props;
-            }
-          },
-          {idIn: R.map(R.prop('id'), projects)}
-        );
-      }
-    ),
-    mapToNamedResponseAndInputs('projectsPaged1',
-      ({apolloConfig, projects}) => {
-        return queryPageContainer(
-          {apolloConfig, regionConfig: {}},
-          {
-            pageSize,
-            page: 1,
-            typeName: 'project',
-            name: 'projectsPaginated',
-            filterObjsByConfig: ({regionConfig}, objs) => objs,
-            outputParams: projectOutputParams,
-            normalizeProps: props => {
-              return props;
-            }
-          },
-          {idIn: R.map(R.prop('id'), projects)}
-        );
-      }),
-    mapToNamedResponseAndInputs('projects',
-      ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
-    ),
-    mapToNamedPathAndInputs('user', 'data.currentUser',
-      ({apolloConfig}) => {
-        return currentUserQueryContainer(apolloConfig, userOutputParams, {});
-      }
-    ),
-    mapToNamedResponseAndInputs('apolloConfig',
-      ({}) => {
-        return testAuthTask();
-      }
-    )
-  ])({});
-  const errors = [];
-  task.run().listen(defaultRunConfig({
-    onResolved: ({projectsPaged1, projectsPaged10, projectsPagedSkipped,projectsPagedSkipped2 }) => {
-      expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged1))).toEqual(1);
-      expect(reqStrPathThrowing('data.projectsPaginated.pages', projectsPaged1)).toEqual(10);
-      expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged10))).toEqual(1);
-      expect(reqStrPathThrowing('data.projectsPaginated.hasNext', projectsPaged10)).toEqual(false);
-      expect(projectsPagedSkipped.skip).toBeTruthy()
-      expect(projectsPagedSkipped2.skip).toBeTruthy()
-    }
-  }, errors, done));
-}, 1000000);
+    }, errors, done));
+  }, 1000000);
+});

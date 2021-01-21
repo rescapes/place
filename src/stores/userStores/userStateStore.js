@@ -421,18 +421,18 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false
  */
 export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, {}, {userState, scopeProps, render}) => {
   return composeWithComponentMaybeOrTaskChain([
-    ({deletedRegions, deletedProjects}) => {
+    ({userState, deletedRegionsResponse, deletedProjectsResponse}) => {
       return containerForApolloType(
         apolloConfig,
         {
           render: getRenderPropFunction({render}),
           // Override the data with the consolidated mapbox
-          response: {deletedRegions, deletedProjects}
+          response: {userState, deletedRegionsResponse, deletedProjectsResponse}
         }
       );
     },
     // clearedScopeObjsUserState is the userState with the regions cleared
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedProjects',
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedProjectsResponse',
       ({userState, deletedRegions, clearedScopeObjsUserState}) => {
         const user = reqStrPathThrowing('user', userState);
         return R.ifElse(
@@ -465,7 +465,7 @@ export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, {}, {us
         )(strPathOr(null, 'project', scopeProps));
       }),
 
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedRegions',
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedRegionsResponse',
       ({userState}) => {
         return R.ifElse(
           R.identity,

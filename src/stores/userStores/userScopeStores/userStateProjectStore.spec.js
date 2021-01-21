@@ -275,7 +275,7 @@ describe('userProjectStore', () => {
       ),
       // Remove all the projects from the user state
       // Resolve the user state
-      mapToNamedPathAndInputs('userState', 'data.mutate.userState',
+      mapToMergedResponseAndInputs(
         ({apolloConfig, userState}) => {
           return deleteSampleUserStateScopeObjectsContainer(
             apolloConfig, {}, {
@@ -317,7 +317,7 @@ describe('userProjectStore', () => {
     )({}).run().listen(defaultRunConfig({
       onResolved:
         ({project, userState, undefinedUserProject}) => {
-          expect(strPathOr(null, 'data.userProjects.0.project.id', userState)).toEqual(project.id);
+          expect(strPathOr(null, 'data.userProjects.1.project.id', userState)).toEqual(project.id);
           expect(R.propOr(false, 'skip', undefinedUserProject)).toBeTruthy();
           done();
         }

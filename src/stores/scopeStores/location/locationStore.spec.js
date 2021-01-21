@@ -83,7 +83,11 @@ describe('locationStore', () => {
       ),
       mapToNamedResponseAndInputs('deleted',
         // Delete all locations
-        ({apolloConfig}) => deleteLocationsContainer(apolloConfig, {}, {})
+        ({apolloConfig}) => {
+          return deleteLocationsContainer(apolloConfig, {}, {
+            keyContains: 'hillsborough'
+          });
+        }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => {
@@ -101,7 +105,7 @@ describe('locationStore', () => {
         expect(R.length(reqStrPathThrowing('data.locationsPaginated.objects', locationsPagedAllMinimized))).toEqual(3);
       }
     }, errors, done));
-  }, 100000);
+  }, 1000000);
 
 
   test('makeLocationMutationContainer', done => {
@@ -114,7 +118,9 @@ describe('locationStore', () => {
       ),
       mapToNamedResponseAndInputs('deleted',
         // Delete all locations
-        ({apolloConfig}) => deleteLocationsContainer(apolloConfig, {}, {})
+        ({apolloConfig}) => {
+          return deleteLocationsContainer(apolloConfig, {}, {});
+        }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask()
