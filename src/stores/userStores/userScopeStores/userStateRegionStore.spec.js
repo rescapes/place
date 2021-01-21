@@ -227,7 +227,7 @@ describe('userRegionStore', () => {
           return userStateMutationContainer(
             apolloConfig,
             {outputParams: userStateMutateOutputParams},
-            R.over(R.lensPath(['data', 'userRegions']), () => [], userState)
+            {userState: R.over(R.lensPath(['data', 'userRegions']), () => [], userState)}
           );
         }
       ),

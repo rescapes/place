@@ -350,10 +350,12 @@ export const normalizeUserStatePropsForMutating = userState => {
  * along with the mutation and result object in the component
  * @param [Object] mutationConfig.outputParams OutputParams for the query of the mutation
  * @param {Object} props Object matching the shape of a userState for the create or update
+ * @param {Object} props.userState Object matching the shape of a userState for the create or update
+ * @param {Function} [props.render] required for comonent mutations
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false, outputParams}, props) => {
+export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false, outputParams}, {userState, render}) => {
     return makeMutationRequestContainer(
       R.merge(
         apolloConfig,
@@ -394,14 +396,17 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false
         name: 'userState',
         outputParams
       },
-      normalizeUserStatePropsForMutating(props)
+      {userState: normalizeUserStatePropsForMutating(userState), render}
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
     ['mutationConfig', PropTypes.shape({
       outputParams: PropTypes.shape().isRequired
     })],
-    ['props', PropTypes.shape().isRequired]
+    ['props', PropTypes.shape({
+      userState: PropTypes.shape().isRequired,
+      render: PropTypes.function
+    }).isRequired]
   ],
   'userStateMutationContainer'
 );
@@ -557,7 +562,7 @@ export const deleteScopeObjectsContainer = (
             apolloConfig,
             // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
             {outputParams: omitClientFields(userStateOutputParamsFull())},
-            modifiedUserState
+            {userState: modifiedUserState, render}
           );
         },
         () => {

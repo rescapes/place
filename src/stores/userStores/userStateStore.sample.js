@@ -51,7 +51,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
         return userStateMutationContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
-          createSampleUserStateProps({user, regions: [region], projects: [project]})
+          {userState: createSampleUserStateProps({user, regions: [region], projects: [project]})}
         );
       }
     ),
@@ -103,11 +103,11 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   return composeWithComponentMaybeOrTaskChain([
     // Set the user state of the given user to the region and project
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userState',
-      ({user, regions, projects}) => {
+      ({user, regions, projects, render}) => {
         return userStateMutationContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
-          createSampleUserStateProps({user, regions, projects})
+          {userState: createSampleUserStateProps({user, regions, projects}), render}
         );
       }
     ),

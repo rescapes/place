@@ -215,7 +215,7 @@ describe('userStore', () => {
         // Update the UserState with some cache only values
         // We'll set the project's isSelected cache only property
         ({apolloConfig, userState}) => {
-          const props = R.over(
+          const modifiedUserState = R.over(
             R.lensPath(['data', 'userProjects', 0, 'selection']),
             selection => {
               return R.merge(selection, {
@@ -228,7 +228,7 @@ describe('userStore', () => {
           return userStateMutationContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
-            props
+            {userState: modifiedUserState}
           );
         }
       ),

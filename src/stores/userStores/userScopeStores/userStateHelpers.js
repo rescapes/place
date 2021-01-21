@@ -328,7 +328,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
               userScopeOutputParams
             )
           },
-          R.merge(userStateWithCreatedOrUpdatedScopeObj, {render})
+          {userState: userStateWithCreatedOrUpdatedScopeObj, render}
         );
       }),
       // Query for userScopeObjs that match the userScope
