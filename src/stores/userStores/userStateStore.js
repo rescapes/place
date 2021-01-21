@@ -540,7 +540,7 @@ export const deleteScopeObjectsContainer = (
       );
     }),
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'scopeObjsToDeleteResponse',
-    () => {
+    ({render}) => {
       return makeQueryContainer(
         apolloConfig,
         {
@@ -548,7 +548,7 @@ export const deleteScopeObjectsContainer = (
           outputParams: outputParams,
           readInputTypeMapper
         },
-        scopeProps
+        R.merge(scopeProps, {render})
       );
     }),
     // Remove existing scope objects from the userState if userState was given
