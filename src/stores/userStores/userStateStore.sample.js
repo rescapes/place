@@ -41,7 +41,7 @@ import {createSampleLocationsContainer} from '../scopeStores/location/locationSt
  * @param user
  * @param regionKey
  * @param projectKey
- * @returns {Task} {project, region, userState}
+ * @returns {Task} {project, region, userStateResponse}
  */
 export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, user, regionKey, projectKey}) => {
   return composeWithChain([
@@ -51,7 +51,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
         return userStateMutationContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
-          {userState: createSampleUserStateProps({user, regions: [region], projects: [project]})}
+          {userStateResponse: createSampleUserStateProps({user, regions: [region], projects: [project]})}
         );
       }
     ),

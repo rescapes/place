@@ -355,13 +355,19 @@ export const normalizeUserStatePropsForMutating = userState => {
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false, outputParams}, {userState, render}) => {
+export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false, outputParams}, {
+    userState,
+    render
+  }) => {
     return makeMutationRequestContainer(
       R.merge(
         apolloConfig,
         {
           // Skip if passed in or in apolloConfig
           options: {
+            variables: props => {
+              return R.prop('userState', props);
+            },
             skip: R.propOr(skip, 'option.skip', apolloConfig),
             update: (store, response) => {
               // Add mutate to response.data so we dont' have to guess if it's a create or udpate
@@ -374,7 +380,10 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false
               // in props. We'll only cache values that are cache only since the mutation will have put
               // the other return objects from the server into the cache
               // TODO this is a bit redundant since the cache write also triggers a merge
-              const propsWithCacheOnlyItems = mergeCacheable({idPathLookup: userStateDataTypeIdPathLookup}, userState, props);
+              const propsWithCacheOnlyItems = mergeCacheable({idPathLookup: userStateDataTypeIdPathLookup}, userState, {
+                userState,
+                render
+              });
 
               // Mutate the cache to save settings to the database that are not stored on the server
               makeCacheMutationContainer(
@@ -404,7 +413,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false
       outputParams: PropTypes.shape().isRequired
     })],
     ['props', PropTypes.shape({
-      userState: PropTypes.shape().isRequired,
+      userState: PropTypes.shape(),
       render: PropTypes.function
     }).isRequired]
   ],
@@ -518,65 +527,65 @@ export const deleteScopeObjectsContainer = (
     // Delete those test scope objects
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'clearedScopeObjsUserState',
       ({userStateResponse, scopeObjsToDeleteResponse, userState}) => {
-      const scopeObjsToDelete = strPathOr([], `data.${scopeName}s`, scopeObjsToDeleteResponse);
-      return callMutationNTimesAndConcatResponses(
-        apolloConfig,
-        {
-          items: scopeObjsToDelete,
-          mutationContainer: makeMutationRequestContainer,
-          responsePath: `data.mutate.${scopeName}`,
-          propVariationFunc: ({item}) => {
-            return R.compose(
-              // And the deleted datetime
-              item => R.set(R.lensProp('deleted'), moment().toISOString(true), item),
-              // Just pass the id
-              item => R.pick(['id'], item)
-            )(item);
+        const scopeObjsToDelete = strPathOr([], `data.${scopeName}s`, scopeObjsToDeleteResponse);
+        return callMutationNTimesAndConcatResponses(
+          apolloConfig,
+          {
+            items: scopeObjsToDelete,
+            mutationContainer: makeMutationRequestContainer,
+            responsePath: `data.mutate.${scopeName}`,
+            propVariationFunc: ({item}) => {
+              return R.compose(
+                // And the deleted datetime
+                item => R.set(R.lensProp('deleted'), moment().toISOString(true), item),
+                // Just pass the id
+                item => R.pick(['id'], item)
+              )(item);
+            },
+            name: scopeName,
+            outputParams: {id: 1}
           },
-          name: scopeName,
-          outputParams: {id: 1}
-        },
-        {}
-      );
-    }),
+          {}
+        );
+      }),
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'scopeObjsToDeleteResponse',
-    ({render}) => {
-      return makeQueryContainer(
-        apolloConfig,
-        {
-          name: `${scopeName}s`,
-          outputParams: outputParams,
-          readInputTypeMapper
-        },
-        R.merge(scopeProps, {render})
-      );
-    }),
+      ({render}) => {
+        return makeQueryContainer(
+          apolloConfig,
+          {
+            name: `${scopeName}s`,
+            outputParams: outputParams,
+            readInputTypeMapper
+          },
+          R.merge(scopeProps, {render})
+        );
+      }),
     // Remove existing scope objects from the userState if userState was given
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'clearedScopeObjsUserState',
-    ({userState, render}) => {
-      return R.ifElse(
-        R.identity,
-        userState => {
-          const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
-          return userStateMutationContainer(
-            apolloConfig,
-            // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
-            {outputParams: omitClientFields(userStateOutputParamsFull())},
-            {userState: modifiedUserState, render}
-          );
-        },
-        () => {
-          return containerForApolloType(
-            apolloConfig,
-            {
-              render: getRenderPropFunction({render}),
-              // Override the data with the consolidated mapbox
-              response: null
-            }
-          );
-        }
-      )(userState);
-    })
+      ({userState, render}) => {
+        return R.ifElse(
+          R.identity,
+          userState => {
+            const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
+            return userStateMutationContainer(
+              apolloConfig,
+              // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
+              {outputParams: omitClientFields(userStateOutputParamsFull())},
+              {userState: modifiedUserState, render}
+            );
+          },
+          () => {
+            return containerForApolloType(
+              apolloConfig,
+              {
+                render: getRenderPropFunction({render}),
+                // Override the data with the consolidated mapbox
+                response: null
+              }
+            );
+          }
+        )(userState);
+      })
   ])
   ({userState, render});
 };
