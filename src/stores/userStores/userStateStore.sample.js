@@ -102,7 +102,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
 ) => {
   return composeWithComponentMaybeOrTaskChain([
     // Set the user state of the given user to the region and project
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userState',
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
       ({user, regions, projects, render}) => {
         return userStateMutationContainer(
           apolloConfig,
