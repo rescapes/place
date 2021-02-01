@@ -100,12 +100,13 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   apolloConfig,
   {user, regionKeys, projectKeys, locationsContainer, render}
 ) => {
+  const _apolloConfig = R.merge(apolloConfig, {mutateOnMount: true})
   return composeWithComponentMaybeOrTaskChain([
     // Set the user state of the given user to the region and project
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
+    mapTaskOrComponentToNamedResponseAndInputs(_apolloConfig, 'userStateResponse',
       ({user, regions, projects, render}) => {
         return userStateMutationContainer(
-          apolloConfig,
+          _apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
           {userState: createSampleUserStateProps({user, regions, projects}), render}
         );
@@ -113,14 +114,14 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     ),
 
     // Create sample projects
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projects',
+    mapTaskOrComponentToNamedResponseAndInputs(_apolloConfig, 'projects',
       ({locations, regions}) => {
         return callMutationNTimesAndConcatResponses(
-          apolloConfig,
+          _apolloConfig,
           {
             items: projectKeys,
-            mutationContainer: (apolloConfig, {}, props) => {
-              return createSampleProjectContainer(apolloConfig, {locationsContainer}, props);
+            mutationContainer: (_apolloConfig, {}, props) => {
+              return createSampleProjectContainer(_apolloConfig, {locationsContainer}, props);
             },
             responsePath: 'data.mutate.project',
             propVariationFunc: ({item: projectKey}) => {
@@ -138,10 +139,10 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       }
     ),
     // Create sample regions
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'regions',
-      () => {
+    mapTaskOrComponentToNamedResponseAndInputs(_apolloConfig, 'regions',
+      ({render}) => {
         return callMutationNTimesAndConcatResponses(
-          apolloConfig,
+          _apolloConfig,
           {
             items: regionKeys,
             mutationContainer: createSampleRegionContainer,
@@ -153,22 +154,22 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
               };
             }
           },
-          {}
+          {render}
         );
       }
     ),
 
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'locations',
+    mapTaskOrComponentToNamedResponseAndInputs(_apolloConfig, 'locations',
       // Create sample locations (optional)
-      ({locationsContainer}) => {
+      ({locationsContainer, render}) => {
         return R.ifElse(
           R.identity,
-          f => f(apolloConfig, {}, {}),
+          f => f(_apolloConfig, {}, {render}),
           () => {
             return containerForApolloType(
-              apolloConfig,
+              _apolloConfig,
               {
-                render: getRenderPropFunction(props),
+                render: getRenderPropFunction({render}),
                 response: []
               }
             );
