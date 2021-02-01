@@ -28,7 +28,7 @@ import * as R from 'ramda';
 import T from 'folktale/concurrency/task/index.js';
 import {
   callMutationNTimesAndConcatResponses,
-  composeWithComponentMaybeOrTaskChain,
+  composeWithComponentMaybeOrTaskChain, containerForApolloType, getRenderPropFunction,
   mapTaskOrComponentToNamedResponseAndInputs
 } from '@rescapes/apollo';
 
@@ -164,7 +164,15 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         return R.ifElse(
           R.identity,
           f => f(apolloConfig, {}, {}),
-          () => of([])
+          () => {
+            return containerForApolloType(
+              apolloConfig,
+              {
+                render: getRenderPropFunction(props),
+                response: []
+              }
+            );
+          }
         )(locationsContainer);
       }
     )
