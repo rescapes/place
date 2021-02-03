@@ -15,8 +15,11 @@ import {
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   mapWithArgToPath,
+  strPathOr,
+  compact,
   reqStrPathThrowing
 } from '@rescapes/ramda';
+import {e} from '@rescapes/helpers-component';
 import {
   userStateMutationContainer, userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateMutateOutputParams,
@@ -29,11 +32,13 @@ import T from 'folktale/concurrency/task/index.js';
 import {
   callMutationNTimesAndConcatResponses,
   composeWithComponentMaybeOrTaskChain, containerForApolloType, getRenderPropFunction,
-  mapTaskOrComponentToNamedResponseAndInputs
+  mapTaskOrComponentToNamedResponseAndInputs,
+  mutationOnMountOnce
 } from '@rescapes/apollo';
 
 const {of} = T;
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
+
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -81,6 +86,12 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
   ])({apolloConfig, user, regionKey, projectKey});
 };
 
+const _mutateSampleUserStateWithProjectsAndRegionsContainerOnce = {
+  userState: mutationOnMountOnce(),
+  projects: mutationOnMountOnce(),
+  regions: mutationOnMountOnce(),
+  locations: mutationOnMountOnce()
+};
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -100,13 +111,12 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   apolloConfig,
   {user, regionKeys, projectKeys, locationsContainer, render}
 ) => {
-  const _apolloConfig = R.merge(apolloConfig, {mutateOnMount: true})
   return composeWithComponentMaybeOrTaskChain([
     // Set the user state of the given user to the region and project
-    mapTaskOrComponentToNamedResponseAndInputs(_apolloConfig, 'userStateResponse',
-      ({user, regions, projects, render}) => {
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
+      ({user, regions, projects: {objets: projects}, render}) => {
         return userStateMutationContainer(
-          _apolloConfig,
+          apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
           {userState: createSampleUserStateProps({user, regions, projects}), render}
         );
@@ -114,14 +124,13 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     ),
 
     // Create sample projects
-    mapTaskOrComponentToNamedResponseAndInputs(_apolloConfig, 'projects',
-      ({locations, regions}) => {
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projects',
+      ({locations, regions: {objects: regions}}) => {
         return callMutationNTimesAndConcatResponses(
-          _apolloConfig,
-          {
+          apolloConfig, {
             items: projectKeys,
-            mutationContainer: (_apolloConfig, {}, props) => {
-              return createSampleProjectContainer(_apolloConfig, {locationsContainer}, props);
+            mutationContainer: (apolloConfig, {}, props) => {
+              return createSampleProjectContainer(apolloConfig, {locationsContainer}, props);
             },
             responsePath: 'data.mutate.project',
             propVariationFunc: ({item: projectKey}) => {
@@ -139,10 +148,10 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       }
     ),
     // Create sample regions
-    mapTaskOrComponentToNamedResponseAndInputs(_apolloConfig, 'regions',
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'regions',
       ({render}) => {
         return callMutationNTimesAndConcatResponses(
-          _apolloConfig,
+          apolloConfig,
           {
             items: regionKeys,
             mutationContainer: createSampleRegionContainer,
@@ -159,15 +168,15 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       }
     ),
 
-    mapTaskOrComponentToNamedResponseAndInputs(_apolloConfig, 'locations',
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'locations',
       // Create sample locations (optional)
       ({locationsContainer, render}) => {
         return R.ifElse(
           R.identity,
-          f => f(_apolloConfig, {}, {render}),
+          f => f(apolloConfig, {}, {render}),
           () => {
             return containerForApolloType(
-              _apolloConfig,
+              apolloConfig,
               {
                 render: getRenderPropFunction({render}),
                 response: []
