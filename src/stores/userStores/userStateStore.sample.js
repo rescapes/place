@@ -32,8 +32,7 @@ import T from 'folktale/concurrency/task/index.js';
 import {
   callMutationNTimesAndConcatResponses,
   composeWithComponentMaybeOrTaskChain, containerForApolloType, getRenderPropFunction,
-  mapTaskOrComponentToNamedResponseAndInputs,
-  mutationOnMountOnce
+  mapTaskOrComponentToNamedResponseAndInputs
 } from '@rescapes/apollo';
 
 const {of} = T;
@@ -84,13 +83,6 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
       }
     )
   ])({apolloConfig, user, regionKey, projectKey});
-};
-
-const _mutateSampleUserStateWithProjectsAndRegionsContainerOnce = {
-  userState: mutationOnMountOnce(),
-  projects: mutationOnMountOnce(),
-  regions: mutationOnMountOnce(),
-  locations: mutationOnMountOnce()
 };
 
 /***
