@@ -59,27 +59,27 @@ describe('projectStore', () => {
     const task = composeWithChain([
       mapToNamedResponseAndInputs('projectsPagedAll',
         ({projectResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses.responses)};
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
           // Returns all 10 with 2 queries of pageSize 5
           return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('projectsPaged',
         ({projectResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses.responses)};
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
           // Returns 3 of the 10 projects on page 3
           return reqStrPathThrowing('queryProjectsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
         }
       ),
       mapToNamedResponseAndInputs('projectsMinimized',
         ({projectResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses.responses)};
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
           return reqStrPathThrowing('queryProjectsMinimized', variations)(props);
         }
       ),
       mapToNamedResponseAndInputs('projectsFull',
         ({projectResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses.responses)};
+          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
           return reqStrPathThrowing('queryProjects', variations)(props);
         }
       ),

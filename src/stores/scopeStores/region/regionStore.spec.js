@@ -74,27 +74,27 @@ describe('regionStore', () => {
     const task = composeWithChain([
       mapToNamedResponseAndInputs('regionsPagedAll',
         ({regionResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses.responses)};
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           // Returns all 10 with 2 queries of pageSize 5
           return reqStrPathThrowing('queryRegionsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('regionsPaged',
         ({regionResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses.responses)};
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           // Returns 3 of the 10 regions on page 3
           return reqStrPathThrowing('queryRegionsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
         }
       ),
       mapToNamedResponseAndInputs('regionsMinimized',
         ({regionResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses.responses)};
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           return reqStrPathThrowing('queryRegionsMinimized', variations)(props);
         }
       ),
       mapToNamedResponseAndInputs('regionsFull',
         ({regionResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses.responses)};
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           return reqStrPathThrowing('queryRegions', variations)(props);
         }
       ),

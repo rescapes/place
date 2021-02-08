@@ -69,7 +69,7 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
             },
             // locations from locationsContainer. Will be overridden by props.locations
             // if the latter is specified
-            locations: locationResponses.responses,
+            locations: locationResponses,
             data: {
               // Limits the possible locations by query
               locations: {
@@ -99,11 +99,11 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
         R.identity,
         f => f(apolloConfig, {}, R.pick(['render'], props)),
         () => {
-          containerForApolloType(
+          return containerForApolloType(
             apolloConfig,
             {
               render: getRenderPropFunction(props),
-              response: {responses: []}
+              response: []
             }
           );
         }

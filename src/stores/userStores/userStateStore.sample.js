@@ -109,7 +109,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   return composeWithComponentMaybeOrTaskChain([
 
     // Wait for the userState to be ready for component request
-    ({userStateResponse, user, regions: {objects: regions}, projects: {objects: projects}, render}) => {
+    ({userStateResponse, user, regions, projects, render}) => {
       if (strPathOr(false, 'result.loading', userStateResponse) || !strPathOr(false, 'result.data', userStateResponse)) {
         return e('div', 'loading');
       }
@@ -129,7 +129,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
 
     // Set the user state of the given user to the region and project
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
-      ({user, regions: {objects: regions}, projects: {objects: projects}, render}) => {
+      ({user, regions, projects, render}) => {
         return userStateMutationContainer(
           R.merge(apolloConfig, {mutateOnMount: true}),
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
@@ -140,7 +140,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
 
     // Create sample projects
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projects',
-      ({locations: {objects: locations}, regions: {objects: regions}, render}) => {
+      ({locations, regions, render}) => {
         return callMutationNTimesAndConcatResponses(
           apolloConfig, {
             items: projectKeys,
@@ -194,7 +194,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
               apolloConfig,
               {
                 render: getRenderPropFunction({render}),
-                response: {objects: []}
+                response: []
               }
             );
           }
