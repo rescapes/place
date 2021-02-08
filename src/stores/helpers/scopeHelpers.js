@@ -12,9 +12,10 @@
 import * as R from 'ramda';
 import moment from 'moment';
 import T from 'folktale/concurrency/task/index.js';
+import {e} from '@rescapes/helpers-component'
 
 const {of} = T;
-import {composeWithChain, reqPathThrowing} from '@rescapes/ramda';
+import {composeWithChain, reqPathThrowing ,pathOr} from '@rescapes/ramda';
 import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
 
 /**
@@ -38,7 +39,10 @@ export const queryAndDeleteIfFoundContainer = (
 ) => {
   return composeWithComponentMaybeOrTaskChain([
     response => {
-      const objectsToDelete = reqPathThrowing(['data', queryName], response);
+      const objectsToDelete = pathOr(null, ['data', queryName], response);
+      if (!objectsToDelete || R.any(response => !R.prop('data', response), objectsToDelete)) {
+        return e('div', 'loading')
+      }
       return callMutationNTimesAndConcatResponses(
         apolloConfig,
         {

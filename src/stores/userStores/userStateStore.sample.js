@@ -19,6 +19,7 @@ import {
   compact,
   reqStrPathThrowing
 } from '@rescapes/ramda';
+import RT from 'react';
 import {e} from '@rescapes/helpers-component';
 import {
   userStateMutationContainer, userScopeOutputParamsFragmentDefaultOnlyIds,
@@ -35,8 +36,10 @@ import {
   mapTaskOrComponentToNamedResponseAndInputs
 } from '@rescapes/apollo';
 
+const {useEffect} = RT;
 const {of} = T;
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
+import {addMutateKeyToMutationResponse} from '@rescapes/apollo/src/helpers/containerHelpers';
 
 
 /***
@@ -104,11 +107,31 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   {user, regionKeys, projectKeys, locationsContainer, render}
 ) => {
   return composeWithComponentMaybeOrTaskChain([
+
+    // Wait for the userState to be ready for component request
+    ({userStateResponse, user, regions: {objects: regions}, projects: {objects: projects}, render}) => {
+      if (strPathOr(false, 'result.loading', userStateResponse) || !strPathOr(false, 'result.data', userStateResponse)) {
+        return e('div', 'loading');
+      }
+      return containerForApolloType(
+        apolloConfig,
+        {
+          render: getRenderPropFunction({render}),
+          response: {
+            userState: reqStrPathThrowing('data.mutate.userState',
+              addMutateKeyToMutationResponse({silent: true}, userStateResponse.result)
+            ),
+            regions, projects
+          }
+        }
+      );
+    },
+
     // Set the user state of the given user to the region and project
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
-      ({user, regions, projects: {objets: projects}, render}) => {
+      ({user, regions: {objects: regions}, projects: {objects: projects}, render}) => {
         return userStateMutationContainer(
-          apolloConfig,
+          R.merge(apolloConfig, {mutateOnMount: true}),
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
           {userState: createSampleUserStateProps({user, regions, projects}), render}
         );
@@ -117,7 +140,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
 
     // Create sample projects
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projects',
-      ({locations, regions: {objects: regions}}) => {
+      ({locations: {objects: locations}, regions: {objects: regions}, render}) => {
         return callMutationNTimesAndConcatResponses(
           apolloConfig, {
             items: projectKeys,
@@ -135,7 +158,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
               };
             }
           },
-          {regions, locations}
+          {regions, locations, render}
         );
       }
     ),
@@ -171,7 +194,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
               apolloConfig,
               {
                 render: getRenderPropFunction({render}),
-                response: []
+                response: {objects: []}
               }
             );
           }

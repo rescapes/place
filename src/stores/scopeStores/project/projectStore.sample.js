@@ -4,7 +4,8 @@ import {
   mapToNamedResponseAndInputs,
   mergeDeep,
   reqStrPathThrowing,
-  traverseReduce
+  traverseReduce,
+  compact
 } from '@rescapes/ramda';
 import * as R from 'ramda';
 import moment from 'moment';
@@ -15,7 +16,11 @@ import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers.js';
 import {createSampleLocationsContainer} from '../location/locationStore.sample.js';
-import {composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
+import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
+import {getRenderPropFunction} from '@rescapes/apollo/src/helpers/componentHelpersMonadic';
+import {containerForApolloType} from '@rescapes/apollo/src/helpers/containerHelpers';
+import {createSampleRegionContainer} from '../region/regionStore.sample';
+import {makeRegionMutationContainer, makeRegionsQueryContainer, regionOutputParams} from '../region/regionStore';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -31,20 +36,22 @@ import {composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
 /**
  * Creates a sample project. first if it exists
  * @params {Object} config
- * @params {Object} apolloConfig
- * @params {Function} locationsContainer Optional function to create locations for the project
+ * @params {Object} config.apolloConfig
+ * @params {Object} options
+ * @params {Function} options.locationsContainer Optional function to create locations for the project
+ * @params {Object} options.outputParams Optional
  * @params {Object} props Overrides the defaults. {user: {id}} is required
  * @params {Object} props.user
  * @params {Number} props.user.id Required
  * @return {Object} {data: project: {...}}
  */
-export const createSampleProjectContainer = (apolloConfig, {locationsContainer}, props) => {
+export const createSampleProjectContainer = (apolloConfig, {outputParams, locationsContainer}, props) => {
   const now = moment().format('HH-mm-ss-SSS');
   return composeWithComponentMaybeOrTaskChain([
-    locations => {
+    locationResponses => {
       return makeProjectMutationContainer(
         apolloConfig,
-        {outputParams: projectOutputParams},
+        {outputParams: outputParams || projectOutputParams},
         mergeDeep(
           {
             key: `downtownPincher${now}`,
@@ -62,7 +69,7 @@ export const createSampleProjectContainer = (apolloConfig, {locationsContainer},
             },
             // locations from locationsContainer. Will be overridden by props.locations
             // if the latter is specified
-            locations,
+            locations: locationResponses.responses,
             data: {
               // Limits the possible locations by query
               locations: {
@@ -87,11 +94,19 @@ export const createSampleProjectContainer = (apolloConfig, {locationsContainer},
     },
 
     // Create sample locations (optional)
-    () => {
+    props => {
       return R.ifElse(
         R.identity,
-        f => f(apolloConfig, {}, {}),
-        () => of([])
+        f => f(apolloConfig, {}, R.pick(['render'], props)),
+        () => {
+          containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: {responses: []}
+            }
+          );
+        }
       )(locationsContainer);
     },
     // Delete all projects of this user
@@ -107,11 +122,13 @@ export const createSampleProjectContainer = (apolloConfig, {locationsContainer},
           mutateContainer: makeProjectMutationContainer,
           responsePath: 'data.mutate.project'
         },
-        {
-          user: {
-            id: reqStrPathThrowing('user.id', props)
-          }
-        }
+        R.merge({
+            user: {
+              id: reqStrPathThrowing('user.id', props)
+            }
+          },
+          compact({render: R.prop('render', props)})
+        )
       );
     }
   ])(props);
@@ -126,52 +143,58 @@ export const createSampleProjectContainer = (apolloConfig, {locationsContainer},
  * @return Task resolving to a list of 10 projects
  */
 export const createSampleProjectsContainer = v((apolloConfig, props) => {
-  return composeWithChain([
-      ({props}) => traverseReduce(
-        (projects, project) => {
-          return R.concat(projects, [reqStrPathThrowing('data.createProject.project', project)]);
-        },
-        of([]),
-        R.times(() => {
-          return composeWithChain([
-            () => {
-              return createSampleProjectContainer(apolloConfig, {locationsContainer: createSampleLocationsContainer}, {
-                  key: `test${moment().format('HH-mm-ss-SSS')}`,
-                  user: {
-                    id: reqStrPathThrowing('user.id', props)
-                  }
-                }
+  return composeWithComponentMaybeOrTaskChain([
+      response => {
+        return callMutationNTimesAndConcatResponses(
+          apolloConfig,
+          {
+            count: 10,
+            mutationContainer: (apolloConfig, options, props) => {
+              return createSampleProjectContainer(
+                apolloConfig,
+                R.merge(
+                  options,
+                  {locationsContainer: createSampleLocationsContainer}
+                ),
+                props
               );
             },
-            () => fromPromised(() => new Promise(r => setTimeout(r, 100)))()
-          ])();
-        }, 10)
-      ),
-      mapToNamedResponseAndInputs('deleted',
-        ({props}) => {
-          // Delete existing test projects for the test user
-          return queryAndDeleteIfFoundContainer(
-            apolloConfig,
-            {
-              queryName: 'projects',
-              queryContainer: makeProjectsQueryContainer(
-                {apolloConfig},
-                {outputParams: projectOutputParams}
-              ),
-              mutateContainer: makeProjectMutationContainer,
-              responsePath: 'data.mutate.project'
-            },
-            {
-              keyContains: 'test',
-              user: {
-                id: reqStrPathThrowing('user.id', props)
-              }
+            responsePath: 'data.createProject.project',
+            propVariationFunc: props => {
+              return {
+                key: `test${moment().format('HH-mm-ss-SSS')}`,
+                user: {
+                  id: reqStrPathThrowing('user.id', props)
+                }
+              };
             }
-          );
-        }
-      )
+          },
+          props
+        );
+      },
+      props => {
+        // Delete existing test regions for the test user
+        return queryAndDeleteIfFoundContainer(
+          apolloConfig,
+          {
+            queryName: 'projects',
+            queryContainer: makeProjectsQueryContainer(
+              {apolloConfig},
+              {outputParams: projectOutputParams}
+            ),
+            mutateContainer: makeProjectMutationContainer,
+            responsePath: 'data.mutate.project'
+          },
+          {
+            keyContains: 'test',
+            user: {
+              id: reqStrPathThrowing('user.id', props)
+            }
+          }
+        );
+      }
     ]
-  )({props});
+  )(props);
 }, [
   ['apolloConfig', PropTypes.shape({}).isRequired],
   ['props', PropTypes.shape({

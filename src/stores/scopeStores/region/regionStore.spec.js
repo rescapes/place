@@ -14,7 +14,7 @@ import {
   expectKeysAtPath,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
-  reqStrPathThrowing
+  reqStrPathThrowing, strPathOr
 } from '@rescapes/ramda';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
@@ -73,28 +73,28 @@ describe('regionStore', () => {
     expect.assertions(4);
     const task = composeWithChain([
       mapToNamedResponseAndInputs('regionsPagedAll',
-        ({regions, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
+        ({regionResponses, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses.responses)};
           // Returns all 10 with 2 queries of pageSize 5
           return reqStrPathThrowing('queryRegionsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('regionsPaged',
-        ({regions, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
+        ({regionResponses, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses.responses)};
           // Returns 3 of the 10 regions on page 3
           return reqStrPathThrowing('queryRegionsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
         }
       ),
       mapToNamedResponseAndInputs('regionsMinimized',
-        ({regions, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
+        ({regionResponses, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses.responses)};
           return reqStrPathThrowing('queryRegionsMinimized', variations)(props);
         }
       ),
       mapToNamedResponseAndInputs('regionsFull',
-        ({regions, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), regions)};
+        ({regionResponses, variations}) => {
+          const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses.responses)};
           return reqStrPathThrowing('queryRegions', variations)(props);
         }
       ),
@@ -103,7 +103,7 @@ describe('regionStore', () => {
           return of(regionQueryVariationContainers({apolloConfig, regionConfig: {}}));
         }
       ),
-      mapToNamedResponseAndInputs('regions',
+      mapToNamedResponseAndInputs('regionResponses',
         ({apolloConfig, user}) => {
           return createSampleRegionsContainer(apolloConfig, {user});
         }
