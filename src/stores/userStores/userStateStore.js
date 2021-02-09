@@ -369,7 +369,8 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false
               return R.prop('userState', props);
             },
             skip: R.propOr(skip, 'option.skip', apolloConfig),
-            update: (store, response) => {
+            update: (store, {data, ...rest}) => {
+              const response = {result: {data}, ...rest}
               // Add mutate to response.data so we dont' have to guess if it's a create or udpate
               const userState = reqStrPathThrowing(
                 'result.data.mutate.userState',
