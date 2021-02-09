@@ -372,7 +372,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false
             update: (store, response) => {
               // Add mutate to response.data so we dont' have to guess if it's a create or udpate
               const userState = reqStrPathThrowing(
-                'data.mutate.userState',
+                'result.data.mutate.userState',
                 addMutateKeyToMutationResponse({silent: true}, response)
               );
               // Add the cache only values to the persisted settings
@@ -533,7 +533,7 @@ export const deleteScopeObjectsContainer = (
           {
             items: scopeObjsToDelete,
             mutationContainer: makeMutationRequestContainer,
-            responsePath: `data.mutate.${scopeName}`,
+            responsePath: `result.data.mutate.${scopeName}`,
             propVariationFunc: ({item}) => {
               return R.compose(
                 // And the deleted datetime

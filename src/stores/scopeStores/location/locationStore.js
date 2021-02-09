@@ -178,7 +178,7 @@ export const deleteLocationsContainer = (
           {
             items: locations,
             mutationContainer: makeLocationMutationContainer,
-            responsePath: 'data.mutate.location',
+            responsePath: 'result.data.mutate.location',
             outputParams: {id: 1, deleted: 1},
             propVariationFunc: ({item: location, props}) => {
               return R.compose(

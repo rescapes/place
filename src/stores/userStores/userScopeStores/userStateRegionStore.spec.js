@@ -212,7 +212,7 @@ describe('userRegionStore', () => {
         }
       ),
       // Save another test region
-      mapToNamedPathAndInputs('region', 'data.createRegion.region',
+      mapToNamedPathAndInputs('region', 'result.data.createRegion.region',
         ({apolloConfig}) => {
           return createSampleRegionContainer(apolloConfig, {
             key: regionKey,
@@ -222,7 +222,7 @@ describe('userRegionStore', () => {
       ),
       // Remove all the regions from the user state
       // Resolve the user state
-      mapToNamedPathAndInputs('userState', 'data.updateUserState.userState',
+      mapToNamedPathAndInputs('userState', 'result.data.updateUserState.userState',
         ({apolloConfig, userState}) => {
           return userStateMutationContainer(
             apolloConfig,
@@ -278,7 +278,7 @@ describe('userRegionStore', () => {
     )({}).run().listen(defaultRunConfig({
       onResolved:
         ({region, userState, undefinedUserRegion}) => {
-          expect(strPathOr(null, 'data.updateUserState.userState.data.userRegions.0.region.id', userState)).toEqual(region.id);
+          expect(strPathOr(null, 'result.data.updateUserState.userState.data.userRegions.0.region.id', userState)).toEqual(region.id);
           expect(R.propOr(false, 'skip', undefinedUserRegion)).toBeTruthy();
           done();
         }

@@ -211,7 +211,7 @@ describe('userStore', () => {
             R.pick(['id'], userState)
           );
         }),
-      mapToNamedPathAndInputs('user', 'data.updateUserState',
+      mapToNamedPathAndInputs('user', 'result.data.updateUserState',
         // Update the UserState with some cache only values
         // We'll set the project's isSelected cache only property
         ({apolloConfig, userState}) => {

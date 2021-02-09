@@ -201,7 +201,7 @@ describe('userProjectStore', () => {
         }
       ),
       // Modify the new project in the UserState
-      mapToNamedPathAndInputs('userState', 'data.mutate.userState',
+      mapToNamedPathAndInputs('userState', 'result.data.mutate.userState',
         ({apolloConfig, userState, project}) => {
           return userStateProjectMutationContainer(
             apolloConfig,
@@ -235,7 +235,7 @@ describe('userProjectStore', () => {
         }
       ),
       // Add the new project to the UserState
-      mapToNamedPathAndInputs('userState', 'data.mutate.userState',
+      mapToNamedPathAndInputs('userState', 'result.data.mutate.userState',
         ({apolloConfig, userState, project}) => {
           return userStateProjectMutationContainer(
             apolloConfig,
@@ -261,7 +261,7 @@ describe('userProjectStore', () => {
         }
       ),
       // Save another test project
-      mapToNamedPathAndInputs('project', 'data.createProject.project',
+      mapToNamedPathAndInputs('project', 'result.data.createProject.project',
         ({apolloConfig, userState}) => {
           return createSampleProjectContainer(apolloConfig,
             {locationsContainer: createSampleLocationsContainer},

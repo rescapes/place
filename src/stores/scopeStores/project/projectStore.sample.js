@@ -120,7 +120,7 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
             {outputParams: projectOutputParams}
           ),
           mutateContainer: makeProjectMutationContainer,
-          responsePath: 'data.mutate.project'
+          responsePath: 'result.data.mutate.project'
         },
         R.merge({
             user: {
@@ -159,7 +159,7 @@ export const createSampleProjectsContainer = v((apolloConfig, props) => {
                 props
               );
             },
-            responsePath: 'data.createProject.project',
+            responsePath: 'result.data.createProject.project',
             propVariationFunc: props => {
               return {
                 key: `test${moment().format('HH-mm-ss-SSS')}`,
@@ -183,7 +183,7 @@ export const createSampleProjectsContainer = v((apolloConfig, props) => {
               {outputParams: projectOutputParams}
             ),
             mutateContainer: makeProjectMutationContainer,
-            responsePath: 'data.mutate.project'
+            responsePath: 'result.data.mutate.project'
           },
           {
             keyContains: 'test',

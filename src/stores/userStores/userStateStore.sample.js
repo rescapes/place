@@ -53,7 +53,7 @@ import {addMutateKeyToMutationResponse} from '@rescapes/apollo/src/helpers/conta
 export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, user, regionKey, projectKey}) => {
   return composeWithChain([
     // Set the user state of the given user to the region and project
-    mapToNamedPathAndInputs('userState', 'data.mutate.userState',
+    mapToNamedPathAndInputs('userState', 'result.data.mutate.userState',
       ({apolloConfig, user, region, project}) => {
         return userStateMutationContainer(
           apolloConfig,
@@ -63,7 +63,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
       }
     ),
     // Create a sample project
-    mapToNamedPathAndInputs('project', 'data.mutate.project',
+    mapToNamedPathAndInputs('project', 'result.data.mutate.project',
       ({apolloConfig, user, userState}) => {
         return createSampleProjectContainer(apolloConfig,
           {locationsContainer: createSampleLocationsContainer},
@@ -77,7 +77,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
     ),
 
     // Create a sample region
-    mapToNamedPathAndInputs('region', 'data.mutate.region',
+    mapToNamedPathAndInputs('region', 'result.data.mutate.region',
       ({apolloConfig}) => {
         return createSampleRegionContainer(apolloConfig, {
           key: regionKey,
@@ -111,14 +111,14 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     // Wait for the userState to be ready for component request
     ({userStateResponse, user, regions, projects, render}) => {
       if (strPathOr(false, 'result.loading', userStateResponse) || !strPathOr(false, 'result.data', userStateResponse)) {
-        return e('div', 'loading');
+        return e('div', {}, 'loading');
       }
       return containerForApolloType(
         apolloConfig,
         {
           render: getRenderPropFunction({render}),
           response: {
-            userState: reqStrPathThrowing('data.mutate.userState',
+            userState: reqStrPathThrowing('result.data.mutate.userState',
               addMutateKeyToMutationResponse({silent: true}, userStateResponse.result)
             ),
             regions, projects
@@ -147,7 +147,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
             mutationContainer: (apolloConfig, {}, props) => {
               return createSampleProjectContainer(apolloConfig, {locationsContainer}, props);
             },
-            responsePath: 'data.mutate.project',
+            responsePath: 'result.data.mutate.project',
             propVariationFunc: ({item: projectKey}) => {
               return {
                 key: projectKey,
@@ -170,7 +170,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
           {
             items: regionKeys,
             mutationContainer: createSampleRegionContainer,
-            responsePath: 'data.mutate.region',
+            responsePath: 'result.data.mutate.region',
             propVariationFunc: ({item: regionKey}) => {
               return {
                 key: regionKey,
@@ -194,7 +194,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
               apolloConfig,
               {
                 render: getRenderPropFunction({render}),
-                response: []
+                response: {objects: []}
               }
             );
           }

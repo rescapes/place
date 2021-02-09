@@ -31,7 +31,7 @@ describe('projectStore', () => {
     expect.assertions(1);
     const errors = [];
     composeWithChain([
-      mapToNamedPathAndInputs('project', 'data.createProject.project',
+      mapToNamedPathAndInputs('project', 'result.data.createProject.project',
         ({apolloConfig, userId}) => createSampleProjectContainer(
           apolloConfig,
           {locationsContainer: createSampleLocationsContainer},

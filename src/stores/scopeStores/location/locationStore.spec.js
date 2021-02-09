@@ -113,7 +113,7 @@ describe('locationStore', () => {
     const errors = [];
     const now = moment().format('MMMM Do YYYY, h:mm:ss');
     composeWithChain([
-      mapToNamedPathAndInputs('location', 'data.createLocation.location',
+      mapToNamedPathAndInputs('location', 'result.data.createLocation.location',
         ({apolloConfig}) => createSampleLocationContainer(apolloConfig, {}, {key: `cool${now}`, name: `cool${now}`})
       ),
       mapToNamedResponseAndInputs('deleted',

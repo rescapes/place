@@ -63,7 +63,7 @@ export const createSampleLocationsContainer = v((apolloConfig, {count = 3}, prop
     {
       count,
       mutationContainer: createSampleLocationContainer,
-      responsePath: 'data.mutate.location',
+      responsePath: 'result.data.mutate.location',
       propVariationFunc: props => {
         const item = reqStrPathThrowing('item', props);
         return R.merge({

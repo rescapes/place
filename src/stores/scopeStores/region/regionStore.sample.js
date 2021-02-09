@@ -93,7 +93,7 @@ export const createSampleRegionsContainer = v((apolloConfig, props) => {
         {
           count: 10,
           mutationContainer: createSampleRegionContainer,
-          responsePath: 'data.createRegion.region',
+          responsePath: 'result.data.createRegion.region',
           propVariationFunc: props => {
             return {
               key: `test${moment().format('HH-mm-ss-SSS')}`
@@ -114,7 +114,7 @@ export const createSampleRegionsContainer = v((apolloConfig, props) => {
             {outputParams: regionOutputParams}
           ),
           mutateContainer: makeRegionMutationContainer,
-          responsePath: 'data.mutate.region'
+          responsePath: 'result.data.mutate.region'
         },
         {
           keyContains: 'test'

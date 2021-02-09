@@ -26,7 +26,7 @@ import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskCha
  * @param {Object} config
  * @param {String} config.queryName Used to find the query response objects
  * @param {Function} config.queryContainer Called with props
- * @param {String} config.responsePath path to return from each mutation (e.g. 'data.mutate.project')
+ * @param {String} config.responsePath path to return from each mutation (e.g. 'result.data.mutate.project')
  * @param {Function} config.mutateContainer Called with apolloConfig, {} (empty dict), and each props for result of queryContainer
  * in {data: [queryName]: [...]}
  * @param props
