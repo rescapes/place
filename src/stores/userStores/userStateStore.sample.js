@@ -119,7 +119,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
           render: getRenderPropFunction({render}),
           response: {
             userState: reqStrPathThrowing('result.data.mutate.userState',
-              addMutateKeyToMutationResponse({silent: true}, userStateResponse.result)
+              addMutateKeyToMutationResponse({silent: true}, userStateResponse)
             ),
             regions, projects
           }
