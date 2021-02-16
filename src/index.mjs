@@ -50,7 +50,6 @@ export {
   userStateOutputParamsOnlyIds,
   currentUserStateQueryContainer,
   userScopeOutputParamsFragmentDefaultOnlyIds,
-  deleteSampleUserStateScopeObjectsContainer,
   userStateOutputParamsFullMetaOnlyScopeIds
 } from './stores/userStores/userStateStore.js';
 
@@ -79,7 +78,8 @@ export {
   createUserProjectWithDefaults,
   createUserRegionWithDefaults,
   mutateSampleUserStateWithProjectAndRegionTask,
-  mutateSampleUserStateWithProjectsAndRegionsContainer
+  mutateSampleUserStateWithProjectsAndRegionsContainer,
+  deleteSampleUserStateScopeObjectsContainer,
 } from './stores/userStores/userStateStore.sample.js';
 
 export {queryVariationContainers, variationContainerAuthDependency} from './stores/helpers/variedRequestHelpers.js';

@@ -1,7 +1,6 @@
 import {testAuthTask} from '../../helpers/testHelpers.js';
 import moment from 'moment';
 import {
-  deleteSampleUserStateScopeObjectsContainer,
   currentUserStateQueryContainer,
   userStateOutputParamsFull
 } from '../userStores/userStateStore.js';
@@ -20,7 +19,10 @@ import T from 'folktale/concurrency/task/index.js';
 
 const {of} = T;
 import {expectKeys, currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
-import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample.js';
+import {
+  mutateSampleUserStateWithProjectsAndRegionsContainer,
+  deleteSampleUserStateScopeObjectsContainer
+} from '../../stores/userStores/userStateStore.sample.js';
 
 /**
  * Created by Andy Likuski on 2018.12.31
@@ -56,11 +58,12 @@ describe('mapboxStore', () => {
       mapToMergedResponseAndInputs(
         ({apolloConfig, user}) => {
           const now = moment().format('HH-mm-ss-SSS');
-          return mutateSampleUserStateWithProjectsAndRegionsContainer(apolloConfig, {
-            user,
-            regionKeys: [`testAntarctica${now}`],
-            projectKeys: [`testRefrost${now}`, `testPoleVault${now}`]
-          });
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig, {forceDelete: true}, {
+              user,
+              regionKeys: [`testAntarctica${now}`],
+              projectKeys: [`testRefrost${now}`, `testPoleVault${now}`]
+            });
         }
       ),
       // Get the current user if we didn't get a userState

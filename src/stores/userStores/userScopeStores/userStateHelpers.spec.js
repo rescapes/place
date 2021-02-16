@@ -123,7 +123,7 @@ describe('userStateHelpers', () => {
       mapToMergedResponseAndInputs(
       ({apolloConfig, user}) => {
         return mutateSampleUserStateWithProjectsAndRegionsContainer(
-          apolloConfig, {
+          apolloConfig, {forceDleete: true}, {
           user: R.pick(['id'], user),
           regionKeys: ['earth'],
           projectKeys: ['shrangrila', 'pangea']

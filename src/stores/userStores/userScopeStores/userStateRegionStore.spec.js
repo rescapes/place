@@ -26,13 +26,16 @@ import {
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
 import {
-  deleteSampleUserStateScopeObjectsContainer,
   currentUserStateQueryContainer,
   userStateMutationContainer,
   userStateMutateOutputParams,
   userStateOutputParamsOnlyIds
 } from '../userStateStore.js';
-import {createUserRegionWithDefaults, mutateSampleUserStateWithProjectAndRegionTask} from '../userStateStore.sample.js';
+import {
+  createUserRegionWithDefaults,
+  mutateSampleUserStateWithProjectAndRegionTask,
+  deleteSampleUserStateScopeObjectsContainer
+} from '../userStateStore.sample.js';
 import moment from 'moment';
 import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';

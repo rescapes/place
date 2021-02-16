@@ -27,14 +27,14 @@ import {
 import * as R from 'ramda';
 import {
   currentUserStateQueryContainer,
-  deleteSampleUserStateScopeObjectsContainer,
   userStateOutputParamsOnlyIds
 } from '../userStateStore.js';
 import moment from 'moment';
 import {
   createUserProjectWithDefaults,
   mutateSampleUserStateWithProjectAndRegionTask,
-  mutateSampleUserStateWithProjectsAndRegionsContainer
+  mutateSampleUserStateWithProjectsAndRegionsContainer,
+  deleteSampleUserStateScopeObjectsContainer
 } from '../userStateStore.sample.js';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample.js';
@@ -112,7 +112,7 @@ describe('userProjectStore', () => {
       mapToMergedResponseAndInputs(
         ({apolloConfig, user}) => {
           return mutateSampleUserStateWithProjectsAndRegionsContainer(
-            apolloConfig, {
+            apolloConfig, {forceDelete: true}, {
               user: R.pick(['id'], user),
               regionKeys: ['earth'],
               projectKeys: ['shrangrila', 'pangea']
