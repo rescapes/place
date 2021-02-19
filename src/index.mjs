@@ -79,7 +79,6 @@ export {
   createUserRegionWithDefaults,
   mutateSampleUserStateWithProjectAndRegionTask,
   mutateSampleUserStateWithProjectsAndRegionsContainer,
-  deleteSampleUserStateScopeObjectsContainer,
 } from './stores/userStores/userStateStore.sample.js';
 
 export {queryVariationContainers, variationContainerAuthDependency} from './stores/helpers/variedRequestHelpers.js';
