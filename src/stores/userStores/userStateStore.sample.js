@@ -24,7 +24,7 @@ import {e} from '@rescapes/helpers-component';
 import {
   userStateMutationContainer, userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateMutateOutputParams,
-  userStateOutputParamsFullMetaOnlyScopeIds, deleteProjectsContainer, deleteRegionsContainer
+  userStateOutputParamsFullMetaOnlyScopeIds
 } from './userStateStore.js';
 import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample.js';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample.js';
@@ -33,7 +33,7 @@ import T from 'folktale/concurrency/task/index.js';
 import {
   callMutationNTimesAndConcatResponses,
   composeWithComponentMaybeOrTaskChain, containerForApolloType, getRenderPropFunction,
-  mapTaskOrComponentToNamedResponseAndInputs
+  mapTaskOrComponentToNamedResponseAndInputs, mutateOnceAndWaitContainer
 } from '@rescapes/apollo';
 
 const {useEffect} = RT;
@@ -90,11 +90,8 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
 
 /***
  * Helper to create scope objects and set the user state to them
- * @param {Object} config.apolloConfig
  * @param {Object} apolloConfig
- * @param {Object} options
- * @param {Boolean} [options.forceDelete] Default true, if true, delete all the instances of locations,
- * regions, and projects matching the test props first. Then create new instances
+ * @param {Object} config
  * @param {Object} config.user A real user object
  * @param [{String}] config.regionKeys Region keys to use to make sample regions
  * @param [{String}] config.projectKeys Project keys to use to make sample projects
@@ -107,35 +104,19 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
  */
 export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   apolloConfig,
-  {forceDelete=true},
   {user, regionKeys, projectKeys, locationsContainer, render}
 ) => {
   return composeWithComponentMaybeOrTaskChain([
-
-    // Wait for the userState to be ready for component request
-    ({userStateResponse, user, regions, projects, render}) => {
-      if (strPathOr(false, 'result.loading', userStateResponse) || !strPathOr(false, 'result.data', userStateResponse)) {
-        return e('div', {}, 'loading');
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'sampleResponses',
+      ({userStateResponse, render}) => {
+        return mutateOnceAndWaitContainer(apolloConfig, {responsePath: 'result.data.mutate.userState'}, userStateResponse, render)
       }
-      return containerForApolloType(
-        apolloConfig,
-        {
-          render: getRenderPropFunction({render}),
-          response: {
-            userState: reqStrPathThrowing('result.data.mutate.userState',
-              addMutateKeyToMutationResponse({silent: true}, userStateResponse)
-            ),
-            regions, projects
-          }
-        }
-      );
-    },
-
+    ),
     // Set the user state of the given user to the region and project
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
       ({user, regions, projects, render}) => {
         return userStateMutationContainer(
-          R.merge(apolloConfig, {mutateOnMount: true}),
+          apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
           {userState: createSampleUserStateProps({user, regions, projects}), render}
         );
@@ -148,13 +129,6 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         return callMutationNTimesAndConcatResponses(
           apolloConfig, {
             items: projectKeys,
-            // If true, deletes all the instances matching forceDeleteMatchingProps before creating new instances
-            forceDelete,
-            forceDeleteMatchingProps: {
-              keysContains: projectKeys,
-              region: R.pick(['id'], R.head(regions)),
-              user: R.pick(['id'], user),
-            },
             mutationContainer: (apolloConfig, {}, props) => {
               return createSampleProjectContainer(apolloConfig, {locationsContainer}, props);
             },
@@ -179,11 +153,6 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         return callMutationNTimesAndConcatResponses(
           apolloConfig,
           {
-            // If true, deletes all the instances matching forceDeleteMatchingProps before creating new instances
-            forceDelete,
-            forceDeleteMatchingProps: {
-              keysContains: regionKeys,
-            },
             items: regionKeys,
             mutationContainer: createSampleRegionContainer,
             responsePath: 'result.data.mutate.region',
@@ -204,13 +173,13 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       ({locationsContainer, render}) => {
         return R.ifElse(
           R.identity,
-          f => f(apolloConfig, {forceDelete}, {render}),
+          f => f(apolloConfig, {}, {render}),
           () => {
             return containerForApolloType(
               apolloConfig,
               {
                 render: getRenderPropFunction({render}),
-                response: []
+                response: {objects: []}
               }
             );
           }
@@ -315,88 +284,4 @@ const createSampleUserStateProps = ({user, regions, projects}) => {
       )
     }
   };
-};
-
-
-/***
- * Deletes the scope instances created by mutateSampleUserStateWithProjectAndRegionTask,
- * both the references in userState and the instances themselves
- * @param {Object} config
- * @param {Object} config.apolloConfig
- * @param {Object} options
- * @param {Boolean} options.forceDelete If true delete the samples created by previous runs first
- * @param {Object} props
- * @param {Object} props.userState
- * @param {Object} props.scopeProps Keyed by 'region' and 'project'. Values are search props for
- * regions and projects of the userState to remove.
- * @param {Object} [props.render] The render function for component requests
- * E.g. {region: {keyContains: 'test'}, project: {keyContains: 'test'}}
- * @return {*}
- */
-export const deleteSampleUserStateScopeObjectsContainer = (apolloConfig, {forceDelete}, {userState, scopeProps, render}) => {
-  return composeWithComponentMaybeOrTaskChain([
-    ({userState, deletedRegionsResponse, deletedProjectsResponse}) => {
-      return containerForApolloType(
-        apolloConfig,
-        {
-          render: getRenderPropFunction({render}),
-          // Override the data with the consolidated mapbox
-          response: {userState, deletedRegionsResponse, deletedProjectsResponse}
-        }
-      );
-    },
-    // clearedScopeObjsUserState is the userState with the regions cleared
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedProjectsResponse',
-      ({userState, deletedRegions, clearedScopeObjsUserState}) => {
-        const user = reqStrPathThrowing('user', userState);
-        return R.ifElse(
-          R.identity,
-          project => {
-            return deleteProjectsContainer(
-              apolloConfig,
-              {
-                // Only allow deleting projects owned by userState.user
-                // Also Clear the userState of these projects
-                userState
-              },
-              R.merge(
-                project,
-                // Only allow deleting projects owned by this user
-                {user: R.pick(['id'], user)}
-              )
-            );
-          },
-          _ => {
-            return containerForApolloType(
-              apolloConfig,
-              {
-                render: getRenderPropFunction({render}),
-                // Override the data with the consolidated mapbox
-                response: {clearedScopeObjsUserState}
-              }
-            );
-          }
-        )(strPathOr(null, 'project', scopeProps));
-      }),
-
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedRegionsResponse',
-      ({userState}) => {
-        return R.ifElse(
-          R.identity,
-          region => {
-            return deleteRegionsContainer(apolloConfig, {}, {userState, scopeProps: region, render});
-          },
-          _ => {
-            return containerForApolloType(
-              apolloConfig,
-              {
-                render: getRenderPropFunction({render}),
-                // Override the data with the consolidated mapbox
-                response: {clearedScopeObjsUserState: {data: {mutate: {userState}}}}
-              }
-            );
-          }
-        )(strPathOr(null, 'region', scopeProps));
-      })
-  ])({userState, render});
 };

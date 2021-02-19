@@ -159,7 +159,7 @@ export const variationContainerAuthDependency = (apolloConfig, authenticationPat
             apolloConfig,
             {
               render: getRenderPropFunction(props),
-              response: null
+              response: props
             }
           );
         }
