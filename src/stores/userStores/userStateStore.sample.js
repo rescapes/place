@@ -107,7 +107,8 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   {user, regionKeys, projectKeys, locationsContainer, render}
 ) => {
   return composeWithComponentMaybeOrTaskChain([
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'sampleResponses',
+    // This creates one userState and puts it in userStates
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStates',
       ({userStateResponse, render}) => {
         return mutateOnceAndWaitContainer(apolloConfig, {responsePath: 'result.data.mutate.userState'}, userStateResponse, render)
       }
