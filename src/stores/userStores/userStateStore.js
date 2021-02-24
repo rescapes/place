@@ -361,7 +361,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
     ...rest
   }) => {
     return makeMutationRequestContainer(
-      R.merge(
+      mergeDeep(
         apolloConfig,
         {
           // Skip if passed in or in apolloConfig
@@ -369,10 +369,9 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
             variables: props => {
               return R.prop('userState', props);
             },
-            skip: R.propOr(skip, 'option.skip', apolloConfig),
             update: (store, {data, ...rest}) => {
               const response = {result: {data}, ...rest}
-              // Add mutate to response.data so we dont' have to guess if it's a create or udpate
+              // Add mutate to response.data so we dont' have to guess if it's a create or update
               const userState = reqStrPathThrowing(
                 'result.data.mutate.userState',
                 addMutateKeyToMutationResponse({silent: true}, response)

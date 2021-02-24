@@ -257,7 +257,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
     if (!userScope) {
       return userStateMutationContainer(
         // Skip if we don't have the variable ready
-        R.set(R.lensPath(['options', 'skip']), () => true, apolloConfig),
+        R.set(R.lensPath(['options', 'skip']), true, apolloConfig),
         {
           outputParams: userStateOutputParamsCreator(
             userScopeOutputParams
