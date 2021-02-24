@@ -344,10 +344,10 @@ export const normalizeUserStatePropsForMutating = userState => {
  * TODO: There is currently no way to prevent deleting regions that do not belong to the user
  * This will be fixed when Region ownership permissions are set up
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
+ * @param {Object} apolloConfig.options
+ * @param {Boolean} apolloConfig.options.skip Set true to skip the mutation or disable the ability
+ * to call mutation (for component) when the props aren't ready
  * @param {Object} mutationConfig
- * @param {Boolean} [mutationConfig.skip] Default false, For components, if true the mutation isn't ready to run.
- * Neuter the mutation function that is produced and warn if it's run. Also return skip=true to
- * along with the mutation and result object in the component
  * @param [Object] mutationConfig.outputParams OutputParams for the query of the mutation
  * @param {Object} props Object matching the shape of a userState for the create or update
  * @param {Object} props.userState Object matching the shape of a userState for the create or update
@@ -355,9 +355,10 @@ export const normalizeUserStatePropsForMutating = userState => {
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false, outputParams}, {
+export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, {
     userState,
-    render
+    render,
+    ...rest
   }) => {
     return makeMutationRequestContainer(
       R.merge(
@@ -406,7 +407,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {skip = false
         name: 'userState',
         outputParams
       },
-      {userState: normalizeUserStatePropsForMutating(userState), render}
+      {userState: normalizeUserStatePropsForMutating(userState), render, ...rest}
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],
