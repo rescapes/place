@@ -325,7 +325,6 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
               skip => skip || R.complement(R.propOr)(false, 'data', userScopeObjsResponse),
               apolloConfig
             ),
-            apolloConfig,
             {
               outputParams: userStateOutputParamsCreator(
                 userScopeOutputParams

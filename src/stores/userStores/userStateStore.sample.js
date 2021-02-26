@@ -180,7 +180,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
               apolloConfig,
               {
                 render: getRenderPropFunction({render}),
-                response: {objects: []}
+                response: []
               }
             );
           }
