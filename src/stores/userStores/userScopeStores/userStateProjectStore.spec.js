@@ -34,14 +34,17 @@ import {
   createUserProjectWithDefaults,
   mutateSampleUserStateWithProjectAndRegionTask,
   mutateSampleUserStateWithProjectsAndRegionsContainer,
-  deleteSampleUserStateScopeObjectsContainer
 } from '../userStateStore.sample.js';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample.js';
 import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsFragment} from '../activityStore.js';
-import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
-import {projectOutputParamsMinimized} from '../../scopeStores/project/projectStore.js';
+import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
+import {
+  makeProjectMutationContainer,
+  makeProjectsQueryContainer,
+  projectOutputParamsMinimized
+} from '../../scopeStores/project/projectStore.js';
 import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample.js';
 
 describe('userProjectStore', () => {
@@ -276,18 +279,25 @@ describe('userProjectStore', () => {
       // Remove all the projects from the user state
       // Resolve the user state
       mapToMergedResponseAndInputs(
-        ({apolloConfig, userState}) => {
-          return deleteSampleUserStateScopeObjectsContainer(
-            apolloConfig, {}, {
-              userState,
-              scopeProps: {
-                project: {
-                  // Remove all projects
-                  keyContains: ''
-                }
-              }
-            }
-          );
+        ({apolloConfig, existingItemResponses}) => {
+          return deleteItemsOfExistingResponses(
+            apolloConfig, {
+            queryResponsePath: 'data.projects',
+            forceDelete: true,
+            mutationContainer: makeProjectMutationContainer,
+            responsePath: 'result.data.mutate.project',
+            propVariationFuncForDeleted:  ({item}) => {
+              return {project: {id: item.id, deleted: moment().toISOString(true)}};
+            },
+            outputParams: {id: 1, deleted: 1}
+        },
+        {existingItemResponses}
+            )
+        }
+      ),
+      mapToNamedResponseAndInputs('existingItemResponses',
+        ({apolloConfig, user}) => {
+          return makeProjectsQueryContainer({apolloConfig}, {outputParams: {id: 1}}, {user: {id: user.id}})
         }
       ),
       // Resolve the user state

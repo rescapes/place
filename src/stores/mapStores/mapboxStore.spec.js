@@ -1,7 +1,7 @@
 import {testAuthTask} from '../../helpers/testHelpers.js';
 import moment from 'moment';
 import {
-  currentUserStateQueryContainer,
+  currentUserStateQueryContainer, userStateMutationContainer,
   userStateOutputParamsFull
 } from '../userStores/userStateStore.js';
 import {makeMapboxQueryContainer} from '../mapStores/mapboxStore.js';
@@ -18,11 +18,16 @@ import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings.js';
 import T from 'folktale/concurrency/task/index.js';
 
 const {of} = T;
-import {expectKeys, currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {
-  mutateSampleUserStateWithProjectsAndRegionsContainer,
-  deleteSampleUserStateScopeObjectsContainer
+  expectKeys,
+  currentUserQueryContainer,
+  userOutputParams,
+  deleteItemsOfExistingResponses
+} from '@rescapes/apollo';
+import {
+  mutateSampleUserStateWithProjectsAndRegionsContainer
 } from '../../stores/userStores/userStateStore.sample.js';
+import {makeProjectMutationContainer} from '../scopeStores/project/projectStore';
 
 /**
  * Created by Andy Likuski on 2018.12.31
@@ -75,29 +80,32 @@ describe('mapboxStore', () => {
         )(userState)
       ),
       mapToNamedResponseAndInputs('void',
-        ({apolloConfig, userStateResponse}) => {
-          const userState = strPathOr(null, 'data.userStates.0', userStateResponse);
+        ({apolloConfig, userStateResponses}) => {
           return R.ifElse(
             R.identity,
-            userState => deleteSampleUserStateScopeObjectsContainer(
-              apolloConfig, {}, {
-                userState,
-                scopeParams: {
-                  project: {
-                    keyContains: 'testRefrost'
+            userStateResponses => {
+              return deleteItemsOfExistingResponses(
+                apolloConfig, {
+                  queryResponsePath: 'data.userStates',
+                  forceDelete: true,
+                  mutationContainer: userStateMutationContainer,
+                  responsePath: 'result.data.mutate.userState',
+                  propVariationFuncForDeleted:  ({item}) => {
+                    return {project: {keyContains: 'testRefrost'},  region: {
+                      keyContains: 'testAntarctica'
+                    }}
                   },
-                  region: {
-                    keyContains: 'testAntarctica'
-                  }
-                }
-              }
-            ),
+                  outputParams: {id: 1, deleted: 1}
+                },
+                {existingItemResponses: userStateResponses}
+              )
+            },
             () => of({})
-          )(userState);
+          )(userStateResponses);
         }),
 
       // Get the current user state
-      mapToNamedResponseAndInputs('userStateResponse',
+      mapToNamedResponseAndInputs('userStateResponses',
         ({apolloConfig}) => currentUserStateQueryContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFull()},

@@ -9,38 +9,20 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {
-  capitalize,
-  composeWithChain,
-  mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs,
-  mapWithArgToPath,
-  strPathOr,
-  compact,
-  reqStrPathThrowing
-} from '@rescapes/ramda';
-import RT from 'react';
-import {e} from '@rescapes/helpers-component';
-import {
-  userStateMutationContainer, userScopeOutputParamsFragmentDefaultOnlyIds,
-  userStateMutateOutputParams,
-  userStateOutputParamsFullMetaOnlyScopeIds
-} from './userStateStore.js';
+import {capitalize, composeWithChain, mapToNamedPathAndInputs, reqStrPathThrowing} from '@rescapes/ramda';
+import {userStateMutationContainer, userStateOutputParamsFullMetaOnlyScopeIds} from './userStateStore.js';
 import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample.js';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample.js';
 import * as R from 'ramda';
-import T from 'folktale/concurrency/task/index.js';
 import {
   callMutationNTimesAndConcatResponses,
-  composeWithComponentMaybeOrTaskChain, containerForApolloType, getRenderPropFunction,
-  mapTaskOrComponentToNamedResponseAndInputs, mutateOnceAndWaitContainer
+  composeWithComponentMaybeOrTaskChain,
+  containerForApolloType,
+  getRenderPropFunction,
+  mapTaskOrComponentToNamedResponseAndInputs,
+  mutateOnceAndWaitContainer
 } from '@rescapes/apollo';
-
-const {useEffect} = RT;
-const {of} = T;
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
-import {addMutateKeyToMutationResponse} from '@rescapes/apollo/src/helpers/containerHelpers';
-
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -58,7 +40,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
         return userStateMutationContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
-          {userStateResponse: createSampleUserStateProps({user, regions: [region], projects: [project]})}
+          {userState: createSampleUserStateProps({user, regions: [region], projects: [project]})}
         );
       }
     ),
@@ -104,6 +86,7 @@ export const mutateSampleUserStateWithProjectAndRegionTask = ({apolloConfig, use
  */
 export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   apolloConfig,
+  {forceDelete},
   {user, regionKeys, projectKeys, locationsContainer, render}
 ) => {
   return composeWithComponentMaybeOrTaskChain([

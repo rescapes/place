@@ -33,12 +33,11 @@ import {
 } from '../userStateStore.js';
 import {
   createUserRegionWithDefaults,
-  mutateSampleUserStateWithProjectAndRegionTask,
-  deleteSampleUserStateScopeObjectsContainer
+  mutateSampleUserStateWithProjectAndRegionTask
 } from '../userStateStore.sample.js';
 import moment from 'moment';
 import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample.js';
-import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
+import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
 import {regionOutputParamsMinimized} from '../../scopeStores/region/regionStore.js';
 
 describe('userRegionStore', () => {
@@ -246,26 +245,27 @@ describe('userRegionStore', () => {
         });
       },
       mapToMergedResponseAndInputs(
-        ({apolloConfig, userState}) => {
-          return deleteSampleUserStateScopeObjectsContainer(
-            apolloConfig, {},
-            {
-              userState,
-              scopeProps: {
-                region: {
-                  keyContains: 'test'
-                },
-                project: {
-                  keyContains: 'test'
-                }
-              }
-            }
+        ({apolloConfig, userStateResponses}) => {
+          return deleteItemsOfExistingResponses(
+            apolloConfig, {
+              queryResponsePath: 'data.userStates',
+              forceDelete: true,
+              mutationContainer: userStateMutationContainer,
+              responsePath: 'result.data.mutate.userState',
+              propVariationFuncForDeleted: ({item}) => {
+                return {
+                  userState: R.pick(['id'], item)
+                };
+              },
+              outputParams: {id: 1, deleted: 1}
+            },
+            {existingItemResponses: userStateResponses}
           );
         }
       ),
 
       // Resolve the user state
-      mapToNamedPathAndInputs('userState', 'data.userStates.0',
+      mapToNamedResponseAndInputs('userStateResponses',
         ({apolloConfig}) => {
           return currentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
         }
