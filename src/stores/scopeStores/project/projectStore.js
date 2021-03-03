@@ -22,6 +22,7 @@ import {
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams.js';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
+import {strPathOr} from '@rescapes/ramda';
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [
@@ -99,32 +100,26 @@ export const normalizeProjectPropsForQuerying = project => {
 
 /**
  * Queries projects
- * @params {Object} config
- * @params {Object} config.apolloConfig The Apollo config. See makeQueryContainer for options
- * @params {Object} config.regionConfig. Currently unused
+ * @params {Object} apolloConfig The Apollo config. See makeQueryContainer for options
  * @param {Object} apolloClient An authorized Apollo Client
  * @params {Object} queryConfig
  * @params {Object} queryConfig.outputParams OutputParams for the query such as projectOutputParams
  * @params {Object} props Arguments for the Projects query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Projects in an object with obj.data.projects or errors in obj.errors
  */
-export const makeProjectsQueryContainer = v(R.curry(({apolloConfig, regionConfig}, {outputParams}, props) => {
+export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeQueryContainer(
-      composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeProjectPropsForQuerying),
+      composeFuncAtPathIntoApolloConfig(
+        apolloConfig,
+        'options.variables',
+        normalizeProjectPropsForQuerying
+      ),
       {name: 'projects', readInputTypeMapper: projectReadInputTypeMapper, outputParams},
       props
     );
   }),
   [
-    ['config', PropTypes.shape(
-      {
-        apolloConfig: PropTypes.shape().isRequired
-      },
-      {
-        regionConfig: PropTypes.shape()
-      }
-    ).isRequired
-    ],
+    ['apolloConfig', PropTypes.shape().isRequired],
     ['queryConfig', PropTypes.shape({
       outputParams: PropTypes.shape().isRequired
     })],
@@ -191,16 +186,29 @@ export const makeProjectMutationContainer = v(R.curry((
 ], 'makeProjectMutationContainer');
 
 /**
- * Returns and object with different versions of the project query container: 'minimized', 'paginated', 'paginatedAll'
+ * Returns an object with different versions of the project query container: 'minimized', 'paginated', 'paginatedAll'
+ * with only one potentially skip: false based on the prop value of projectQueryKey.
+ * The prop user or userState.user must also exist to avoid skipping all.
  * @param apolloConfig
  * @return {Object} keyed by the variation: 'projects', 'projectsMinimized', 'projectsPaginated', 'projectsPaginatedAll',
  * valued by the query container
  */
-export const projectQueryVariationContainers = ({apolloConfig, regionConfig: {}}) => {
+export const projectQueryVariationContainers = apolloConfig => {
   return queryVariationContainers(
-    {apolloConfig, regionConfig: {}},
+    apolloConfig,
     {
       name: 'project',
+      // Only allow the query matching the value of props.projectQueryKey so we never run multiple
+      // query variations. This allows us to dynamically change which query we use, so that if
+      // we expect a large list we can page, or if we need to minimize or maximize outputParams
+      allowRequestProp: 'projectQueryKey',
+      // Skip any query unless we are authorized
+      authRequestFilter: props => {
+        return R.anyPass([
+          R.prop('user'),
+          strPathOr(false, 'userState.user')
+        ])(props);
+      },
       requestTypes: [
         {},
         {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},

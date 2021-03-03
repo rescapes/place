@@ -100,7 +100,7 @@ describe('regionStore', () => {
       ),
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
-          return of(regionQueryVariationContainers({apolloConfig, regionConfig: {}}));
+          return of(regionQueryVariationContainers(apolloConfig));
         }
       ),
       mapToNamedResponseAndInputs('regionResponses',

@@ -73,7 +73,7 @@ describe('locationStore', () => {
       ),
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
-          return of(locationQueryVariationContainers({apolloConfig, regionConfig: {}}));
+          return of(locationQueryVariationContainers(apolloConfig));
         }
       ),
       mapToNamedResponseAndInputs('locations',

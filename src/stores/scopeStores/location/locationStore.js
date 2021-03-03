@@ -42,15 +42,13 @@ export const locationReadInputTypeMapper = createReadInputTypeMapper(
 
 /**
  * Chained Task to query locations and return locations and the queryParams
- * @param {Object} config
- * @param {Object} config.apolloConfig The Apollo config
- * @param {Object} [config.regionConfig] Not currently used
+ * @param {Object} apolloConfig The Apollo config
  * @param {Object} queryStructure.outputParams The output params of the query
  * @param {Object} props The props for the query
  * @return {Task|Maybe} A task or Maybe containing the locations and the queryParams
  */
 export const queryLocationsContainer = v(R.curry(
-  ({apolloConfig, regionConfig}, {outputParams}, props) => {
+  (apolloConfig, {outputParams}, props) => {
     // TODO this has to support components. Move the two steps below to the server to make it easy
     return makeQueryContainer(
       apolloConfig,
@@ -64,14 +62,7 @@ export const queryLocationsContainer = v(R.curry(
     );
   }),
   [
-    ['config', PropTypes.shape(
-      {
-        apolloConfig: PropTypes.shape().isRequired
-      },
-      {
-        regionConfig: PropTypes.shape()
-      }
-    ).isRequired
+    ['apolloConfig', PropTypes.shape().isRequired
     ],
     ['queryStructure', PropTypes.shape({
       outputParams: PropTypes.shape.isRequired
@@ -128,9 +119,9 @@ export const makeLocationMutationContainer = v(R.curry(
  * @param configapolloConfig
  * @return {Object} keyed by the variation, valued by the query container
  */
-export const locationQueryVariationContainers = ({apolloConfig, regionConfig: {}}) => {
+export const locationQueryVariationContainers = (apolloConfig) => {
   return queryVariationContainers(
-    {apolloConfig, regionConfig: {}},
+    apolloConfig,
     {
       name: 'location',
       requestTypes: [

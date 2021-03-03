@@ -10,7 +10,7 @@
  */
 import * as R from 'ramda';
 import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers.js';
-import {capitalize, strPathOr} from '@rescapes/ramda';
+import {capitalize, mergeDeep, strPathOr} from '@rescapes/ramda';
 import {
   composeFuncAtPathIntoApolloConfig,
   containerForApolloType,
@@ -41,18 +41,27 @@ import {
  * }
  * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
  * passed to the query. Defaults to passing all of them
+ * @param {String} queryConfig.allowRequestProp The prop to check for a string match of key of the query that should not be skipped.
+ * This makes all queries inactive except 0 or 1, since there's no reason to use two variations of query at the same time.
+ * If there ever was we could make allowRequestProp match a prop that could be a list of strings.
+ * Note that if queryContainer defines it's own skip, it should be set up to OR the skip passed in by queryVariationContainers
+ * @param {Function} [queryConfig.authRequestFilter] If specified accepts props and returns true
+ * if the queries are authorized to run, otherwise all queries are skipped. Note again that if queryContainer
+ * defines it's own skip, it should be set up to OR the skip passed in by queryVariationContainers
  * @param {Object} props
  * @returns {Object} keyed by query names, e.g. queryFoos, queryFoosPaginated, queryFoosMinimized, valued by
  * the query container
  */
 export const queryVariationContainers = R.curry((
-  {apolloConfig, regionConfig},
+  apolloConfig,
   {
     name,
     requestTypes,
     queryConfig,
     queryContainer,
-    normalizeProps = R.identity
+    normalizeProps = R.identity,
+    allowRequestProp,
+    authRequestFilter
   }
 ) => {
   return R.fromPairs(R.map(
@@ -62,20 +71,30 @@ export const queryVariationContainers = R.curry((
       return [
         key,
         props => {
+          // Skip if our skipFilter returns true or authRequestFilter returns false
+          const skip = R.anyPass([
+            props => R.complement(R.propEq)(allowRequestProp, key)(props),
+            // If apolloConfig.options.skip is defined, test it
+            props => strPathOr(R.always(false), 'options.skip', apolloConfig)(props),
+            props => (R.complement(authRequestFilter || R.always(true)))(props)
+          ])(props);
+          // Update apolloConfig so that props.objects are passed to the optional options.variables function
+          const _apolloConfig = mergeDeep(
+            composeFuncAtPathIntoApolloConfig(
+              apolloConfig,
+              'options.variables',
+              normalizeProps
+            ),
+            // Merge skip into options
+            {options: {skip}}
+          )
+
           return R.cond([
             // Queries for one page at a time
             [R.equals('paginated'),
               () => {
                 return queryPageContainer(
-                  // Update apolloConfig so that props.objects are passed to the optional options.variables function
-                  {
-                    apolloConfig: composeFuncAtPathIntoApolloConfig(
-                      apolloConfig,
-                      'options.variables',
-                      normalizeProps
-                    ),
-                    regionConfig: regionConfig || {}
-                  },
+                  _apolloConfig,
                   R.omit(['readInputTypeMapper'],
                     R.mergeAll([
                       // Defaults
@@ -97,10 +116,7 @@ export const queryVariationContainers = R.curry((
             [R.equals('paginatedAll'),
               () => {
                 return queryUsingPaginationContainer(
-                  {
-                    apolloConfig: composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeProps),
-                    regionConfig: regionConfig || {}
-                  },
+                  _apolloConfig,
                   R.omit(['readInputTypeMapper'],
                     R.mergeAll([
                         // Defaults
@@ -124,10 +140,7 @@ export const queryVariationContainers = R.curry((
               () => {
                 // Perform the normal query
                 return queryContainer(
-                  {
-                    apolloConfig: composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeProps),
-                    regionConfig
-                  },
+                  _apolloConfig,
                   R.mergeAll([queryConfig, args]),
                   props
                 );

@@ -83,14 +83,12 @@ const normalizeRegionPropsForQuerying = region => {
 
 /**
  * Queries regions
- * @params {Object} config
- * @params {Object} config.apolloConfig The Apollo config. See makeQueryContainer for options
- * @params {Object} config.regionConfig Not currently used
+ * @params {Object} apolloConfig The Apollo config. See makeQueryContainer for options
  * @params {Object} outputParams OutputParams for the query such as regionOutputParams
  * @params {Object} props Arguments for the Regions query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
-export const makeRegionsQueryContainer = v(R.curry(({apolloConfig, regionConfig}, {outputParams}, props) => {
+export const makeRegionsQueryContainer = v(R.curry((apolloConfig , {outputParams}, props) => {
     return makeQueryContainer(
       composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeRegionPropsForQuerying),
       {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams},
@@ -98,12 +96,7 @@ export const makeRegionsQueryContainer = v(R.curry(({apolloConfig, regionConfig}
     );
   }),
   [
-    ['config', PropTypes.shape(
-      {
-        apolloConfig: PropTypes.shape().isRequired,
-        regionConfig: PropTypes.shape()
-      }).isRequired
-    ],
+    ['apolloConfig', PropTypes.shape()],
     ['queryStructure', PropTypes.shape({
       outputParams: PropTypes.shape().isRequired
     })],
@@ -177,9 +170,9 @@ export const makeRegionMutationContainer = v(R.curry(
  * @param apolloConfig
  * @return {Object} keyed by the variation, valued by the query container
  */
-export const regionQueryVariationContainers = ({apolloConfig, regionConfig: {}}) => {
+export const regionQueryVariationContainers = (apolloConfig) => {
   return queryVariationContainers(
-    {apolloConfig, regionConfig: {}},
+    apolloConfig,
     {
       name: 'region',
       requestTypes: [

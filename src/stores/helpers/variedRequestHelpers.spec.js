@@ -26,7 +26,8 @@ import {testAuthTask} from '../../helpers/testHelpers.js';
 import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample.js';
 import {projectReadInputTypeMapper} from '../scopeStores/project/projectStore.js';
 import T from 'folktale/concurrency/task/index.js';
-const {of} = T
+
+const {of} = T;
 import * as R from 'ramda';
 
 describe('variedRequestHelpers', () => {
@@ -69,19 +70,17 @@ describe('variedRequestHelpers', () => {
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
           return of(queryVariationContainers(
-            {
-              apolloConfig: R.merge(apolloConfig, {
-                  options: {
-                    variables: props => {
-                      // Search by whatever props are passed into locationFilter
-                      return R.propOr(null, 'projectFilter', props);
-                    },
-                    errorPolicy: 'all',
-                    partialRefetch: true
-                  }
+            R.merge(apolloConfig, {
+                options: {
+                  variables: props => {
+                    // Search by whatever props are passed into locationFilter
+                    return R.propOr(null, 'projectFilter', props);
+                  },
+                  errorPolicy: 'all',
+                  partialRefetch: true
                 }
-              ), regionConfig: {}
-            },
+              }
+            ),
             {
               name: 'project',
               requestTypes: [

@@ -28,7 +28,7 @@ describe('pagedRequestHelpers', () => {
     const task = composeWithChain([
       ({apolloConfig, projects}) => {
         return queryUsingPaginationContainer(
-          {apolloConfig, regionConfig: {}},
+          apolloConfig,
           {
             typeName: 'project',
             name: 'projectsPaginated',
@@ -72,13 +72,12 @@ describe('pagedRequestHelpers', () => {
       mapToNamedResponseAndInputs('projectsPagedSkipped2',
         ({apolloConfig, projects}) => {
           return queryPageContainer(
-            {apolloConfig, regionConfig: {}},
+            apolloConfig,
             {
               pageSize,
               // No page argument, so skip
               typeName: 'project',
               name: 'projectsPaginated',
-              filterObjsByConfig: ({regionConfig}, objs) => objs,
               outputParams: projectOutputParams,
               normalizeProps: props => {
                 return props;
@@ -91,13 +90,12 @@ describe('pagedRequestHelpers', () => {
       mapToNamedResponseAndInputs('projectsPagedSkipped',
         ({apolloConfig, projects}) => {
           return queryPageContainer(
-            {apolloConfig: mergeDeep(apolloConfig, {options: {skip: true}}), regionConfig: {}},
+            mergeDeep(apolloConfig, {options: {skip: true}}),
             {
               pageSize,
               page: 10,
               typeName: 'project',
               name: 'projectsPaginated',
-              filterObjsByConfig: ({regionConfig}, objs) => objs,
               outputParams: projectOutputParams,
               normalizeProps: props => {
                 return props;
@@ -110,13 +108,12 @@ describe('pagedRequestHelpers', () => {
       mapToNamedResponseAndInputs('projectsPaged10',
         ({apolloConfig, projects}) => {
           return queryPageContainer(
-            {apolloConfig, regionConfig: {}},
+            apolloConfig,
             {
               pageSize,
               page: 10,
               typeName: 'project',
               name: 'projectsPaginated',
-              filterObjsByConfig: ({regionConfig}, objs) => objs,
               outputParams: projectOutputParams,
               normalizeProps: props => {
                 return props;
@@ -129,13 +126,12 @@ describe('pagedRequestHelpers', () => {
       mapToNamedResponseAndInputs('projectsPaged1',
         ({apolloConfig, projects}) => {
           return queryPageContainer(
-            {apolloConfig, regionConfig: {}},
+            apolloConfig,
             {
               pageSize,
               page: 1,
               typeName: 'project',
               name: 'projectsPaginated',
-              filterObjsByConfig: ({regionConfig}, objs) => objs,
               outputParams: projectOutputParams,
               normalizeProps: props => {
                 return props;

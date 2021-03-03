@@ -30,19 +30,13 @@ const log = loggers.get('rescapeDefault');
  * Queries for all objects using pagination to break up query results. All results are combined
  * Note that pageSize and page can either be passed to queryConfig or in via props, but props takes precedence
  * @type {function(): any}
- * @param {Object} config
- * @param {Object} config.apolloConfig
- * @param {Object} config.regionConfig
+ * @param {Object} apolloConfig
  * @param {Number} [queryConfig.pageSize] Optional pageSize, defaults to 100
  * @param {String} queryConfig.typeName the type name of the object being queried, such as 'region' or 'project'
  * @param {String} queryConfig.name the name matching the paginated query name on the server,
  * such as regionsPaginated or projectsPaginated
  * @param {String} queryConfig.paginatedObjectsName The name for the query
  * @param {Function} queryConfig.paginatedQueryContainer The query container function. This is passed most of the parameters
- * @param {Function} [queryConfig.filterObjsByConfig] Optional function expecting ({regionConfig}, objs)
- * to filter objects returned by pagination based on the regionConfig, where objs are all objects returned by pagination.
- * This is used to filter out objects that can't easily be filtered out using direct props on the pagination query,
- * such as properties embedded in json data
  * @param {Object} queryConfig.outputParams
  * @param {Object} [queryConfig.regionReadInputTypeMapper] This should not be needed, it specifies the graphql input type.
  * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinFor(capitalize(typeName))TypeRelatedReadInputType`}
@@ -54,7 +48,7 @@ const log = loggers.get('rescapeDefault');
  * @returns {Task|Object} Object or Task resolving to the all the matching objects of all pages
  */
 export const queryUsingPaginationContainer = v(R.curry((
-  {apolloConfig, regionConfig},
+  apolloConfig,
   {
     pageSize,
     typeName,
@@ -95,7 +89,7 @@ export const queryUsingPaginationContainer = v(R.curry((
             // Query for the page and extract the objects, since we don't need intermediate page info
             return nameComponent(`page${page}Query`, previousPages => {
               return accumulatedSinglePageQueryContainer(
-                {apolloConfig, regionConfig},
+                apolloConfig,
                 {
                   name,
                   outputParams,
@@ -117,7 +111,7 @@ export const queryUsingPaginationContainer = v(R.curry((
     // Initial query determines tells us the number of pages
     ({page, ...props}) => {
       return _paginatedQueryContainer(
-        {apolloConfig, regionConfig},
+        apolloConfig,
         {
           name,
           outputParams,
@@ -130,15 +124,7 @@ export const queryUsingPaginationContainer = v(R.curry((
     }
   ])(R.merge({page: 1}, props));
 }), [
-  ['config', PropTypes.shape(
-    {
-      apolloConfig: PropTypes.shape().isRequired
-    },
-    {
-      regionConfig: PropTypes.shape().isRequired
-    }
-  ).isRequired
-  ],
+  ['apolloConfig', PropTypes.shape()],
   ['queryConfig', PropTypes.shape({
     name: PropTypes.string.isRequired,
     typeName: PropTypes.string.isRequired,
@@ -153,19 +139,13 @@ export const queryUsingPaginationContainer = v(R.curry((
  * Queries for one page at a time. Note that pageSize and page can either be passed to queryConfig or in via props.
  * props takes precedence
  * @type {function(): any}
- * @param {Object} config
- * @param {Object} config.apolloConfig
- * @param {Object} config.regionConfig
+ * @param {Object} apolloConfig
  * @param {Number} [queryConfig.pageSize] Optional pageSize, defaults to 100
  * @param {String} queryConfig.typeName the type name of the object being queried, such as 'region' or 'project'
  * @param {String} queryConfig.name the name matching the paginated query name on the server,
  * such as regionsPaginated or projectsPaginated
  * @param {String} queryConfig.paginatedObjectsName The name for the query
  * @param {Function} queryConfig.paginatedQueryContainer The query container function. This is passed most of the parameters
- * @param {Function} [queryConfig.filterObjsByConfig] Optional function expecting ({regionConfig}, objs)
- * to filter objects returned by pagination based on the regionConfig, where objs are all objects returned by pagination.
- * This is used to filter out objects that can't easily be filtered out using direct props on the pagination query,
- * such as properties embedded in json data
  * @param {Object} queryConfig.outputParams
  * @param {Object} [queryConfig.regionReadInputTypeMapper] This should not be needed, it specifies the graphql input type.
  * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeFor${capitalize(typeName)}TypeMixinRelatedReadInputType`}
@@ -178,7 +158,7 @@ export const queryUsingPaginationContainer = v(R.curry((
  * on the number of objects returned if using filterObjsByConfig
  */
 export const queryPageContainer = v(R.curry((
-  {apolloConfig, regionConfig},
+  apolloConfig,
   {
     page, pageSize,
     typeName, name, filterObjsByConfig, outputParams, readInputTypeMapper
@@ -209,10 +189,7 @@ export const queryPageContainer = v(R.curry((
 
     // Run a query for each page (based on the result of the first query)
     return _paginatedQueryContainer(
-      {
-        apolloConfig: updatedApolloConfig,
-        regionConfig
-      },
+      updatedApolloConfig,
       {
         name,
         outputParams,
@@ -224,14 +201,7 @@ export const queryPageContainer = v(R.curry((
     );
   }),
   [
-    ['config', PropTypes.shape(
-      {
-        apolloConfig: PropTypes.shape().isRequired
-      },
-      {
-        regionConfig: PropTypes.shape().isRequired
-      }
-    ).isRequired
+    ['apolloConfig', PropTypes.shape().isRequired
     ],
     ['queryConfig', PropTypes.shape({
       name: PropTypes.string.isRequired,
@@ -246,12 +216,10 @@ export const queryPageContainer = v(R.curry((
 
 /**
  * Paginated query for locations
- * @param {Object} config
- * @param {Object} config.apolloConfig
- * @param {Object} [config.apolloConfig.options]
- * @param {Booleen} [config.apolloConfig.options.skip] Only relevant for component queries. Skips the query
+ * @param {Object} apolloConfig
+ * @param {Object} [apolloConfig.options]
+ * @param {Booleen} [apolloConfig.options.skip] Only relevant for component queries. Skips the query
  * if the dependent data isn't ready
- * @param {Object} config.regionConfig
  * @param {Object} queryConfig
  * @param {Object} queryConfig.outputParams Location outputParams (not the page)
  * @param {Object} queryConfig.pageSize
@@ -263,7 +231,7 @@ export const queryPageContainer = v(R.curry((
  * @private
  */
 export const _paginatedQueryContainer = (
-  {apolloConfig, regionConfig},
+  apolloConfig,
   {name, outputParams, readInputTypeMapper, pageSize, page},
   props
 ) => {
@@ -289,7 +257,6 @@ export const _paginatedQueryContainer = (
 /**
  * Queries for a single page of a paginated query
  * @param apolloConfig
- * @param regionConfig
  * @param name
  * @param paginatedQueryContainer
  * @param outputParams
@@ -309,7 +276,7 @@ export const _paginatedQueryContainer = (
  * @private
  */
 export const accumulatedSinglePageQueryContainer = (
-  {apolloConfig, regionConfig},
+  apolloConfig,
   {name, outputParams, readInputTypeMapper},
   {previousPages},
   props
@@ -364,14 +331,11 @@ export const accumulatedSinglePageQueryContainer = (
         // If the previous page is still loading, skip
         page => {
           return _paginatedQueryContainer(
-            {
-              apolloConfig: R.set(
-                R.lensPath(['options', 'skip']),
-                R.complement(R.prop)('data', previousPages),
-                apolloConfig
-              ),
-              regionConfig
-            },
+            R.set(
+              R.lensPath(['options', 'skip']),
+              R.complement(R.prop)('data', previousPages),
+              apolloConfig
+            ),
             {name, outputParams, readInputTypeMapper, pageSize, page},
             props
           );

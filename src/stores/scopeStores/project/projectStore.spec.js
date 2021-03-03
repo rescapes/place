@@ -21,7 +21,8 @@ import * as R from 'ramda';
 import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore.js';
 import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample.js';
 import T from 'folktale/concurrency/task/index.js';
-const {of} = T
+
+const {of} = T;
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {createSampleLocationsContainer} from '../location/locationStore.sample.js';
 
@@ -58,34 +59,58 @@ describe('projectStore', () => {
     const errors = [];
     const task = composeWithChain([
       mapToNamedResponseAndInputs('projectsPagedAll',
-        ({projectResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
+        ({projectResponses, variations, user}) => {
+          const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+          return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {
+            projectQueryKey: 'queryProjectsPaginatedAll',
+            pageSize: 5
+          }));
         }
       ),
       mapToNamedResponseAndInputs('projectsPaged',
-        ({projectResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
+        ({projectResponses, variations,user}) => {
+          const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
           // Returns 3 of the 10 projects on page 3
-          return reqStrPathThrowing('queryProjectsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
+          return reqStrPathThrowing('queryProjectsPaginated', variations)(R.merge(props, {
+            projectQueryKey: 'queryProjectsPaginated',
+            pageSize: 3,
+            page: 2
+          }));
         }
       ),
       mapToNamedResponseAndInputs('projectsMinimized',
-        ({projectResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
-          return reqStrPathThrowing('queryProjectsMinimized', variations)(props);
+        ({projectResponses, variations, user}) => {
+          const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
+          return reqStrPathThrowing('queryProjectsMinimized', variations)(R.merge(props, {projectQueryKey: 'queryProjectsMinimized'}));
         }
       ),
       mapToNamedResponseAndInputs('projectsFull',
-        ({projectResponses, variations}) => {
-          const props = {idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
-          return reqStrPathThrowing('queryProjects', variations)(props);
+        ({projectResponses, variations, user}) => {
+          const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
+          return reqStrPathThrowing('queryProjects', variations)(R.merge(props, {projectQueryKey: 'queryProjects'}));
         }
       ),
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
-          return of(projectQueryVariationContainers({apolloConfig, regionConfig: {}}));
+          return of(projectQueryVariationContainers(
+            R.merge(apolloConfig, {
+              options: {
+                skip: props => {
+                  return !strPathOr('user', props);
+                },
+                variables: props => {
+                  // Search by whatever props are passed into projectFilter
+                  return R.merge(
+                    R.propOr({}, 'idIn', props),
+                    {user: R.pick(['id'], reqStrPathThrowing('user', props))}
+                  );
+                },
+                errorPolicy: 'all',
+                partialRefetch: true
+              }
+            })
+          ));
         }
       ),
       mapToNamedResponseAndInputs('projectResponses',
