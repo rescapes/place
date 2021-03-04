@@ -38,33 +38,33 @@ describe('variedRequestHelpers', () => {
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+          return reqStrPathThrowing('queryProjectsPaginatedAllMinimized', variations)(R.merge(props, {projectQueryKey: 'queryProjectsPaginatedAllMinimized', pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('projectsPagedAll',
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+          return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {projectQueryKey: 'queryProjectsPaginatedAll', pageSize: 5}));
         }
       ),
       mapToNamedResponseAndInputs('projectsPaged',
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns 3 of the 10 projects on page 3
-          return reqStrPathThrowing('queryProjectsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
+          return reqStrPathThrowing('queryProjectsPaginated', variations)(R.merge(props, {projectQueryKey: 'queryProjectsPaginated', pageSize: 3, page: 2}));
         }
       ),
       mapToNamedResponseAndInputs('projectsMinimized',
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
-          return reqStrPathThrowing('queryProjectsMinimized', variations)(props);
+          return reqStrPathThrowing('queryProjectsMinimized', variations)(R.merge(props, {projectQueryKey: 'queryProjectsMinimized'}));
         }
       ),
       mapToNamedResponseAndInputs('projectsFull',
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
-          return reqStrPathThrowing('queryProjects', variations)(props);
+          return reqStrPathThrowing('queryProjects', variations)(R.merge(props, {projectQueryKey: 'queryProjects'}));
         }
       ),
       mapToNamedResponseAndInputs('variations',
@@ -83,6 +83,7 @@ describe('variedRequestHelpers', () => {
             ),
             {
               name: 'project',
+              allowRequestProp: 'projectQueryKey',
               requestTypes: [
                 {},
                 {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},

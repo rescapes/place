@@ -49,7 +49,7 @@ describe('userRegionStore', () => {
       // Get the authenticated user
       ({apolloConfig, user}) => {
         return userStateRegionsQueryContainer(
-          {apolloConfig},
+          apolloConfig,
           // default output params
           {},
           // props
@@ -99,7 +99,7 @@ describe('userRegionStore', () => {
       // This forces a separate query on Regions so we can filter by Region
       ({apolloConfig, user}) => {
         return userStateRegionsQueryContainer(
-          {apolloConfig},
+          apolloConfig,
           {userRegionOutputParams: userStateRegionOutputParams(regionOutputParamsMinimized)},
           {
             userState: {user: R.pick(['id'], user)},
@@ -141,7 +141,7 @@ describe('userRegionStore', () => {
     R.composeK(
       ({apolloConfig, user}) => {
         return userStateRegionsQueryContainer(
-          {apolloConfig},
+          apolloConfig,
           {},
           {
             userState: {

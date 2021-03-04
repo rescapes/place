@@ -59,7 +59,7 @@ export const userStateRegionOutputParams = (explicitRegionOuputParams = regionOu
  * @returns {Object} The resulting User Regions in a Task in {data: usersRegions: [...]}}
  */
 export const userStateRegionsQueryContainer = v(R.curry(
-  ({apolloConfig}, {userRegionOutputParams: explicitUserRegionOutputParams}, propSets) => {
+  (apolloConfig, {userRegionOutputParams: explicitUserRegionOutputParams}, propSets) => {
     const scopeName = 'region';
     return userStateScopeObjsQueryContainer(
       apolloConfig,

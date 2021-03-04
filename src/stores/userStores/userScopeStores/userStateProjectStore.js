@@ -71,7 +71,7 @@ export const userStateProjectOutputParams = (explicitProjectOutputParams = proje
  * @returns {Object} The resulting Projects in a Task in {data: usersProjects: [...]}}
  */
 export const userStateProjectsQueryContainer = v(R.curry((
-  {apolloConfig}, {
+  apolloConfig, {
     userProjectOutputParams: explicitUserProjectOutputParams
   }, propSets) => {
     const scopeName = 'project';

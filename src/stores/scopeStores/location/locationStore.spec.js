@@ -26,7 +26,7 @@ import {
   expectKeysAtPath,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
-  reqStrPathThrowing
+  reqStrPathThrowing, strPathOr
 } from '@rescapes/ramda';
 import {createSampleLocationContainer, createSampleLocationsContainer} from './locationStore.sample.js';
 
@@ -42,38 +42,77 @@ describe('locationStore', () => {
         ({locations, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('queryLocationsPaginatedAllMinimized', variations)(R.merge(props, {pageSize: 5}));
+          return reqStrPathThrowing('queryLocationsPaginatedAllMinimized', variations)(
+            R.merge(
+              {locationQueryKey: 'queryLocationsPaginatedAllMinimized', pageSize: 5},
+              props
+            )
+          );
         }
       ),
       mapToNamedResponseAndInputs('locationsPagedAll',
         ({locations, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('queryLocationsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+          return reqStrPathThrowing('queryLocationsPaginatedAll', variations)(
+            R.merge(
+              {locationQueryKey: 'queryLocationsPaginatedAll', pageSize: 5},
+              props
+            )
+          );
         }
       ),
       mapToNamedResponseAndInputs('locationsPaged',
         ({locations, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
           // Returns 3 of the 10 locations on page 3
-          return reqStrPathThrowing('queryLocationsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
+          return reqStrPathThrowing('queryLocationsPaginated', variations)(
+            R.merge(
+              {locationQueryKey: 'queryLocationsPaginated', pageSize: 3, page: 2},
+              props
+            )
+          );
         }
       ),
       mapToNamedResponseAndInputs('locationsMinimized',
         ({locations, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
-          return reqStrPathThrowing('queryLocationsMinimized', variations)(props);
+          return reqStrPathThrowing('queryLocationsMinimized', variations)(
+            R.merge(
+              {locationQueryKey: 'queryLocationsMinimized'},
+              props
+            )
+          );
         }
       ),
       mapToNamedResponseAndInputs('locationsFull',
         ({locations, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
-          return reqStrPathThrowing('queryLocations', variations)(props);
+          return reqStrPathThrowing('queryLocations', variations)(
+            R.merge(
+              {locationQueryKey: 'queryLocations'},
+              props
+            )
+          );
         }
       ),
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
-          return of(locationQueryVariationContainers(apolloConfig));
+          return of(locationQueryVariationContainers(
+            R.merge(apolloConfig, {
+              options: {
+                skip: props => {
+                  return !strPathOr('user', props);
+                },
+                variables: props => {
+                  // Search by whatever props are passed into projectFilter
+                  return R.pick(['idIn'], props)
+                },
+                errorPolicy: 'all',
+                partialRefetch: true
+              }
+            })
+          ));
         }
       ),
       mapToNamedResponseAndInputs('locations',
@@ -97,7 +136,13 @@ describe('locationStore', () => {
     ])({});
     const errors = [];
     task.run().listen(defaultRunConfig({
-      onResolved: ({locationsFull, locationsMinimized, locationsPaged, locationsPagedAll, locationsPagedAllMinimized}) => {
+      onResolved: ({
+                     locationsFull,
+                     locationsMinimized,
+                     locationsPaged,
+                     locationsPagedAll,
+                     locationsPagedAllMinimized
+                   }) => {
         expect(R.length(reqStrPathThrowing('data.locations', locationsFull))).toEqual(3);
         expect(R.length(reqStrPathThrowing('data.locations', locationsMinimized))).toEqual(3);
         expect(R.length(reqStrPathThrowing('data.locationsPaginated.objects', locationsPaged))).toEqual(3);

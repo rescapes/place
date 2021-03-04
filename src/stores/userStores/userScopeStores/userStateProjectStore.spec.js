@@ -54,7 +54,7 @@ describe('userProjectStore', () => {
     composeWithChainMDeep(1, [
       ({apolloConfig, user}) => {
         return userStateProjectsQueryContainer(
-          {apolloConfig},
+          apolloConfig,
           {
             userProjectOutputParams: userStateProjectOutputParams(projectOutputParamsMinimized)
           },
@@ -100,7 +100,7 @@ describe('userProjectStore', () => {
       ({apolloConfig, user, projects}) => {
         // Get the name since it will be Shrangrila29 or whatever
         const projectNames = R.map(R.prop('name'), projects);
-        return userStateProjectsQueryContainer({apolloConfig}, {
+        return userStateProjectsQueryContainer(apolloConfig, {
           userProjectOutputParams: userStateProjectOutputParams(projectOutputParamsMinimized)
         }, {
           userState: {user: R.pick(['id'], user)},
@@ -145,7 +145,7 @@ describe('userProjectStore', () => {
     R.composeK(
       ({apolloConfig, user}) => {
         return userStateProjectsQueryContainer(
-          {apolloConfig},
+          apolloConfig,
           {},
           {
             userState: {user: R.pick(['id'], user)},
@@ -297,7 +297,7 @@ describe('userProjectStore', () => {
       ),
       mapToNamedResponseAndInputs('existingItemResponses',
         ({apolloConfig, user}) => {
-          return makeProjectsQueryContainer({apolloConfig}, {outputParams: {id: 1}}, {user: {id: user.id}})
+          return makeProjectsQueryContainer(apolloConfig, {outputParams: {id: 1}}, {user: {id: user.id}})
         }
       ),
       // Resolve the user state

@@ -136,7 +136,7 @@ describe('userStore', () => {
       'id',
       'data.userRegions.0.region.id',
       'data.userProjects.0.project.id',
-      'data.userProjects.0.selection.isSelected'
+      'data.userProjects.0.activity.isActive'
     ];
 
     composeWithChain([

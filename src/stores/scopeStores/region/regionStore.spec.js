@@ -27,7 +27,8 @@ import {
 import {createSampleRegionContainer, createSampleRegionsContainer} from './regionStore.sample.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import T from 'folktale/concurrency/task/index.js';
-const {of} = T
+
+const {of} = T;
 
 const someRegionKeys = ['id', 'key', 'geojson', 'data'];
 describe('regionStore', () => {
@@ -51,7 +52,7 @@ describe('regionStore', () => {
     const errors = [];
     R.composeK(
       ({apolloConfig, region}) => makeRegionsQueryContainer(
-        {apolloConfig},
+        apolloConfig,
         {outputParams: regionOutputParams},
         {key: reqStrPathThrowing('key', region)}
       ),
@@ -76,31 +77,65 @@ describe('regionStore', () => {
         ({regionResponses, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('queryRegionsPaginatedAll', variations)(R.merge(props, {pageSize: 5}));
+          return reqStrPathThrowing('queryRegionsPaginatedAll', variations)(
+            R.merge(
+              {regionQueryKey: 'queryRegionsPaginatedAll', pageSize: 5},
+              props
+            )
+          );
         }
       ),
       mapToNamedResponseAndInputs('regionsPaged',
         ({regionResponses, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           // Returns 3 of the 10 regions on page 3
-          return reqStrPathThrowing('queryRegionsPaginated', variations)(R.merge(props, {pageSize: 3, page: 2}));
+          return reqStrPathThrowing('queryRegionsPaginated', variations)(
+            R.merge(
+              {regionQueryKey: 'queryRegionsPaginated', pageSize: 3, page: 2},
+              props
+            )
+          );
         }
       ),
       mapToNamedResponseAndInputs('regionsMinimized',
         ({regionResponses, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
-          return reqStrPathThrowing('queryRegionsMinimized', variations)(props);
+          return reqStrPathThrowing('queryRegionsMinimized', variations)(
+            R.merge(
+              {regionQueryKey: 'queryRegionsMinimized'},
+              props
+            )
+          );
         }
       ),
       mapToNamedResponseAndInputs('regionsFull',
         ({regionResponses, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
-          return reqStrPathThrowing('queryRegions', variations)(props);
+          return reqStrPathThrowing('queryRegions', variations)(
+            R.merge(
+              {regionQueryKey: 'queryRegions'},
+              props
+            )
+          );
         }
       ),
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
-          return of(regionQueryVariationContainers(apolloConfig));
+          return of(regionQueryVariationContainers(
+            R.merge(apolloConfig, {
+              options: {
+                skip: props => {
+                  return !strPathOr('user', props);
+                },
+                variables: props => {
+                  // Search by whatever props are passed into projectFilter
+                  return R.pick(['idIn'], props)
+                },
+                errorPolicy: 'all',
+                partialRefetch: true
+              }
+            })
+          ))
         }
       ),
       mapToNamedResponseAndInputs('regionResponses',

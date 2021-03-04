@@ -124,6 +124,10 @@ export const locationQueryVariationContainers = (apolloConfig) => {
     apolloConfig,
     {
       name: 'location',
+      // Only allow the query matching the value of props.locationQueryKey so we never run multiple
+      // query variations. This allows us to dynamically change which query we use, so that if
+      // we expect a large list we can page, or if we need to minimize or maximize outputParams
+      allowRequestProp: 'locationQueryKey',
       requestTypes: [
         {},
         {type: 'minimized', args: {outputParams: locationOutputParamsMinimized}},
@@ -188,7 +192,7 @@ export const deleteLocationsContainer = (
       // Get scope objects to delete
       ({props}) => {
         return queryLocationsContainer(
-          {apolloConfig},
+          apolloConfig,
           {
             outputParams: {id: 1, deleted: 1}
           },

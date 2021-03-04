@@ -110,7 +110,7 @@ export const createSampleRegionsContainer = v((apolloConfig, props) => {
         {
           queryName: 'regions',
           queryContainer: makeRegionsQueryContainer(
-            {apolloConfig},
+            apolloConfig,
             {outputParams: regionOutputParams}
           ),
           mutateContainer: makeRegionMutationContainer,

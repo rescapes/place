@@ -116,7 +116,7 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
         {
           queryName: 'projects',
           queryContainer: makeProjectsQueryContainer(
-            {apolloConfig},
+            apolloConfig,
             {outputParams: projectOutputParams}
           ),
           mutateContainer: makeProjectMutationContainer,
@@ -179,7 +179,7 @@ export const createSampleProjectsContainer = v((apolloConfig, props) => {
           {
             queryName: 'projects',
             queryContainer: makeProjectsQueryContainer(
-              {apolloConfig},
+              apolloConfig,
               {outputParams: projectOutputParams}
             ),
             mutateContainer: makeProjectMutationContainer,

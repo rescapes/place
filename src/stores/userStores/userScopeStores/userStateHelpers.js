@@ -473,45 +473,43 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
         const {userScope, userScopeObjs} = props;
         const scopeProps = R.prop(scopeName, userScope);
         return scopeQueryContainer(
-          {
-            apolloConfig: composeFuncAtPathIntoApolloConfig(
-              R.mergeDeepRight(
-                apolloConfig,
-                {
-                  options: {
-                    // If userScopeObjs is null, it means a dependent query is not ready
-                    // See userStateScopeObjsQueryContainer for an example
-                    // If it is simply empty, we still want to query
-                    skip: !userScopeObjs
-                  }
+          composeFuncAtPathIntoApolloConfig(
+            R.mergeDeepRight(
+              apolloConfig,
+              {
+                options: {
+                  // If userScopeObjs is null, it means a dependent query is not ready
+                  // See userStateScopeObjsQueryContainer for an example
+                  // If it is simply empty, we still want to query
+                  skip: !userScopeObjs
                 }
-              ),
-              'options.variables',
-              _props => {
-                // If there is not a previous filter, filter
-                return R.when(
-                  () => {
-                    return R.complement(strPathOr)(false, 'options.variables', apolloConfig);
-                  },
-                  p => {
-                    const userScopeObjs = R.propOr(null, 'userScopeObjs', p);
-                    return R.merge(
-                      // Limit by any properties in the scope that aren't id. Keep id if we don't have userScopeObjs
-                      R.omit(R.length(userScopeObjs || []) ? ['id'] : [], scopeProps || {}),
-                      R.filter(R.length, {
-                        // Map each scope object to its id
-                        idIn: R.map(
-                          userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj),
-                          // If we don't have any we'll skip the query above
-                          userScopeObjs || []
-                        )
-                      })
-                    );
-                  }
-                )(_props);
               }
-            )
-          },
+            ),
+            'options.variables',
+            _props => {
+              // If there is not a previous filter, filter
+              return R.when(
+                () => {
+                  return R.complement(strPathOr)(false, 'options.variables', apolloConfig);
+                },
+                p => {
+                  const userScopeObjs = R.propOr(null, 'userScopeObjs', p);
+                  return R.merge(
+                    // Limit by any properties in the scope that aren't id. Keep id if we don't have userScopeObjs
+                    R.omit(R.length(userScopeObjs || []) ? ['id'] : [], scopeProps || {}),
+                    R.filter(R.length, {
+                      // Map each scope object to its id
+                      idIn: R.map(
+                        userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj),
+                        // If we don't have any we'll skip the query above
+                        userScopeObjs || []
+                      )
+                    })
+                  );
+                }
+              )(_props);
+            }
+          ),
           {
             outputParams: scopeOutputParams
           },

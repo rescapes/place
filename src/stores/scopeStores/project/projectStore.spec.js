@@ -14,7 +14,7 @@ import {
   expectKeysAtPath,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
-  reqStrPathThrowing
+  reqStrPathThrowing, strPathOr
 } from '@rescapes/ramda';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
@@ -102,7 +102,7 @@ describe('projectStore', () => {
                 variables: props => {
                   // Search by whatever props are passed into projectFilter
                   return R.merge(
-                    R.propOr({}, 'idIn', props),
+                    R.pick(['idIn'], props),
                     {user: R.pick(['id'], reqStrPathThrowing('user', props))}
                   );
                 },
