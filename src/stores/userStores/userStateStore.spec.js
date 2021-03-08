@@ -27,9 +27,10 @@ import {
   userStateMutationContainer,
   userStateOutputParamsFull
 } from './userStateStore.js';
-import {mutateSampleUserStateWithProjectAndRegionTask} from './userStateStore.sample.js';
+import {mutateSampleUserStateWithProjectAndRegionContainer} from './userStateStore.sample.js';
 import {testAuthTask} from '../../helpers/testHelpers.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
+import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample';
 
 
 describe('userStore', () => {
@@ -66,11 +67,11 @@ describe('userStore', () => {
       // Mutate the UserState to get cache-only data stored
       mapMonadByConfig({},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegionTask({
+          return mutateSampleUserStateWithProjectAndRegionContainer({
             apolloConfig,
             user,
-            regionKey: 'earth',
-            projectKey: 'shrangrila'
+            regionKeys: ['earth'],
+            projectKeys: ['shrangrila']
           });
         }
       ),
@@ -105,11 +106,11 @@ describe('userStore', () => {
       // Mutate the UserState to get cache-only data stored
       mapMonadByConfig({},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegionTask({
+          return mutateSampleUserStateWithProjectAndRegionContainer({
             apolloConfig,
             user,
-            regionKey: 'earth',
-            projectKey: 'shrangrila'
+            regionKey: ['earth'],
+            projectKey: ['shrangrila']
           });
         }
       ),
@@ -149,15 +150,19 @@ describe('userStore', () => {
           );
         }
       ),
-      // Set it again. This will wipe out the previous region and project ids
+      // Set it again. This will wipe out the previous region and project and location ids
       mapMonadByConfig({name: 'mutatedUserStateSecond', strPath: 'userState'},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegionTask({
+          return mutateSampleUserStateWithProjectAndRegionContainer(
             apolloConfig,
-            user,
-            regionKey: 'mars',
-            projectKey: 'tharsisVolcanoes'
-          });
+            {
+              mutateSampleLocationsContainer: createSampleLocationsContainer
+            },
+            {
+              user,
+              regionKeys: ['mars'],
+              projectKeys: ['tharsisVolcanoes']
+            });
         }
       ),
       mapMonadByConfig({name: 'userStateFirst', strPath: 'data.userStates.0'},
@@ -172,12 +177,16 @@ describe('userStore', () => {
       // Mutate the UserState
       mapMonadByConfig({name: 'mutatedUserStateFirst', strPath: 'userState'},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegionTask({
-            apolloConfig,
-            user,
-            regionKey: 'earth',
-            projectKey: 'shrangrila'
-          });
+          return mutateSampleUserStateWithProjectAndRegionContainer(apolloConfig,
+            {
+              mutateSampleLocationsContainer: createSampleLocationsContainer
+            },
+            {
+              user,
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila']
+            }
+          );
         }
       ),
       mapMonadByConfig({name: 'user', strPath: 'data.currentUser'},
@@ -195,7 +204,7 @@ describe('userStore', () => {
           expectKeys(someUserStateKeysWithCacheKeys, userStateSecond);
         }
     }, errors, done));
-  });
+  }, 10000000);
 
   test('userStateMutationWithCacheValuesContainer', done => {
     const errors = [];
@@ -235,11 +244,11 @@ describe('userStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionTask({
+        return mutateSampleUserStateWithProjectAndRegionContainer({
           apolloConfig,
           user,
-          regionKey: 'earth',
-          projectKey: 'shrangrila'
+          regionKeys: ['earth'],
+          projectKeys: ['shrangrila']
         });
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',

@@ -40,42 +40,42 @@ export const createSampleRegionContainer = (apolloConfig, {}, props = {}) => {
   return makeRegionMutationContainer(
     apolloConfig,
     {outputParams: regionOutputParams},
-    mergeDeep({
-        key: 'testPincherCreek',
-        name: 'Test Pincher Creek',
-        geojson: {
-
-          'type': 'FeatureCollection',
-          'features': [{
-            "type": "Feature",
-            'id': 'rel/999999',
-            "geometry": {
-              "type": "Polygon",
-              "coordinates": [[[49.54147, -114.17439], [49.42996, -114.17439], [49.42996, -113.72635], [49.54147, -113.72635], [49.54147, -114.174390]]]
-            }
-          }]
-        },
-        data: {
-          locations: {
-            params: {
-              city: 'Pincher Creek',
-              state: 'Alberta',
-              country: 'Canada'
-            }
-          },
-          mapbox: {
-            viewport: {
-              latitude: 49.54147,
-              longitude: -114.17439,
-              zoom: 7
-            }
-          }
-        }
-      },
-      props
-    )
+    sampleRegion(props)
   );
 };
+export const sampleRegion = props => mergeDeep({
+    key: 'testPincherCreek',
+    name: 'Test Pincher Creek',
+    geojson: {
+      'type': 'FeatureCollection',
+      'features': [{
+        "type": "Feature",
+        'id': 'rel/999999',
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[49.54147, -114.17439], [49.42996, -114.17439], [49.42996, -113.72635], [49.54147, -113.72635], [49.54147, -114.174390]]]
+        }
+      }]
+    },
+    data: {
+      locations: {
+        params: {
+          city: 'Pincher Creek',
+          state: 'Alberta',
+          country: 'Canada'
+        }
+      },
+      mapbox: {
+        viewport: {
+          latitude: 49.54147,
+          longitude: -114.17439,
+          zoom: 7
+        }
+      }
+    }
+  },
+  props
+)
 
 /**
  * Creates 10 regions for the given user

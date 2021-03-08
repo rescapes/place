@@ -597,20 +597,20 @@ export const userScopeOrNullAndProps = (userScopeName, scopeName, props) => {
  * @param {Object} config
  * @param {String} config.userScopeCollectName collection in props.userState.data, e,g. 'userProjects' or 'userRegions'
  * @param {String} config.scopeName The name of the scope instance in the user scope instance, e.g. 'project', or 'region'
- * @param {String} config.userStatePropKey The userState in props. For instance 'userState'
- * @param {String} config.scopeInstancePropKey The key props that points to the scope instance that we want to look
+ * @param {String} config.userStatePropPath The userState in props. For instance 'userState' or 'userStateResponse.data.userStates.0'
+ * @param {String} config.scopeInstancePropPath The key props that points to the scope instance that we want to look
  * for in the user scopes
  * @param {Object} props The props to scour
  * @returns {Object} The matching userScope instance or undefined
  */
 export const findUserScopeInstance = (
-  {userScopeCollectName, scopeName, userStatePropKey, scopeInstancePropKey},
+  {userScopeCollectName, scopeName, userStatePropPath, scopeInstancePropPath},
   props) => {
   return R.compose(
     ({userScopes, scopeInstance}) => {
       return scopeInstance && R.find(
         userScope => {
-          // Find a userScope.scope instance id that matches scopeIntances's id
+          // Find a userScope.scope instance id that matches scopeInstances's id
           return R.eqProps(
             'id',
             scopeInstance,
@@ -623,11 +623,11 @@ export const findUserScopeInstance = (
     toNamedResponseAndInputs('scopeInstance',
       // If there is no scope instance in the props return null. The mutation won't be able to run
       // until we specify one.
-      props => strPathOr(null, scopeInstancePropKey, props)
+      props => strPathOr(null, scopeInstancePropPath, props)
     ),
     toNamedResponseAndInputs('userScopes',
       // If there are no userStates then we can't find the one matching the scope instance, return empty
-      props => strPathOr([], `${userStatePropKey}.data.${userScopeCollectName}`, props)
+      props => strPathOr([], `${userStatePropPath}.data.${userScopeCollectName}`, props)
     )
   )(props);
 };

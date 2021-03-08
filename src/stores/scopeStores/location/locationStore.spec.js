@@ -123,7 +123,9 @@ describe('locationStore', () => {
       mapToNamedResponseAndInputs('deleted',
         // Delete all locations
         ({apolloConfig}) => {
-          return deleteLocationsContainer(apolloConfig, {}, {
+          return deleteLocationsContainer(apolloConfig, {
+
+          }, {
             keyContains: 'hillsborough'
           });
         }

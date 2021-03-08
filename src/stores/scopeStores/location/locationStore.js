@@ -151,27 +151,32 @@ export const locationQueryVariationContainers = (apolloConfig) => {
 /**
  * Soft delete locations matching the props
  * @param {Object} apolloConfig The Apollo config
- * @param {Object} scopeConfig
- * @param {Object} scopeConfig.outputParams
- * @param {Object} scopeConfig.readInputTypeMapper
+ * @param {Object} options
+ * @param {Boolean} [options.forceDelete] Default true. Delete all instances and recreate
+ * @param {Function} [options.existingItemMatch] Required if forceDelete is false. Expects
+ * item and existingItemResponses and returns the existingItemResponse that matches item if any.
  * @param {Object} props Props matching the locations to delete
  * @return {Object} {deleted[scope name]s: deleted objects, clearedScopeObjsUserState: The user state post clearing}
  */
 export const deleteLocationsContainer = (
   apolloConfig,
-  {},
+  {forceDelete, existingItemMatch},
   props
 ) => {
   return composeWithComponentMaybeOrTaskChain([
     // Delete those test scope objects
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedLocationResponse',
       ({locationsResponse}) => {
-        const locations = reqStrPathThrowing('data.locations', locationsResponse)
-
         return callMutationNTimesAndConcatResponses(
           apolloConfig,
           {
-            items: locations,
+            items: locationsResponse,
+            forceDelete,
+            existingMatchingProps: props,
+            queryForExistingContainer: queryLocationsContainer,
+            queryResponsePath: 'data.locations',
+            // Delete each existing by id
+            propVariationFuncForDeleted: ({item}) => R.pick(['id'], item),
             mutationContainer: makeLocationMutationContainer,
             responsePath: 'result.data.mutate.location',
             outputParams: {id: 1, deleted: 1},

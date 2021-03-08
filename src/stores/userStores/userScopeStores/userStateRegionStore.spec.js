@@ -33,7 +33,7 @@ import {
 } from '../userStateStore.js';
 import {
   createUserRegionWithDefaults,
-  mutateSampleUserStateWithProjectAndRegionTask
+  mutateSampleUserStateWithProjectAndRegionContainer
 } from '../userStateStore.sample.js';
 import moment from 'moment';
 import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample.js';
@@ -63,7 +63,7 @@ describe('userRegionStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionTask({
+        return mutateSampleUserStateWithProjectAndRegionContainer({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',
@@ -110,7 +110,7 @@ describe('userRegionStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionTask({
+        return mutateSampleUserStateWithProjectAndRegionContainer({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',
@@ -154,7 +154,7 @@ describe('userRegionStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionTask({
+        return mutateSampleUserStateWithProjectAndRegionContainer({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',
@@ -237,7 +237,7 @@ describe('userRegionStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionTask({
+        return mutateSampleUserStateWithProjectAndRegionContainer({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKey: 'earth',

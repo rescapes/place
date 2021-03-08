@@ -248,7 +248,7 @@ export const createCacheOnlyPropsForUserState = props => {
  * @param [Object] outputParams OutputParams for the query
  * @param {Object} props Arguments for the UserState query. Likely null unless testing whether the current
  * user state has passes a certain predicate
- * @returns {Task|Just<Object>} A Task containing the single item user state response {data: {usersStates: []}}
+ * @returns {Task|Object} A Task or apollo container resolving to the single item user state response {data: {usersStates: []}}
  */
 export const currentUserStateQueryContainer = v(R.curry(
   (apolloConfig, {outputParams}, props) => {
@@ -307,7 +307,7 @@ export const currentUserStateQueryContainer = v(R.curry(
  * @param {Object} apolloClient The Apollo Client
  * @param [Object] outputParams OutputParams for the query
  * @param {Object} userStateArguments Arguments for the UserState query. This can be {} or null to not filter.
- * @returns {Task} A Task containing the Regions in an object with obj.data.userStates or errors in obj.errors
+ * @returns {Task|Object} A Task or Apollo container resolving the user states an object with obj.data.userStates or errors in obj.errors
  */
 export const adminUserStateQueryContainer = v(R.curry(
   (apolloConfig, {outputParams}, props) => {

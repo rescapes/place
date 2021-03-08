@@ -32,7 +32,7 @@ import {
 import moment from 'moment';
 import {
   createUserProjectWithDefaults,
-  mutateSampleUserStateWithProjectAndRegionTask,
+  mutateSampleUserStateWithProjectAndRegionContainer,
   mutateSampleUserStateWithProjectsAndRegionsContainer,
 } from '../userStateStore.sample.js';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
@@ -68,11 +68,11 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionTask({
+        return mutateSampleUserStateWithProjectAndRegionContainer({
           apolloConfig,
           user: R.pick(['id'], user),
-          regionKey: 'earth',
-          projectKey: 'shrangrila'
+          regionKeys: ['earth'],
+          projectKeys: ['shrangrila']
         });
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
@@ -156,11 +156,11 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionTask({
+        return mutateSampleUserStateWithProjectAndRegionContainer({
           apolloConfig,
           user: R.pick(['id'], user),
-          regionKey: 'earth',
-          projectKey: 'shrangrila'
+          regionKeys: ['earth'],
+          projectKeys: ['shrangrila']
         });
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',
@@ -309,11 +309,11 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionTask({
+        return mutateSampleUserStateWithProjectAndRegionContainer({
           apolloConfig,
           user: R.pick(['id'], user),
-          regionKey: 'earth',
-          projectKey: 'shrangrila'
+          regionKeys: ['earth'],
+          projectKeys: ['shrangrila']
         });
       },
       mapToNamedPathAndInputs('user', 'data.currentUser',

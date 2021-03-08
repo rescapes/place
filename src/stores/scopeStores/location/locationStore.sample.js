@@ -1,13 +1,13 @@
-import {makeLocationMutationContainer} from './locationStore.js';
-import {composeWithChain, reqStrPathThrowing, traverseReduce} from '@rescapes/ramda';
+import {makeLocationMutationContainer, queryLocationsContainer} from './locationStore.js';
+import {reqStrPathThrowing} from '@rescapes/ramda';
 import * as R from 'ramda';
 import T from 'folktale/concurrency/task/index.js';
-
-const {fromPromised, of} = T;
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {locationOutputParamsMinimized} from './locationOutputParams.js';
-import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
+import {callMutationNTimesAndConcatResponses} from '@rescapes/apollo';
+
+const {fromPromised, of} = T;
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -46,7 +46,7 @@ export const createSampleLocationContainer = ({apolloClient}, {}, props) => {
 };
 
 /**
- * Creates 10 locations
+ * CRUD sample locations
  * TODO make these real world blocks so we can test intersection relationships
  * @param {Object} apolloConfig
  * @param {Object} requestConfig
@@ -57,18 +57,31 @@ export const createSampleLocationContainer = ({apolloClient}, {}, props) => {
  * @param {Number} props.user.id Required user id for each location
  * @return Task resolving to a list of 10 locations
  */
-export const createSampleLocationsContainer = v((apolloConfig, {count = 3}, props) => {
+export const createSampleLocationsContainer = v((apolloConfig, {forceDelete = true, count = 3}, props) => {
   return callMutationNTimesAndConcatResponses(
     apolloConfig,
     {
+      forceDelete,
+
+      existingMatchingProps: {nameContains: 'CrazyHillsborough'},
+      existingItemMatch: (item, existingItemsResponses) => R.find(
+        existingItem => R.propEq('name', item, existingItem),
+        existingItemsResponses
+      ),
+      queryForExistingContainer: queryLocationsContainer,
+      queryResponsePath: 'data.locations',
+      propVariationFuncForDeleted: ({item}) => {
+        return {name: `CrazyHillsborough${item} Rd`};
+      },
+
       count,
       mutationContainer: createSampleLocationContainer,
       responsePath: 'result.data.mutate.location',
       propVariationFunc: props => {
         const item = reqStrPathThrowing('item', props);
         return R.merge({
-          name: `Hillsborough${item} Rd`,
-          key: `hillsborough${item}Rd`
+          name: `CrazyHillsborough${item} Rd`,
+          key: `crazyHillsborough${item}Rd`
         }, props || {});
       }
     },
@@ -76,6 +89,6 @@ export const createSampleLocationsContainer = v((apolloConfig, {count = 3}, prop
   );
 }, [
   ['apolloConfig', PropTypes.shape({}).isRequired],
-  ['requestConfig', PropTypes.shape({}).isRequired],
+  ['options', PropTypes.shape({}).isRequired],
   ['props', PropTypes.shape({}).isRequired]
 ], 'createSampleLocationsContainer');

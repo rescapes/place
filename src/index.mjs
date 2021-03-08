@@ -77,7 +77,7 @@ export {
 export {
   createUserProjectWithDefaults,
   createUserRegionWithDefaults,
-  mutateSampleUserStateWithProjectAndRegionTask,
+  mutateSampleUserStateWithProjectAndRegionContainer,
   mutateSampleUserStateWithProjectsAndRegionsContainer,
 } from './stores/userStores/userStateStore.sample.js';
 
