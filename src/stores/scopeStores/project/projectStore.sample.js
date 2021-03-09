@@ -46,49 +46,16 @@ import {makeRegionMutationContainer, makeRegionsQueryContainer, regionOutputPara
  * @return {Object} {data: project: {...}}
  */
 export const createSampleProjectContainer = (apolloConfig, {outputParams, locationsContainer}, props) => {
-  const now = moment().format('HH-mm-ss-SSS');
+
   return composeWithComponentMaybeOrTaskChain([
     locationResponses => {
       return makeProjectMutationContainer(
         apolloConfig,
         {outputParams: outputParams || projectOutputParams},
-        mergeDeep(
-          {
-            key: `downtownPincher${now}`,
-            name: ` Downtown Pincher Creek${now}`,
-            geojson: {
-              'type': 'FeatureCollection',
-              'features': [{
-                "type": "Feature",
-                id: 'rel/99999',
-                "geometry": {
-                  "type": "Polygon",
-                  "coordinates": [[[49.54147, -114.17439], [49.42996, -114.17439], [49.42996, -113.72635], [49.54147, -113.72635], [49.54147, -114.174390]]]
-                }
-              }]
-            },
-            // locations from locationsContainer. Will be overridden by props.locations
-            // if the latter is specified
-            locations: locationResponses,
-            data: {
-              // Limits the possible locations by query
-              locations: {
-                params: {
-                  city: 'Pincher Creek',
-                  state: 'Alberta',
-                  country: 'Canada'
-                }
-              },
-              mapbox: {
-                viewport: {
-                  latitude: 49.54147,
-                  longitude: -114.17439,
-                  zoom: 7
-                }
-              }
-            }
-          },
-          props
+        projectSample(
+          R.merge(
+            props,
+            {locations: R.map(reqStrPathThrowing('data.locations'), locationResponses)})
         )
       );
     },
@@ -134,6 +101,44 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
   ])(props);
 };
 
+export const projectSample = props => {
+  const now = moment().format('HH-mm-ss-SSS');
+  return mergeDeep(
+    {
+      key: `downtownPincher${now}`,
+      name: `Downtown Pincher Creek`,
+      geojson: {
+        'type': 'FeatureCollection',
+        'features': [{
+          "type": "Feature",
+          id: 'rel/99999',
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[49.54147, -114.17439], [49.42996, -114.17439], [49.42996, -113.72635], [49.54147, -113.72635], [49.54147, -114.174390]]]
+          }
+        }]
+      },
+      data: {
+        // Limits the possible locations by query
+        locations: {
+          params: {
+            city: 'Pincher Creek',
+            state: 'Alberta',
+            country: 'Canada'
+          }
+        },
+        mapbox: {
+          viewport: {
+            latitude: 49.54147,
+            longitude: -114.17439,
+            zoom: 7
+          }
+        }
+      }
+    },
+    props
+  );
+};
 /**
  * Creates 10 projects for the given user
  * @param {Object} apolloConfig

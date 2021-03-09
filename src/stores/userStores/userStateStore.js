@@ -47,7 +47,7 @@ import {
   mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
-  mergeDeep,
+  mergeDeep, pathOr,
   reqStrPathThrowing,
   strPathOr
 } from '@rescapes/ramda';
@@ -184,14 +184,23 @@ const filterOutCacheOnlyObjs = obj => {
   // TODO this should be done with wildcard lens 'data.userProjects|userRegions.*.selection' to handle arrays
   return R.compose(
     ...R.map(
-      userScopePath => composedObj => R.over(
-        R.lensPath(['data', userScopePath]),
-        userScopeObjs => R.map(
-          userScopeObj => R.omit(['selection'], userScopeObj),
-          userScopeObjs || []
-        ),
-        composedObj
-      ),
+      userScopePath => {
+        return composedObj => {
+          return R.when(
+            composedObj => pathOr(null, ['data', userScopePath], composedObj),
+            composedObj => {
+              return R.over(
+                R.lensPath(['data', userScopePath]),
+                userScopeObjs => R.map(
+                  userScopeObj => R.omit(['selection'], userScopeObj),
+                  userScopeObjs
+                ),
+                composedObj
+              );
+            }
+          )(composedObj);
+        };
+      },
       ['userRegions', 'userProjects']
     )
   )(obj);
@@ -350,16 +359,13 @@ export const normalizeUserStatePropsForMutating = userState => {
  * @param {Object} mutationConfig
  * @param [Object] mutationConfig.outputParams OutputParams for the query of the mutation
  * @param {Object} props Object matching the shape of a userState for the create or update
- * @param {Object} props.userState Object matching the shape of a userState for the create or update
- * @param {Function} [props.render] required for comonent mutations
+ * @param {Object} [props.userState] Object matching the shape of a userState for the create or update.
+ * If omitted then the other props will be assumed to be the props of the userState, minus the render prop
+ * @param {Function} [props.render] required for component mutations
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, {
-    userState,
-    render,
-    ...rest
-  }) => {
+export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeMutationRequestContainer(
       mergeDeep(
         apolloConfig,
@@ -367,10 +373,13 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
           // Skip if passed in or in apolloConfig
           options: {
             variables: props => {
-              return R.prop('userState', props);
+              // If the userState is specified use it, otherwise assume the userState props are at the top-level
+              return normalizeUserStatePropsForMutating(
+                R.propOr(R.omit(['render'], props), 'userState', props)
+              );
             },
-            update: (store, {data, ...rest}) => {
-              const response = {result: {data}, ...rest}
+            update: (store, {data, render, ...rest}) => {
+              const response = {result: {data}, ...rest};
               // Add mutate to response.data so we dont' have to guess if it's a create or update
               const userState = reqStrPathThrowing(
                 'result.data.mutate.userState',
@@ -406,7 +415,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
         name: 'userState',
         outputParams
       },
-      {userState: normalizeUserStatePropsForMutating(userState), render, ...rest}
+      props
     );
   }), [
     ['apolloConfig', PropTypes.shape().isRequired],

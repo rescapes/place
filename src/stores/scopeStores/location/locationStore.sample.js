@@ -70,9 +70,6 @@ export const createSampleLocationsContainer = v((apolloConfig, {forceDelete = tr
       ),
       queryForExistingContainer: queryLocationsContainer,
       queryResponsePath: 'data.locations',
-      propVariationFuncForDeleted: ({item}) => {
-        return {name: `CrazyHillsborough${item} Rd`};
-      },
 
       count,
       mutationContainer: createSampleLocationContainer,

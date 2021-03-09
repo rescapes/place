@@ -21,7 +21,7 @@ import {
   userStateMutationContainer,
   userStateOutputParamsFullMetaOnlyScopeIds
 } from './userStateStore.js';
-import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample.js';
+import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample.js'
 import {createSampleRegionContainer, sampleRegion} from '../scopeStores/region/regionStore.sample.js';
 import * as R from 'ramda';
 import {
@@ -34,156 +34,10 @@ import {
 } from '@rescapes/apollo';
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
 import {deleteLocationsContainer} from '../scopeStores/location/locationStore';
-import {makeRegionMutationContainer} from '../scopeStores/region/regionStore';
-import {makeProjectMutationContainer} from '../scopeStores/project/projectStore';
+import {makeRegionMutationContainer, regionOutputParams} from '../scopeStores/region/regionStore';
+import {makeProjectMutationContainer, projectOutputParams} from '../scopeStores/project/projectStore';
 import {queryScopeObjsOfUserStateContainer} from './userScopeStores/userStateHelpers';
-
-/***
- * Helper to optionally delete and (re)create scope objects and set the user state to them
- * @param {Object} apolloConfig
- * @param {Object} apolloConfig.apolloClient
- * @param {Object} options
- * @param {Boolean} [options.forceDelete] Default true. Delete existing scope instances and then
- * recreate. Otherwise existing instances will be used if they exist
- * depending on forceDelete. Expects item and existingItems, then returns the existingItem
- * that matches item, if any.
- * @param {Function} options.mutateSampleLocationsContainer Accepts and apolloConfig and options options and props
- * Returns locations to be used for sample projects. This container should accept forceDelete in options and
- * handle optionally recreating existing locations if forceDelete is true. See createSampleLocationsContainer
- * @param {Object} props
- * @param {Object} props.user
- * @param {[String]} props.regionKeys
- * @param {[String]} props.projectKeys
- * @returns {Task} {project, region, userStateResponse}
- */
-export const mutateSampleUserStateWithProjectAndRegionContainer = (
-  apolloConfig,
-  {forceDelete = true, mutateSampleLocationsContainer},
-  {user, regionKeys, projectKeys}
-) => {
-  return composeWithChain([
-    // Set the user state of the given user to the region and project
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userState',
-      ({user, region, project}) => {
-        return userStateMutationContainer(
-          apolloConfig,
-          {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
-          {
-            userState: createSampleUserStateProps({
-              user,
-              regions: [region],
-              projects: [project]
-            })
-          }
-        );
-      }
-    ),
-
-    // Soft delete the userState if forceDelete is true
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStates',
-      ({render}) => {
-        return callMutationNTimesAndConcatResponses(
-          apolloConfig, {
-            forceDelete,
-            propVariationFuncForDeleted: ({item}) => pickDeepPaths(['user.id'], item),
-            queryResponsePath: 'data.userStates',
-            existingItemMatch: (item, existingItemResponses) => {
-              R.find(existingItem => R.equals(strPathOr(null, 'user.id', item), reqStrPathThrowing('user.id', existingItem)), existingItemResponses);
-            },
-            queryForExistingContainer: currentUserStateQueryContainer,
-            // No props needed, currentUserStateQueryContainer just returns 0 or 1 items
-            existingMatchingProps: {},
-
-            mutationContainer: userStateMutationContainer,
-            responsePath: 'userState',
-            // Always just create 1 userState
-            items: [{user: R.pick(['id'], user)}],
-            propVariationFunc: ({item}) => {
-              return item;
-            },
-            outputParams: userStateOutputParamsFullMetaOnlyScopeIds()
-          },
-          {
-            user,
-            render
-          }
-        );
-      }
-    ),
-
-    // Soft delete the sample projects if forceDelete is true
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projects',
-      ({render}) => {
-        return callMutationNTimesAndConcatResponses(
-          apolloConfig, {
-            forceDelete,
-            mutationContainer: makeProjectMutationContainer,
-            propVariationFuncForDeleted: ({item}) => R.pick(['key'], item),
-            queryResponsePath: 'data.projects',
-
-            responsePath: 'project',
-            items: R.map(key => ({key}), projectKeys),
-            propVariationFunc: ({item}) => {
-              const projectKey = R.prop('key', item);
-              return {
-                key: projectKey,
-                name: capitalize(projectKey)
-              };
-            }
-          },
-          {
-            existingItemResponses: R.map(key => ({key}), projectKeys),
-            render
-          }
-        );
-      }
-    ),
-
-    // CRUD the sample regions if forceDelete is true
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'regions',
-      ({regionKeys, render}) => {
-        return callMutationNTimesAndConcatResponses(
-          apolloConfig, {
-            forceDelete,
-            mutationContainer: makeRegionMutationContainer,
-            propVariationFuncForDeleted: ({item}) => R.pick(['key'], item),
-            queryResponsePath: 'data.regions',
-
-            responsePath: 'region',
-            items: R.map(key => ({key}), regionKeys),
-            propVariationFunc: ({item}) => {
-              const regionKey = R.prop('key', item);
-              return sampleRegion({
-                key: regionKey,
-                name: capitalize(regionKey)
-              });
-            }
-          },
-          {
-            existingItemResponses: R.map(key => ({key}), regionKeys),
-            render
-          }
-        );
-      }
-    ),
-
-    // CRUD the locations for all the sample projects if forceDelete is true
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'locations',
-      ({render}) => {
-        return mutateSampleLocationsContainer ?
-          mutateSampleLocationsContainer(apolloConfig, {
-              forceDelete
-            }, {}
-          ) : containerForApolloType(
-            apolloConfig,
-            {
-              render,
-              response: []
-            }
-          );
-      })
-  ])({apolloConfig, user, regionKeys, projectKeys});
-};
+import {projectSample} from '../scopeStores/project/projectStore.sample';
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -208,7 +62,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
 ) => {
   return composeWithComponentMaybeOrTaskChain([
     // This creates one userState and puts it in userStates
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStates',
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userState',
       ({userStateResponse, render}) => {
         return mutateOnceAndWaitContainer(apolloConfig, {responsePath: 'result.data.mutate.userState'}, userStateResponse, render);
       }
@@ -330,13 +184,8 @@ export const createUserProjectWithDefaults = project => {
       id: parseInt(reqStrPathThrowing('id', project))
     },
     mapbox: {
-      viewport: {
-        // Use the defaults from the project
-        latitude: project.data.mapbox.viewport.latitude,
-        longitude: project.data.mapbox.viewport.longitude,
-        // Zoom in one from he project's zoom
-        zoom: project.data.mapbox.viewport.zoom + 1
-      }
+      // Use the defaults from the project
+      viewport: R.pick(['latitude', 'longitude', 'zoom'], reqStrPathThrowing('data.mapbox.viewport', project))
     },
     selection: {
       isSelected: false

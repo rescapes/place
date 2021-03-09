@@ -90,11 +90,6 @@ describe('mapboxStore', () => {
                   forceDelete: true,
                   mutationContainer: userStateMutationContainer,
                   responsePath: 'result.data.mutate.userState',
-                  propVariationFuncForDeleted:  ({item}) => {
-                    return {project: {keyContains: 'testRefrost'},  region: {
-                      keyContains: 'testAntarctica'
-                    }}
-                  },
                   outputParams: {id: 1, deleted: 1}
                 },
                 {existingItemResponses: userStateResponses}

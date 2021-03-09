@@ -90,7 +90,7 @@ export {
 export {
   createSampleProjectContainer,
   createSampleProjectsContainer
-} from './stores/scopeStores/project/projectStore.sample.js';
+} from './stores/scopeStores/project/regionSample.js';
 
 export {
   createSampleRegionContainer,

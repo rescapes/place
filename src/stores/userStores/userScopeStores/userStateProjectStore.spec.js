@@ -32,11 +32,10 @@ import {
 import moment from 'moment';
 import {
   createUserProjectWithDefaults,
-  mutateSampleUserStateWithProjectAndRegionContainer,
   mutateSampleUserStateWithProjectsAndRegionsContainer,
 } from '../userStateStore.sample.js';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
-import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample.js';
+import {createSampleProjectContainer} from '../../scopeStores/project/regionSample.js';
 import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsFragment} from '../activityStore.js';
 import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
@@ -68,7 +67,7 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionContainer({
+        return mutateSampleUserStateWithProjectsAndRegionsContainer({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKeys: ['earth'],
@@ -156,7 +155,7 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionContainer({
+        return mutateSampleUserStateWithProjectsAndRegionsContainer({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKeys: ['earth'],
@@ -286,9 +285,6 @@ describe('userProjectStore', () => {
             forceDelete: true,
             mutationContainer: makeProjectMutationContainer,
             responsePath: 'result.data.mutate.project',
-            propVariationFuncForDeleted:  ({item}) => {
-              return {project: {id: item.id, deleted: moment().toISOString(true)}};
-            },
             outputParams: {id: 1, deleted: 1}
         },
         {existingItemResponses}
@@ -309,7 +305,7 @@ describe('userProjectStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionContainer({
+        return mutateSampleUserStateWithProjectsAndRegionsContainer({
           apolloConfig,
           user: R.pick(['id'], user),
           regionKeys: ['earth'],

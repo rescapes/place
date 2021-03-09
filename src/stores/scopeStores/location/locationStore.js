@@ -175,8 +175,6 @@ export const deleteLocationsContainer = (
             existingMatchingProps: props,
             queryForExistingContainer: queryLocationsContainer,
             queryResponsePath: 'data.locations',
-            // Delete each existing by id
-            propVariationFuncForDeleted: ({item}) => R.pick(['id'], item),
             mutationContainer: makeLocationMutationContainer,
             responsePath: 'result.data.mutate.location',
             outputParams: {id: 1, deleted: 1},

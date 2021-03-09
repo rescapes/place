@@ -13,7 +13,7 @@ import {
   composeWithChain,
   composeWithChainMDeep,
   defaultRunConfig,
-  mapMonadByConfig,
+  mapMonadByConfig, mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   pickDeepPaths,
@@ -27,7 +27,9 @@ import {
   userStateMutationContainer,
   userStateOutputParamsFull
 } from './userStateStore.js';
-import {mutateSampleUserStateWithProjectAndRegionContainer} from './userStateStore.sample.js';
+import {
+  mutateSampleUserStateWithProjectsAndRegionsContainer
+} from './userStateStore.sample.js';
 import {testAuthTask} from '../../helpers/testHelpers.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample';
@@ -67,12 +69,12 @@ describe('userStore', () => {
       // Mutate the UserState to get cache-only data stored
       mapMonadByConfig({},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegionContainer({
-            apolloConfig,
-            user,
-            regionKeys: ['earth'],
-            projectKeys: ['shrangrila']
-          });
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig, {}, {
+              user,
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila']
+            });
         }
       ),
       mapMonadByConfig({name: 'user', strPath: 'data.currentUser'},
@@ -106,12 +108,15 @@ describe('userStore', () => {
       // Mutate the UserState to get cache-only data stored
       mapMonadByConfig({},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegionContainer({
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
             apolloConfig,
-            user,
-            regionKey: ['earth'],
-            projectKey: ['shrangrila']
-          });
+            {},
+            {
+              user,
+              regionKey: ['earth'],
+              projectKey: ['shrangrila']
+            }
+          );
         }
       ),
       mapMonadByConfig({name: 'user', strPath: 'data.currentUser'},
@@ -146,14 +151,14 @@ describe('userStore', () => {
           return adminUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
-            {id: reqStrPathThrowing('id', mutatedUserStateSecond)}
+            {id: reqStrPathThrowing('result.data.mutate.userState.id', mutatedUserStateSecond)}
           );
         }
       ),
       // Set it again. This will wipe out the previous region and project and location ids
       mapMonadByConfig({name: 'mutatedUserStateSecond', strPath: 'userState'},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegionContainer(
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
             apolloConfig,
             {
               mutateSampleLocationsContainer: createSampleLocationsContainer
@@ -170,14 +175,14 @@ describe('userStore', () => {
           return adminUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
-            {id: reqStrPathThrowing('id', mutatedUserStateFirst)}
+            {id: reqStrPathThrowing('result.data.mutate.userState.id', mutatedUserStateFirst)}
           );
         }
       ),
       // Mutate the UserState
       mapMonadByConfig({name: 'mutatedUserStateFirst', strPath: 'userState'},
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectAndRegionContainer(apolloConfig,
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(apolloConfig,
             {
               mutateSampleLocationsContainer: createSampleLocationsContainer
             },
@@ -212,15 +217,16 @@ describe('userStore', () => {
 
     composeWithChain([
       // Query again to make sure we get the cache-only data
-      mapToNamedPathAndInputs('user', 'data.userStates.0',
+      mapToNamedPathAndInputs('userState', 'data.userStates.0',
         ({apolloConfig, userState}) => {
           return currentUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
             R.pick(['id'], userState)
           );
-        }),
-      mapToNamedPathAndInputs('user', 'result.data.updateUserState',
+        }
+      ),
+      mapToNamedPathAndInputs('userState', 'result.data.mutate.userState',
         // Update the UserState with some cache only values
         // We'll set the project's isSelected cache only property
         ({apolloConfig, userState}) => {
@@ -241,16 +247,21 @@ describe('userStore', () => {
           );
         }
       ),
-      // Set the UserState, returns previous values and {userState, project, region}
+      // Set the UserState, returns previous values and {userStateReponse, projects, regions}
       // where project and region are scope instances of userState
-      ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectAndRegionContainer({
-          apolloConfig,
-          user,
-          regionKeys: ['earth'],
-          projectKeys: ['shrangrila']
-        });
-      },
+      mapToMergedResponseAndInputs(
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig,
+            {},
+            {
+              user,
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila']
+            }
+          );
+        }
+      ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
