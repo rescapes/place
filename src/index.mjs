@@ -77,7 +77,6 @@ export {
 export {
   createUserProjectWithDefaults,
   createUserRegionWithDefaults,
-  mutateSampleUserStateWithProjectAndRegionContainer,
   mutateSampleUserStateWithProjectsAndRegionsContainer,
 } from './stores/userStores/userStateStore.sample.js';
 
@@ -90,7 +89,7 @@ export {
 export {
   createSampleProjectContainer,
   createSampleProjectsContainer
-} from './stores/scopeStores/project/regionSample.js';
+} from './stores/scopeStores/project/projectStore.sample';
 
 export {
   createSampleRegionContainer,
