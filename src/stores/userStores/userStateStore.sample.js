@@ -104,7 +104,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     ),
     // Create sample regions
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'regions',
-      ({render}) => {
+      ({render, regionKeys}) => {
         return callMutationNTimesAndConcatResponses(
           apolloConfig,
           {

@@ -23,7 +23,7 @@ import {
   reqStrPathThrowing
 } from '@rescapes/ramda';
 import {testAuthTask} from '../../helpers/testHelpers.js';
-import {createSampleProjectsContainer} from '../scopeStores/project/regionSample.js';
+import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample';
 import {projectReadInputTypeMapper} from '../scopeStores/project/projectStore.js';
 import T from 'folktale/concurrency/task/index.js';
 

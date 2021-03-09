@@ -113,8 +113,8 @@ describe('userStore', () => {
             {},
             {
               user,
-              regionKey: ['earth'],
-              projectKey: ['shrangrila']
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila']
             }
           );
         }
@@ -151,7 +151,7 @@ describe('userStore', () => {
           return adminUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
-            {id: reqStrPathThrowing('result.data.mutate.userState.id', mutatedUserStateSecond)}
+            {id: reqStrPathThrowing('id', mutatedUserStateSecond)}
           );
         }
       ),
@@ -175,7 +175,7 @@ describe('userStore', () => {
           return adminUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateOutputParamsFull()},
-            {id: reqStrPathThrowing('result.data.mutate.userState.id', mutatedUserStateFirst)}
+            {id: reqStrPathThrowing('id', mutatedUserStateFirst)}
           );
         }
       ),

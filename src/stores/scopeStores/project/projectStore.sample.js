@@ -48,14 +48,14 @@ import {makeRegionMutationContainer, makeRegionsQueryContainer, regionOutputPara
 export const createSampleProjectContainer = (apolloConfig, {outputParams, locationsContainer}, props) => {
 
   return composeWithComponentMaybeOrTaskChain([
-    locationResponses => {
+    locations => {
       return makeProjectMutationContainer(
         apolloConfig,
         {outputParams: outputParams || projectOutputParams},
         projectSample(
           R.merge(
             props,
-            {locations: R.map(reqStrPathThrowing('data.locations'), locationResponses)})
+            {locations})
         )
       );
     },

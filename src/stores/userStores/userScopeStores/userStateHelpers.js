@@ -593,7 +593,7 @@ export const userScopeOrNullAndProps = (userScopeName, scopeName, props) => {
 };
 
 /**
- * Find the userScope instance that matches props[scopeInstancePropKey] by id
+ * Find the userScope instance that matches props[scopeInstancePropPath] by id
  * @param {Object} config
  * @param {String} config.userScopeCollectName collection in props.userState.data, e,g. 'userProjects' or 'userRegions'
  * @param {String} config.scopeName The name of the scope instance in the user scope instance, e.g. 'project', or 'region'

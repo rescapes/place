@@ -61,17 +61,19 @@ describe('userRegionStore', () => {
       },
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
-      ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectsAndRegionsContainer(
-          apolloConfig,
-          {},
-          {
-            user: R.pick(['id'], user),
-            regionKeys: ['earth'],
-            projectKeys: ['shrangrila']
-          }
-        );
-      },
+      mapToMergedResponseAndInputs(
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig,
+            {},
+            {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila']
+            }
+          );
+        }
+      ),
       // Get the authenticated user
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
@@ -111,17 +113,18 @@ describe('userRegionStore', () => {
       },
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
+      mapToMergedResponseAndInputs(
       ({apolloConfig, user}) => {
         return mutateSampleUserStateWithProjectsAndRegionsContainer(
           apolloConfig,
           {},
           {
             user: R.pick(['id'], user),
-            regionKey: 'earth',
-            projectKey: 'shrangrila'
+            regionKeys: ['earth'],
+            projectKeys: ['shrangrila']
           }
         );
-      },
+      }),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
           return currentUserQueryContainer(apolloConfig, userOutputParams, {});
@@ -158,14 +161,16 @@ describe('userRegionStore', () => {
       },
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
+      mapToMergedResponseAndInputs(
       ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectsAndRegionsContainer({
+        return mutateSampleUserStateWithProjectsAndRegionsContainer(
           apolloConfig,
+          {}, {
           user: R.pick(['id'], user),
           regionKeys: ['earth'],
           projectKeys: ['shrangrila']
         });
-      },
+      }),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
@@ -241,17 +246,19 @@ describe('userRegionStore', () => {
 
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
-      ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectsAndRegionsContainer(
-          apolloConfig,
-          {},
-          {
-            user: R.pick(['id'], user),
-            regionKeys: ['earth'],
-            projectKeys: ['shrangrila']
-          }
-        );
-      },
+      mapToMergedResponseAndInputs(
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig,
+            {},
+            {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila']
+            }
+          );
+        }
+      ),
       mapToMergedResponseAndInputs(
         ({apolloConfig, userStateResponses}) => {
           return deleteItemsOfExistingResponses(

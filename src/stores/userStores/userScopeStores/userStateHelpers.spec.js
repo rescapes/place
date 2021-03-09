@@ -159,16 +159,16 @@ describe('userStateHelpers', () => {
     const found = findUserScopeInstance({
       userScopeCollectName: 'userRegions',
       scopeName: 'region',
-      userStatePropKey: 'userState',
-      scopeInstancePropKey: 'region'
+      userStatePropPath: 'userState',
+      scopeInstancePropPath: 'region'
     }, {userState, region});
 
     expect(found).toEqual(userState['data']['userRegions'][1]);
     const notFound = findUserScopeInstance({
       userScopeCollectName: 'userRegions',
       scopeName: 'region',
-      userStatePropKey: 'userState',
-      scopeInstancePropKey: 'region'
+      userStatePropPath: 'userState',
+      scopeInstancePropPath: 'region'
     }, {userState, region: {id: 'fred'}});
     expect(notFound).toEqual(undefined);
   });

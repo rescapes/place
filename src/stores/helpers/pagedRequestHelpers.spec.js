@@ -17,7 +17,7 @@ import {
   mapToNamedResponseAndInputs, mergeDeep,
   reqStrPathThrowing
 } from '@rescapes/ramda';
-import {createSampleProjectsContainer} from '../scopeStores/project/regionSample.js';
+import {createSampleProjectsContainer} from '../scopeStores/project/projectStore.sample'
 import * as R from 'ramda';
 import {projectOutputParams} from '../scopeStores/project/projectStore.js';
 import {testAuthTask} from '../../helpers/testHelpers.js';

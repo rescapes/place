@@ -441,18 +441,16 @@ const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
       );
     },
     props => makeProjectsQueryContainer(
-      {
-        apolloConfig: R.merge(apolloConfig, {
-          options: {
-            variables: props => {
-              // Search by whatever props are passed into locationFilter
-              return R.prop('projectFilter', props);
-            },
-            errorPolicy: 'all',
-            partialRefetch: true
-          }
-        })
-      },
+      R.merge(apolloConfig, {
+        options: {
+          variables: props => {
+            // Search by whatever props are passed into locationFilter
+            return R.prop('projectFilter', props);
+          },
+          errorPolicy: 'all',
+          partialRefetch: true
+        }
+      }),
       {
         name: 'projects',
         readInputTypeMapper,
@@ -496,17 +494,15 @@ const _makeRegionsQueryResolveMapboxContainer = (apolloConfig, outputParams, pro
     },
     props => {
       return makeRegionsQueryContainer(
-        {
-          apolloConfig: R.merge(apolloConfig, {
-            options: {
-              variables: props => {
-                return R.prop('regionFilter', props);
-              },
-              errorPolicy: 'all',
-              partialRefetch: true
-            }
-          })
-        },
+        R.merge(apolloConfig, {
+          options: {
+            variables: props => {
+              return R.prop('regionFilter', props);
+            },
+            errorPolicy: 'all',
+            partialRefetch: true
+          }
+        }),
         {name: 'regions', readInputTypeMapper, outputParams: regionMapboxOutputParamsCreator(outputParams)},
         props
       );

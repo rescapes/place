@@ -14,7 +14,7 @@ import * as R from 'ramda';
 import {
   callMutationNTimesAndConcatResponses,
   composeWithComponentMaybeOrTaskChain,
-  createReadInputTypeMapper,
+  createReadInputTypeMapper, deleteItemsOfExistingResponses,
   makeMutationRequestContainer,
   makeQueryContainer,
   mapTaskOrComponentToNamedResponseAndInputs
@@ -167,27 +167,15 @@ export const deleteLocationsContainer = (
     // Delete those test scope objects
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedLocationResponse',
       ({locationsResponse}) => {
-        return callMutationNTimesAndConcatResponses(
+        return deleteItemsOfExistingResponses(
           apolloConfig,
           {
-            items: locationsResponse,
-            forceDelete,
-            existingMatchingProps: props,
-            queryForExistingContainer: queryLocationsContainer,
+            forceDelete: forceDelete !== false,
             queryResponsePath: 'data.locations',
             mutationContainer: makeLocationMutationContainer,
             responsePath: 'result.data.mutate.location',
-            outputParams: {id: 1, deleted: 1},
-            propVariationFunc: ({item: location, props}) => {
-              return R.compose(
-                // And the deleted datetime
-                R.set(R.lensProp('deleted'), moment().toISOString(true)),
-                // Just pass the id
-                R.pick(['id'])
-              )(location);
-            }
           },
-          props
+          R.merge(props, {existingItemResponses: locationsResponse})
         );
       }
     ),

@@ -19,7 +19,7 @@ import {
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
 import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore.js';
-import {createSampleProjectContainer, createSampleProjectsContainer} from './regionSample.js';
+import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample';
 import T from 'folktale/concurrency/task/index.js';
 
 const {of} = T;
