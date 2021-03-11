@@ -49,6 +49,8 @@ import {
  * if the queries are authorized to run, otherwise all queries are skipped. Note again that if queryContainer
  * defines it's own skip, it should be set up to OR the skip passed in by queryVariationContainers
  * @param {Object} props
+ * @param {Boolean} props.queryVariationContainersTestAll Use this test prop to override allowRequestProp
+ * and run all the query container
  * @returns {Object} keyed by query names, e.g. queryFoos, queryFoosPaginated, queryFoosMinimized, valued by
  * the query container
  */
@@ -61,7 +63,7 @@ export const queryVariationContainers = R.curry((
     queryContainer,
     normalizeProps = R.identity,
     allowRequestProp,
-    authRequestFilter
+    authRequestFilter,
   }
 ) => {
   return R.fromPairs(R.map(
@@ -73,7 +75,8 @@ export const queryVariationContainers = R.curry((
         props => {
           // Skip if our skipFilter returns true or authRequestFilter returns false
           const skip = R.anyPass([
-            props => R.complement(R.propEq)(allowRequestProp, key)(props),
+            props => !R.propOr(false, 'queryVariationContainersTestAll', props) &&
+              R.complement(R.propEq)(allowRequestProp, key)(props),
             // If apolloConfig.options.skip is defined, test it
             props => strPathOr(R.always(false), 'options.skip', apolloConfig)(props),
             props => (R.complement(authRequestFilter || R.always(true)))(props)

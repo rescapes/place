@@ -38,7 +38,10 @@ describe('variedRequestHelpers', () => {
         ({projects, variations}) => {
           const props = {projectFilter: {idIn: R.map(reqStrPathThrowing('id'), projects)}};
           // Returns all 10 with 2 queries of pageSize 5
-          return reqStrPathThrowing('queryProjectsPaginatedAllMinimized', variations)(R.merge(props, {projectQueryKey: 'queryProjectsPaginatedAllMinimized', pageSize: 5}));
+          return reqStrPathThrowing('queryProjectsPaginatedAllMinimized', variations)(
+            // Teat the test prop queryVariationContainersTestAll
+            R.merge(props, {queryVariationContainersTestAll: true, pageSize: 5})
+          );
         }
       ),
       mapToNamedResponseAndInputs('projectsPagedAll',
