@@ -23,9 +23,9 @@ import {
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {compact, mergeDeepAll, pickDeepPaths, reqStrPath, reqStrPathThrowing, strPathOr} from '@rescapes/ramda';
-import {makeRegionsQueryContainer} from '../scopeStores/region/regionStore.js';
+import {regionsQueryContainer} from '../scopeStores/region/regionStore.js';
 import {currentUserStateQueryContainer} from '../userStores/userStateStore.js';
-import {makeProjectsQueryContainer} from '../scopeStores/project/projectStore.js';
+import {projectsQueryContainer} from '../scopeStores/project/projectStore.js';
 
 
 /**
@@ -250,7 +250,7 @@ export const makeMapboxQueryContainer = v(R.curry((apolloConfig, {outputParams},
             }
           );
         }
-        return _makeProjectsQueryResolveMapboxContainer(
+        return _projectsQueryResolveMapboxContainer(
           apolloConfig,
           outputParams,
           // Pass the last mapbox results with the props to accumulate mapboxes
@@ -409,7 +409,7 @@ const _makeCurrentUserStateQueryResolveMapboxContainer = (apolloConfig, outputPa
   ])(props);
 };
 
-const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, props) => {
+const _projectsQueryResolveMapboxContainer = (apolloConfig, outputParams, props) => {
   return composeWithComponentMaybeOrTaskChain([
     projectsResponse => {
       if (!strPathOr(null, 'data', projectsResponse)) {
@@ -423,7 +423,7 @@ const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
         );
       }
       const mapboxes = R.map(
-        region => strPathOr(null, 'data.mapbox', region),
+        project => strPathOr(null, 'data.mapbox', project),
         reqStrPathThrowing('data.projects', projectsResponse)
       );
       const mapbox = consolidateMapboxes(mapboxes);
@@ -440,7 +440,7 @@ const _makeProjectsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
         }
       );
     },
-    props => makeProjectsQueryContainer(
+    props => projectsQueryContainer(
       R.merge(apolloConfig, {
         options: {
           variables: props => {
@@ -493,7 +493,7 @@ const _makeRegionsQueryResolveMapboxContainer = (apolloConfig, outputParams, pro
       );
     },
     props => {
-      return makeRegionsQueryContainer(
+      return regionsQueryContainer(
         R.merge(apolloConfig, {
           options: {
             variables: props => {
@@ -569,31 +569,3 @@ const _makeSettingsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
   ])(props);
 };
 
-/**
- * Makes a Region mutation
- * @param {Object} apolloClient An authorized Apollo Client
- * @param [String|Object] outputParams output parameters for the query in this style json format:
- *  ['id',
- *   {
- *        data: [
- *         'foo',
- *         {
- *            properties: [
- *             'type',
- *            ]
- *         },
- *         'bar',
- *       ]
- *    }
- *  ]
- *  @param {Object} inputParams Object matching the shape of a region. E.g.
- *  {id: 1, city: "Stavanger", data: {foo: 2}}
- *  Creates need all required fields and updates need at minimum the id
- *  @param {Task} An apollo mutation task
- */
-export const makeRegionMutationTask = R.curry((apolloConfig, outputParams, inputParams) => makeMutationRequestContainer(
-  apolloConfig,
-  {name: 'region'},
-  outputParams,
-  inputParams
-));

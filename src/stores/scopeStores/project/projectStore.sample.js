@@ -1,4 +1,4 @@
-import {makeProjectMutationContainer, makeProjectsQueryContainer, projectOutputParams} from './projectStore.js';
+import {projectMutationContainer, projectsQueryContainer, projectOutputParams} from './projectStore.js';
 import {
   composeWithChain,
   mapToNamedResponseAndInputs,
@@ -20,7 +20,7 @@ import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskCha
 import {getRenderPropFunction} from '@rescapes/apollo/src/helpers/componentHelpersMonadic';
 import {containerForApolloType} from '@rescapes/apollo/src/helpers/containerHelpers';
 import {createSampleRegionContainer} from '../region/regionStore.sample';
-import {makeRegionMutationContainer, makeRegionsQueryContainer, regionOutputParams} from '../region/regionStore';
+import {regionMutationContainer, regionsQueryContainer, regionOutputParams} from '../region/regionStore';
 
 /**
  * Created by Andy Likuski on 2019.01.22
@@ -49,7 +49,7 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
 
   return composeWithComponentMaybeOrTaskChain([
     locations => {
-      return makeProjectMutationContainer(
+      return projectMutationContainer(
         apolloConfig,
         {outputParams: outputParams || projectOutputParams},
         projectSample(
@@ -70,7 +70,7 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
             apolloConfig,
             {
               render: getRenderPropFunction(props),
-              response: []
+              response: {objects: []}
             }
           );
         }
@@ -82,11 +82,11 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
         apolloConfig,
         {
           queryName: 'projects',
-          queryContainer: makeProjectsQueryContainer(
+          queryContainer: projectsQueryContainer(
             apolloConfig,
             {outputParams: projectOutputParams}
           ),
-          mutateContainer: makeProjectMutationContainer,
+          mutateContainer: projectMutationContainer,
           responsePath: 'result.data.mutate.project'
         },
         R.merge({
@@ -183,11 +183,11 @@ export const createSampleProjectsContainer = v((apolloConfig, props) => {
           apolloConfig,
           {
             queryName: 'projects',
-            queryContainer: makeProjectsQueryContainer(
+            queryContainer: projectsQueryContainer(
               apolloConfig,
               {outputParams: projectOutputParams}
             ),
-            mutateContainer: makeProjectMutationContainer,
+            mutateContainer: projectMutationContainer,
             responsePath: 'result.data.mutate.project'
           },
           {

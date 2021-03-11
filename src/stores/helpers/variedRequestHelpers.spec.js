@@ -11,7 +11,7 @@
 import {queryVariationContainers} from './variedRequestHelpers.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {
-  makeProjectsQueryContainer,
+  projectsQueryContainer,
   projectOutputParams,
   projectOutputParamsMinimized
 } from '../../stores/scopeStores/project/projectStore.js';
@@ -106,7 +106,7 @@ describe('variedRequestHelpers', () => {
                 outputParams: projectOutputParams,
                 readInputTypeMapper: projectReadInputTypeMapper
               },
-              queryContainer: makeProjectsQueryContainer
+              queryContainer: projectsQueryContainer
             }
           ));
         }

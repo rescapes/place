@@ -18,7 +18,7 @@ import {
 } from '@rescapes/ramda';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
-import {makeProjectMutationContainer, projectQueryVariationContainers} from './projectStore.js';
+import {projectMutationContainer, projectQueryVariationContainers} from './projectStore.js';
 import {createSampleProjectContainer, createSampleProjectsContainer} from './projectStore.sample';
 import T from 'folktale/concurrency/task/index.js';
 
@@ -28,7 +28,7 @@ import {createSampleLocationsContainer} from '../location/locationStore.sample.j
 
 const someProjectKeys = ['id', 'key', 'geojson'];
 describe('projectStore', () => {
-  test('makeProjectMutationContainer', done => {
+  test('projectMutationContainer', done => {
     expect.assertions(1);
     const errors = [];
     composeWithChain([

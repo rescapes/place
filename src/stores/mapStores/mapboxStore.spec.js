@@ -27,7 +27,7 @@ import {
 import {
   mutateSampleUserStateWithProjectsAndRegionsContainer
 } from '../../stores/userStores/userStateStore.sample.js';
-import {makeProjectMutationContainer} from '../scopeStores/project/projectStore';
+import {projectMutationContainer} from '../scopeStores/project/projectStore';
 
 /**
  * Created by Andy Likuski on 2018.12.31

@@ -11,7 +11,6 @@
 
 export {
   makeMapboxQueryContainer,
-  makeRegionMutationTask,
   projectMapboxOutputParamsCreator,
   regionMapboxOutputParamsCreator,
   scopeObjMapboxOutputParamsCreator,
@@ -26,8 +25,8 @@ export {
   projectOutputParams,
   projectOutputParamsMinimized,
   projectOutputParamsMinimizedWithLocations,
-  makeProjectMutationContainer,
-  makeProjectsQueryContainer,
+  projectMutationContainer,
+  projectsQueryContainer,
   projectReadInputTypeMapper,
   projectQueryVariationContainers
 } from './stores/scopeStores/project/projectStore.js';
@@ -35,8 +34,8 @@ export {
   regionOutputParams,
   regionOutputParamsMinimized,
   regionReadInputTypeMapper,
-  makeRegionMutationContainer,
-  makeRegionsQueryContainer,
+  regionMutationContainer,
+  regionsQueryContainer,
   regionQueryVariationContainers,
   regionTypePolicy
 } from './stores/scopeStores/region/regionStore.js';

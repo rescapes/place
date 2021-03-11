@@ -62,7 +62,7 @@ const hasScopeParams = scope => {
  * @param {Object} requestConfig
  * @param {Object} [requestConfig.completeWithRenderProp] Default true, set false if this is being
  * used within another call to composeWithComponentMaybeOrTaskChain
- * @param {Function} scopeQueryContainer Task querying the scope class, such as makeRegionsQueryContainer
+ * @param {Function} scopeQueryContainer Task querying the scope class, such as regionsQueryContainer
  * @param {String} scopeName The name of the scope, such as 'region' or 'project'
  * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
  * and returning output parameters for each the scope class query. If don't have to query scope separately
@@ -229,7 +229,7 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
 /**
  * Mutates the given scope object (UserRegion, UserProject, etc) that are in the scope of the given user.
  * @param {Object} apolloClient The Apollo Client
- * @param {Function} scopeQueryContainer Task querying the scope class, such as makeRegionsQueryContainer
+ * @param {Function} scopeQueryContainer Task querying the scope class, such as regionsQueryContainer
  * @param {String} scopeName The name of the scope, such as 'region' or 'project'
  * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
  * and returning output parameters for each the scope class query. If don't have to query scope seperately
@@ -391,7 +391,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
  * Given resolved objects from the user state about the scope and further arguments to filter those scope objects,
  * query for the scope objects
  * @param {Object} apolloClient The Apollo Client
- * @param {Function} scopeQueryContainer Task querying the scope class, such as makeRegionsQueryContainer
+ * @param {Function} scopeQueryContainer Task querying the scope class, such as regionsQueryContainer
  * @param {Object} scopeSettings
  * @param {String} scopeSettings.scopeName The name of the scope, such as 'region' or 'project'
  * @param {[Object]} scopeSettings.scopeOutputParams Output parameters for each the scope class query

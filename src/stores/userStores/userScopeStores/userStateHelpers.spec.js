@@ -19,7 +19,7 @@ import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../userState
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import {
-  makeProjectsQueryContainer,
+  projectsQueryContainer,
 } from '../../scopeStores/project/projectStore.js';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
@@ -99,7 +99,7 @@ describe('userStateHelpers', () => {
         return userStateScopeObjsQueryContainer(
           apolloConfig,
           {
-            scopeQueryContainer: makeProjectsQueryContainer,
+            scopeQueryContainer: projectsQueryContainer,
             scopeName,
             readInputTypeMapper: userStateReadInputTypeMapper,
             userStateOutputParamsCreator: userScopeOutputParams => {

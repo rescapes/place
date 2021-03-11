@@ -57,7 +57,7 @@
   "devDependencies": {
     "@chakra-ui/core": "1.0.0-rc.8",
     "@chakra-ui/react": "1.3.4",
-    "@rescapes/apollo": "^0.1.413",
+    "@rescapes/apollo": "^0.1.415",
     "@rescapes/geospatial-sankey": "^0.7.62",
     "@rescapes/helpers": "^1.1.114",
     "@rescapes/helpers-component": "^1.5.142",

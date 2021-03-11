@@ -40,8 +40,8 @@ import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsFragment} from '../activityStore.js';
 import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
 import {
-  makeProjectMutationContainer,
-  makeProjectsQueryContainer,
+  projectMutationContainer,
+  projectsQueryContainer,
   projectOutputParamsMinimized
 } from '../../scopeStores/project/projectStore.js';
 import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample.js';
@@ -289,7 +289,7 @@ describe('userProjectStore', () => {
             apolloConfig, {
               queryResponsePath: 'data.projects',
               forceDelete: true,
-              mutationContainer: makeProjectMutationContainer,
+              mutationContainer: projectMutationContainer,
               responsePath: 'result.data.mutate.project',
               outputParams: {id: 1, deleted: 1}
             },
@@ -299,7 +299,7 @@ describe('userProjectStore', () => {
       ),
       mapToNamedResponseAndInputs('existingItemResponses',
         ({apolloConfig, user}) => {
-          return makeProjectsQueryContainer(apolloConfig, {outputParams: {id: 1}}, {user: {id: user.id}});
+          return projectsQueryContainer(apolloConfig, {outputParams: {id: 1}}, {user: {id: user.id}});
         }
       ),
       // Resolve the user state

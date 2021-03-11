@@ -1,4 +1,4 @@
-import {makeRegionMutationContainer, makeRegionsQueryContainer, regionOutputParams} from './regionStore.js';
+import {regionMutationContainer, regionsQueryContainer, regionOutputParams} from './regionStore.js';
 import {
   composeWithChain,
   mapToNamedResponseAndInputs,
@@ -37,7 +37,7 @@ import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskCha
  */
 export const createSampleRegionContainer = (apolloConfig, {}, props = {}) => {
   // Create the prop function and pass it sample props to return a Task
-  return makeRegionMutationContainer(
+  return regionMutationContainer(
     apolloConfig,
     {outputParams: regionOutputParams},
     sampleRegion(props)
@@ -109,11 +109,11 @@ export const createSampleRegionsContainer = v((apolloConfig, props) => {
         apolloConfig,
         {
           queryName: 'regions',
-          queryContainer: makeRegionsQueryContainer(
+          queryContainer: regionsQueryContainer(
             apolloConfig,
             {outputParams: regionOutputParams}
           ),
-          mutateContainer: makeRegionMutationContainer,
+          mutateContainer: regionMutationContainer,
           responsePath: 'result.data.mutate.region'
         },
         {

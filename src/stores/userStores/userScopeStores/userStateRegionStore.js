@@ -12,7 +12,7 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
-import {makeRegionsQueryContainer, regionOutputParamsMinimized} from '../../scopeStores/region/regionStore.js';
+import {regionsQueryContainer, regionOutputParamsMinimized} from '../../scopeStores/region/regionStore.js';
 import {
   userStateScopeObjsMutationContainer,
   userStateScopeObjsQueryContainer, userScopeOrNullAndProps
@@ -64,7 +64,7 @@ export const userStateRegionsQueryContainer = v(R.curry(
     return userStateScopeObjsQueryContainer(
       apolloConfig,
       {
-        scopeQueryContainer: makeRegionsQueryContainer,
+        scopeQueryContainer: regionsQueryContainer,
         scopeName,
         readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: scopeOutputParams => {
@@ -120,7 +120,7 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRe
     return userStateScopeObjsMutationContainer(
       apolloConfig,
       {
-        scopeQueryContainer: makeRegionsQueryContainer,
+        scopeQueryContainer: regionsQueryContainer,
         scopeName,
         readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: userScopeOutputParams => {

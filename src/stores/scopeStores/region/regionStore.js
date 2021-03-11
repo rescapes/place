@@ -89,7 +89,7 @@ const normalizeRegionPropsForQuerying = region => {
  * @params {Object} props Arguments for the Regions query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
-export const makeRegionsQueryContainer = v(R.curry((apolloConfig , {outputParams}, props) => {
+export const regionsQueryContainer = v(R.curry((apolloConfig , {outputParams}, props) => {
     return makeQueryContainer(
       composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeRegionPropsForQuerying),
       {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams},
@@ -103,7 +103,7 @@ export const makeRegionsQueryContainer = v(R.curry((apolloConfig , {outputParams
     })],
     ['props', PropTypes.shape().isRequired]
   ],
-  'makeRegionsQueryContainer'
+  'regionsQueryContainer'
 );
 
 /**
@@ -147,7 +147,7 @@ export const normalizeRegionPropsForMutating = region => {
  *  @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeRegionMutationContainer = v(R.curry(
+export const regionMutationContainer = v(R.curry(
   (apolloConfig, {outputParams = regionOutputParamsMinimized}, props) => makeMutationRequestContainer(
     // if apolloConfig.options.variables is defined, call it and then call normalizeRegionPropsForMutating
     composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeRegionPropsForMutating),
@@ -164,7 +164,7 @@ export const makeRegionMutationContainer = v(R.curry(
   })
   ],
   ['props', PropTypes.shape().isRequired]
-], 'makeRegionMutationContainer');
+], 'regionMutationContainer');
 
 /**
  * Returns and object with different versions of the region query container: 'minimized', 'paginated', 'paginatedAll'
@@ -194,7 +194,7 @@ export const regionQueryVariationContainers = (apolloConfig) => {
         outputParams: regionOutputParams,
         readInputTypeMapper: regionReadInputTypeMapper
       },
-      queryContainer: makeRegionsQueryContainer
+      queryContainer: regionsQueryContainer
     }
   );
 };

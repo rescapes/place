@@ -19,8 +19,8 @@ import {
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import * as R from 'ramda';
 import {
-  makeRegionMutationContainer,
-  makeRegionsQueryContainer,
+  regionMutationContainer,
+  regionsQueryContainer,
   regionOutputParams,
   regionQueryVariationContainers
 } from './regionStore.js';
@@ -51,7 +51,7 @@ describe('regionStore', () => {
   test('makeRegionsQueryContainer', done => {
     const errors = [];
     R.composeK(
-      ({apolloConfig, region}) => makeRegionsQueryContainer(
+      ({apolloConfig, region}) => regionsQueryContainer(
         apolloConfig,
         {outputParams: regionOutputParams},
         {key: reqStrPathThrowing('key', region)}

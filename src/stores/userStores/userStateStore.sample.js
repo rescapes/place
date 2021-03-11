@@ -33,9 +33,17 @@ import {
   mutateOnceAndWaitContainer
 } from '@rescapes/apollo';
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
-import {deleteLocationsContainer} from '../scopeStores/location/locationStore';
-import {makeRegionMutationContainer, regionOutputParams} from '../scopeStores/region/regionStore';
-import {makeProjectMutationContainer, projectOutputParams} from '../scopeStores/project/projectStore';
+import {deleteLocationsContainer, queryLocationsContainer} from '../scopeStores/location/locationStore';
+import {
+  regionMutationContainer,
+  regionsQueryContainer,
+  regionOutputParams
+} from '../scopeStores/region/regionStore';
+import {
+  projectMutationContainer,
+  projectOutputParams,
+  projectsQueryContainer
+} from '../scopeStores/project/projectStore';
 import {queryScopeObjsOfUserStateContainer} from './userScopeStores/userStateHelpers';
 import {projectSample} from '../scopeStores/project/projectStore.sample';
 
@@ -84,19 +92,32 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         return callMutationNTimesAndConcatResponses(
           apolloConfig, {
             items: projectKeys,
-            mutationContainer: (apolloConfig, {}, props) => {
-              return createSampleProjectContainer(apolloConfig, {locationsContainer}, props);
-            },
+
+            // These help us find existing regions from the API and either reuse them or destroy and recreate them
+            forceDelete,
+            existingMatchingProps: {user: R.pick(['id'], user), nameIn: R.map(capitalize, regionKeys)},
+            existingItemMatch: (item, existingItemsResponses) => R.find(
+              existingItem => R.propEq('name', item, existingItem),
+              existingItemsResponses
+            ),
+            queryForExistingContainer: projectsQueryContainer,
+            queryResponsePath: 'data.projects',
+
+            mutationContainer: projectMutationContainer,
             responsePath: 'result.data.mutate.project',
             propVariationFunc: ({item: projectKey}) => {
-              return {
+              return projectSample({
+                // Keys have to be unique through the system, so might have a suffix assigned by the server
                 key: projectKey,
+                // These don't have to be unique
                 name: capitalize(projectKey),
                 user: R.pick(['id'], user),
                 region: R.pick(['id'], R.head(regions)),
                 locations: R.map(R.pick(['id']), locations)
-              };
-            }
+              });
+            },
+            // Need the full outputParams for createUserProjectWithDefaults()
+            outputParams: projectOutputParams
           },
           {regions, locations, render}
         );
@@ -109,6 +130,17 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
           apolloConfig,
           {
             items: regionKeys,
+
+            // These help us find existing regions from the API and either reuse them or destroy and recreate them
+            forceDelete,
+            existingMatchingProps: {keyIn: regionKeys},
+            existingItemMatch: (item, existingItemsResponses) => R.find(
+              existingItem => R.propEq('key', item, existingItem),
+              existingItemsResponses
+            ),
+            queryForExistingContainer: regionsQueryContainer,
+            queryResponsePath: 'data.regions',
+
             mutationContainer: createSampleRegionContainer,
             responsePath: 'result.data.mutate.region',
             propVariationFunc: ({item: regionKey}) => {
@@ -134,7 +166,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
               apolloConfig,
               {
                 render: getRenderPropFunction({render}),
-                response: []
+                response: {objects: []}
               }
             );
           }

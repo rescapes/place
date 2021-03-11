@@ -107,7 +107,7 @@ export const normalizeProjectPropsForQuerying = project => {
  * @params {Object} props Arguments for the Projects query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Projects in an object with obj.data.projects or errors in obj.errors
  */
-export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
+export const projectsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeQueryContainer(
       composeFuncAtPathIntoApolloConfig(
         apolloConfig,
@@ -125,7 +125,7 @@ export const makeProjectsQueryContainer = v(R.curry((apolloConfig, {outputParams
     })],
     ['props', PropTypes.shape().isRequired]
   ],
-  'makeProjectsQueryContainer');
+  'projectsQueryContainer');
 
 /**
  * Normalized project props for for mutation
@@ -162,7 +162,7 @@ export const normalizeProjectPropsForMutating = projectOrObj => {
  *  @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const makeProjectMutationContainer = v(R.curry((
+export const projectMutationContainer = v(R.curry((
   apolloConfig,
   {outputParams = projectOutputParamsMinimized, projectPropsPath = null},
   props
@@ -183,7 +183,7 @@ export const makeProjectMutationContainer = v(R.curry((
   })
   ],
   ['props', PropTypes.shape().isRequired]
-], 'makeProjectMutationContainer');
+], 'projectMutationContainer');
 
 /**
  * Returns an object with different versions of the project query container: 'minimized', 'paginated', 'paginatedAll'
@@ -223,7 +223,7 @@ export const projectQueryVariationContainers = apolloConfig => {
         outputParams: projectOutputParams,
         readInputTypeMapper: projectReadInputTypeMapper
       },
-      queryContainer: makeProjectsQueryContainer
+      queryContainer: projectsQueryContainer
     }
   );
 };

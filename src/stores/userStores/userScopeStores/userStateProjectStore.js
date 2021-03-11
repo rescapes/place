@@ -12,7 +12,7 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
-import {makeProjectsQueryContainer, projectOutputParams} from '../../scopeStores/project/projectStore.js';
+import {projectsQueryContainer, projectOutputParams} from '../../scopeStores/project/projectStore.js';
 import {
   userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
@@ -78,7 +78,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
     return userStateScopeObjsQueryContainer(
       apolloConfig,
       {
-        scopeQueryContainer: makeProjectsQueryContainer,
+        scopeQueryContainer: projectsQueryContainer,
         scopeName,
         readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: userScopeOutputParams => {
@@ -129,7 +129,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userP
       apolloConfig,
       {
         scopeName,
-        scopeQueryContainer: makeProjectsQueryContainer,
+        scopeQueryContainer: projectsQueryContainer,
         readInputTypeMapper,
         userStateOutputParamsCreator: scopeOutputParams => {
           return userStateOutputParamsCreator(
