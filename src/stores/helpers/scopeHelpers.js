@@ -16,7 +16,11 @@ import {e} from '@rescapes/helpers-component'
 
 const {of} = T;
 import {composeWithChain, reqPathThrowing ,pathOr} from '@rescapes/ramda';
-import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
+import {
+  callMutationNTimesAndConcatResponses,
+  composeWithComponentMaybeOrTaskChain,
+  nameComponent
+} from '@rescapes/apollo';
 
 /**
  * Queries using the queryContainer and deletes using the mutateContainer with each result
@@ -41,7 +45,7 @@ export const queryAndDeleteIfFoundContainer = (
     response => {
       const objectsToDelete = pathOr(null, ['data', queryName], response);
       if (!objectsToDelete || R.any(response => !R.prop('data', response), objectsToDelete)) {
-        return e('div', {}, 'loading')
+        return nameComponent('queryAndDeleteIfFoundContainer', e('div', {}, 'loading'))
       }
       return callMutationNTimesAndConcatResponses(
         apolloConfig,
