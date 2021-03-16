@@ -373,14 +373,16 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
           // Skip if passed in or in apolloConfig
           options: {
             variables: props => {
+              // If the userState is specified use it, otherwise assume the userState props are at the top-level
               const userState = R.ifElse(
                 R.has('userState'),
                 R.prop('userState'),
                 R.omit(['render', 'children'])
               )(props)
-              // If the userState is specified use it, otherwise assume the userState props are at the top-level
-              return R.unless(
-                R.either(R.isEmpty, R.isNil),
+              // If it's null, we'll skip the request, but set to {} so other filtering works.
+              return R.ifElse(
+                R.isNil,
+                () => ({}),
                 normalizeUserStatePropsForMutating
               )(userState)
             },

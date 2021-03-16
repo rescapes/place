@@ -1,7 +1,7 @@
 import {
   findUserScopeInstance,
   matchingUserStateScopeInstance,
-  matchingUserStateScopeInstances,
+  matchingUserStateScopeInstances, queryScopeObjsOfUserStateContainer,
   userStateScopeObjsQueryContainer
 } from './userStateHelpers.js';
 import {
@@ -19,7 +19,7 @@ import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../userState
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import {
-  projectsQueryContainer,
+  projectsQueryContainer
 } from '../../scopeStores/project/projectStore.js';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
@@ -121,14 +121,14 @@ describe('userStateHelpers', () => {
       // Set the UserState, returns previous values and {userState, projects, regions}
       // where project and region are scope instances of userState
       mapToMergedResponseAndInputs(
-      ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectsAndRegionsContainer(
-          apolloConfig, {forceDleete: true}, {
-          user: R.pick(['id'], user),
-          regionKeys: ['earth'],
-          projectKeys: ['shrangrila', 'pangea']
-        });
-      }),
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig, {forceDleete: true}, {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila', 'pangea']
+            });
+        }),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
           return currentUserQueryContainer(apolloConfig, userOutputParams, {});
@@ -172,4 +172,4 @@ describe('userStateHelpers', () => {
     }, {userState, region: {id: 'fred'}});
     expect(notFound).toEqual(undefined);
   });
-})
+});

@@ -16,7 +16,7 @@ import {
   compact,
   mergeDeep,
   mergeDeepAll,
-  onlyOneThrowing,
+  onlyOneThrowing, pathOr,
   pickDeepPaths,
   renameKey,
   reqPathThrowing,
@@ -292,7 +292,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
                       },
                       userScopeObjs
                     ),
-                    R.map(
+                    userScopeObjs => R.map(
                       userScopeObj => {
                         // Modify the scope instance to only contain the id. We can't submit any changes to the scope instance
                         return R.over(
@@ -300,7 +300,8 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
                           scopeInstance => R.pick(['id'], scopeInstance),
                           userScopeObj
                         );
-                      }
+                      },
+                      userScopeObjs
                     )
                   )(userScopeObjs);
                 },
@@ -413,7 +414,19 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
     return composeWithComponentMaybeOrTaskChain([
       // Match any returned scope objs with the corresponding userScopeObjs
       nameComponent('matchUserScopeObjs', scopeObjsResponse => {
-        const matchingScopeObjs = R.view(R.lensPath(['data', scopeNamePlural]), scopeObjsResponse) || [];
+
+        // If we are in a loading or error state, return the response with proceeding
+        if (R.any(prop => R.prop(prop, scopeObjsResponse), ['loading', 'error'])) {
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: scopeObjsResponse
+            }
+          );
+        }
+
+        const matchingScopeObjs = pathOr([], ['data', scopeNamePlural], scopeObjsResponse)
         const matchingScopeObjsById = R.indexBy(R.prop('id'), matchingScopeObjs);
         const userScopeObjs = R.propOr([], 'userScopeObjs', props);
         return R.compose(
@@ -469,6 +482,8 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
           }
         )(userScopeObjs);
       }),
+
+      // Find the scope instances that match the ids of userScopeObj
       nameComponent('scopeQuery', props => {
         const {userScope, userScopeObjs} = props;
         const scopeProps = R.prop(scopeName, userScope);
