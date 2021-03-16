@@ -271,6 +271,17 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
     return composeWithComponentMaybeOrTaskChain([
       // If there is a match with what the caller is submitting, update it, else add it
       nameComponent('userStateMutation', userScopeObjsResponse => {
+
+          // If we are in a loading or error state, return the response without proceeding
+          if (R.any(prop => R.prop(prop, userScopeObjsResponse), ['loading', 'error'])) {
+            return containerForApolloType(
+              apolloConfig,
+              {
+                render: getRenderPropFunction(props),
+                response: userScopeObjsResponse
+              }
+            );
+          }
           // Find the userScopeObjs that we just queried for
           // There might be none if nothing in our userState exists yet
           const existingUserScopeObjs = strPathOr(null, `data.${userScopeName}`, userScopeObjsResponse);
@@ -415,7 +426,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
       // Match any returned scope objs with the corresponding userScopeObjs
       nameComponent('matchUserScopeObjs', scopeObjsResponse => {
 
-        // If we are in a loading or error state, return the response with proceeding
+        // If we are in a loading or error state, return the response without proceeding
         if (R.any(prop => R.prop(prop, scopeObjsResponse), ['loading', 'error'])) {
           return containerForApolloType(
             apolloConfig,
