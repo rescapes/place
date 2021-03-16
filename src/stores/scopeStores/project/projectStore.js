@@ -89,6 +89,8 @@ export const projectOutputParams = {
   ...versionOutputParamsMixin
 };
 
+export const projectVariationQueries = ['queryProjects', 'queryProjectsMinimized', 'queryProjectsPaginated', 'queryProjectsPaginatedAll']
+
 /**
  * Normalized project props for for querying
  * @param {Object} project

@@ -28,7 +28,8 @@ export {
   projectMutationContainer,
   projectsQueryContainer,
   projectReadInputTypeMapper,
-  projectQueryVariationContainers
+  projectQueryVariationContainers,
+  projectVariationQueries
 } from './stores/scopeStores/project/projectStore.js';
 export {
   regionOutputParams,
@@ -37,7 +38,8 @@ export {
   regionMutationContainer,
   regionsQueryContainer,
   regionQueryVariationContainers,
-  regionTypePolicy
+  regionTypePolicy,
+  regionVariationQueries
 } from './stores/scopeStores/region/regionStore.js';
 
 export {

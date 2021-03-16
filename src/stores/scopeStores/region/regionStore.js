@@ -78,6 +78,8 @@ export const regionOutputParams = {
   ...versionOutputParamsMixin
 };
 
+export const regionVariationQueries = ['regionProjects', 'queryRegionsMinimized', 'queryRegionsPaginated', 'queryRegionsPaginatedAll'];
+
 const normalizeRegionPropsForQuerying = region => {
   return filterOutNullDeleteProps(region);
 };
@@ -89,7 +91,7 @@ const normalizeRegionPropsForQuerying = region => {
  * @params {Object} props Arguments for the Regions query. This can be {} or null to not filter.
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
-export const regionsQueryContainer = v(R.curry((apolloConfig , {outputParams}, props) => {
+export const regionsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeQueryContainer(
       composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeRegionPropsForQuerying),
       {name: 'regions', readInputTypeMapper: regionReadInputTypeMapper, outputParams},
