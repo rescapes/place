@@ -284,7 +284,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
           }
           // Find the userScopeObjs that we just queried for
           // There might be none if nothing in our userState exists yet
-          const existingUserScopeObjs = strPathOr(null, `data.${userScopeName}`, userScopeObjsResponse);
+          const existingUserScopeObjs = strPathOr(null, `data.userStates.0.data.${userScopeName}`, userScopeObjsResponse);
 
           // Operate on the userScope instances in useState
           const userStateWithCreatedOrUpdatedScopeObj = R.over(
