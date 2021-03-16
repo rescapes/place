@@ -277,7 +277,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
             return containerForApolloType(
               apolloConfig,
               {
-                render: getRenderPropFunction(props),
+                render: getRenderPropFunction({render}),
                 response: userScopeObjsResponse
               }
             );
