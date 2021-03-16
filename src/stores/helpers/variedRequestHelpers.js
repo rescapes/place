@@ -14,7 +14,7 @@ import {capitalize, mergeDeep, strPathOr} from '@rescapes/ramda';
 import {
   composeFuncAtPathIntoApolloConfig,
   containerForApolloType,
-  getRenderPropFunction
+  getRenderPropFunction, nameComponent
 } from '@rescapes/apollo';
 
 
@@ -142,11 +142,11 @@ export const queryVariationContainers = R.curry((
             [R.T,
               () => {
                 // Perform the normal query
-                return queryContainer(
+                return nameComponent(key, queryContainer(
                   _apolloConfig,
                   R.mergeAll([queryConfig, args]),
                   props
-                );
+                ));
               }
             ]
           ])(type);

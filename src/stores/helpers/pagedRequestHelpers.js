@@ -188,7 +188,7 @@ export const queryPageContainer = v(R.curry((
     );
 
     // Run a query for each page (based on the result of the first query)
-    return _paginatedQueryContainer(
+    return nameComponent(name, _paginatedQueryContainer(
       updatedApolloConfig,
       {
         name,
@@ -198,7 +198,7 @@ export const queryPageContainer = v(R.curry((
         page: pageOrDefault
       },
       props
-    );
+    ));
   }),
   [
     ['apolloConfig', PropTypes.shape().isRequired
@@ -235,7 +235,7 @@ export const _paginatedQueryContainer = (
   {name, outputParams, readInputTypeMapper, pageSize, page},
   props
 ) => {
-  return makeQueryContainer(
+  return nameComponent(name, makeQueryContainer(
     // Modify options.variables to put props in objects: [...]
     _modifyApolloConfigOptionsVariablesForPagination(apolloConfig),
     {
@@ -251,7 +251,7 @@ export const _paginatedQueryContainer = (
       readInputTypeMapper
     },
     R.merge({page, pageSize}, props)
-  );
+  ));
 };
 
 /**
