@@ -27,8 +27,9 @@ import {
   omitClientFields,
   relatedObjectsToIdForm,
   versionOutputParamsMixin,
-  callMutationNTimesAndConcatResponses, mapTaskOrComponentToNamedResponseAndInputs
+  callMutationNTimesAndConcatResponses, mapTaskOrComponentToNamedResponseAndInputs, nameComponent
 } from '@rescapes/apollo';
+import {e} from '@rescapes/helpers-component'
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {
@@ -263,13 +264,13 @@ export const currentUserStateQueryContainer = v(R.curry(
   (apolloConfig, {outputParams}, props) => {
     return composeWithComponentMaybeOrTaskChain([
       response => {
-        if (!strPathOr(null, 'data.currentUser', response)) {
+        if (strPathOr(false, 'loading', response)) {
           // Loading
           return containerForApolloType(
             apolloConfig,
             {
               render: getRenderPropFunction(props),
-              response
+              response: nameComponent('currentUserStateQueryContainer', e('div', {}, 'loading'))
             }
           );
         }
