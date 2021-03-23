@@ -204,13 +204,6 @@ export const projectQueryVariationContainers = apolloConfig => {
       // query variations. This allows us to dynamically change which query we use, so that if
       // we expect a large list we can page, or if we need to minimize or maximize outputParams
       allowRequestProp: 'projectQueryKey',
-      // Skip any query unless we are authorized
-      authRequestFilter: props => {
-        return R.anyPass([
-          R.prop('user'),
-          strPathOr(false, 'userState.user')
-        ])(props);
-      },
       requestTypes: [
         {},
         {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},

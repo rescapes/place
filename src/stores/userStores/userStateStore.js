@@ -29,7 +29,7 @@ import {
   versionOutputParamsMixin,
   callMutationNTimesAndConcatResponses, mapTaskOrComponentToNamedResponseAndInputs, nameComponent
 } from '@rescapes/apollo';
-import {e} from '@rescapes/helpers-component'
+import {e} from '@rescapes/helpers-component';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {
@@ -264,13 +264,13 @@ export const currentUserStateQueryContainer = v(R.curry(
   (apolloConfig, {outputParams}, props) => {
     return composeWithComponentMaybeOrTaskChain([
       response => {
-        if (strPathOr(false, 'loading', response)) {
-          // Loading
+        if (!strPathOr(null, 'data.currentUser', response)) {
+          // Loading, error or skipped because not authenticated
           return containerForApolloType(
             apolloConfig,
             {
               render: getRenderPropFunction(props),
-              response: nameComponent('currentUserStateQueryContainer', e('div', {}, 'loading'))
+              response
             }
           );
         }
@@ -379,13 +379,13 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
                 R.has('userState'),
                 R.prop('userState'),
                 R.omit(['render', 'children'])
-              )(props)
+              )(props);
               // If it's null, we'll skip the request, but set to {} so other filtering works.
               return R.ifElse(
                 R.isNil,
                 () => ({}),
                 normalizeUserStatePropsForMutating
-              )(userState)
+              )(userState);
             },
             update: (store, {data, render, ...rest}) => {
               const response = {result: {data}, ...rest};
