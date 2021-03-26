@@ -17,8 +17,7 @@ import {
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   getRenderPropFunction,
-  makeMutationRequestContainer,
-  makeSettingsQueryContainer
+  settingsQueryContainer
 } from '@rescapes/apollo';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
@@ -546,7 +545,7 @@ const _makeSettingsQueryResolveMapboxContainer = (apolloConfig, outputParams, pr
         }
       );
     },
-    props => makeSettingsQueryContainer(
+    props => settingsQueryContainer(
       R.merge(apolloConfig, {
         options: {
           variables: props => {

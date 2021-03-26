@@ -13,7 +13,7 @@ import {
   defaultSettingsCacheIdProps,
   defaultSettingsCacheOnlyObjs,
   defaultSettingsOutputParams, defaultSettingsTypenames,
-  defaultStateLinkResolvers,
+  defaultStateLinkResolvers, settingsConfig,
   writeConfigToServerAndCacheContainer
 } from '@rescapes/apollo';
 import settings from './privateSettings.js';
@@ -46,5 +46,5 @@ export const testConfig = {
  * Task to return and authorized client for tests
  * Returns an object {apolloClient:An authorized client}
  */
-export const testAuthTask = () => createTestAuthTask(testConfig);
-export const testNoAuthTask = () => createTestNoAuthTask(testConfig);
+export const testAuthTask = () => createTestAuthTask(settingsConfig, testConfig);
+export const testNoAuthTask = () => createTestNoAuthTask(settingsConfig, testConfig);
