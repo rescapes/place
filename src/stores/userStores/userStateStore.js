@@ -230,7 +230,7 @@ export const userStateDataTypeIdPathLookup = {
 };
 
 // These fields need deep merge methods to keep cache only values
-export const userStateStorePoliciesConfig = [
+export const userStateStorePoliciesConfig = R.indexBy(R.prop('type'), [
   {type: 'UserStateType', fields: ['data']},
   {
     type: 'UserStateDataType',
@@ -246,7 +246,7 @@ export const userStateStorePoliciesConfig = [
   // we mutate but subsequent queries don't have the cache only data, but we dont want to lose the cache-only data
   {type: 'UserRegionDataType', fields: ['selection']},
   {type: 'UserProjectDataType', fields: ['selection']}
-];
+]);
 
 export const createCacheOnlyPropsForUserState = props => {
   return createCacheOnlyProps({name: 'userStore', cacheIdProps, cacheOnlyObjs}, props);

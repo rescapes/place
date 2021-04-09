@@ -8,20 +8,25 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import {typePoliciesConfig as typePoliciesConfigRescapeApollo, typePoliciesWithMergeObjects} from '@rescapes/apollo';
+import {
+  typePoliciesConfig,
+  typePolicies as typePoliciesRescapeApollo,
+  typePoliciesWithMergeObjects
+} from '@rescapes/apollo';
 import {userStateStorePoliciesConfig} from './stores/userStores/userStateStore.js';
 import {regionTypePolicy} from './stores/scopeStores/region/regionStore';
+import * as R from 'ramda';
 
 /**
  * Combines the Apollo typePolicies with local ones
  * @param {[Object]} callerConfig List of type policies from the caller to concat
  * @returns {[Object]} Returns the combined typePoliciesConfig
  */
-export const typePoliciesConfig = [
-  regionTypePolicy,
-  ...typePoliciesConfigRescapeApollo,
-  ...userStateStorePoliciesConfig
-];
+export const typePoliciesConfig = typePoliciesConfig(R.mergeAll([
+  typePoliciesRescapeApollo,
+  {regionTypePolicy},
+  userStateStorePoliciesConfig
+]));
 
 export const cacheOptions = {
   typePolicies: typePoliciesWithMergeObjects(
