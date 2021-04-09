@@ -27,7 +27,7 @@ export const typePolicies = R.merge(
  * @param {[Object]} callerConfig List of type policies from the caller to concat
  * @returns {[Object]} Returns the combined typePoliciesConfig
  */
-export const typePoliciesConfig = typePoliciesConfig(R.merge(
+export const typePoliciesConfigLocal = typePoliciesConfig(R.merge(
   typePoliciesRescapeApollo,
   typePolicies
 ));
