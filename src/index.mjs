@@ -72,7 +72,8 @@ export {
 } from './stores/helpers/pagedRequestHelpers.js';
 
 export {
-  typePoliciesConfig
+  typePoliciesConfig,
+  typePolicies
 } from './config.js';
 
 export {
