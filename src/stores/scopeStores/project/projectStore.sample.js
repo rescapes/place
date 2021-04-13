@@ -1,26 +1,17 @@
-import {projectMutationContainer, projectsQueryContainer, projectOutputParams} from './projectStore.js';
-import {
-  composeWithChain,
-  mapToNamedResponseAndInputs,
-  mergeDeep,
-  reqStrPathThrowing,
-  traverseReduce,
-  compact
-} from '@rescapes/ramda';
+import {projectMutationContainer, projectOutputParams, projectsQueryContainer} from './projectStore.js';
+import {compact, mergeDeep, reqStrPathThrowing} from '@rescapes/ramda';
 import * as R from 'ramda';
 import moment from 'moment';
-import T from 'folktale/concurrency/task/index.js';
-
-const {fromPromised, of} = T;
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers.js';
 import {createSampleLocationsContainer} from '../location/locationStore.sample.js';
-import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
-import {getRenderPropFunction} from '@rescapes/apollo/src/helpers/componentHelpersMonadic';
-import {containerForApolloType} from '@rescapes/apollo/src/helpers/containerHelpers';
-import {createSampleRegionContainer} from '../region/regionStore.sample';
-import {regionMutationContainer, regionsQueryContainer, regionOutputParams} from '../region/regionStore';
+import {
+  callMutationNTimesAndConcatResponses,
+  composeWithComponentMaybeOrTaskChain,
+  containerForApolloType,
+  getRenderPropFunction
+} from '@rescapes/apollo';
 
 /**
  * Created by Andy Likuski on 2019.01.22
