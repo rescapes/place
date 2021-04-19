@@ -36,6 +36,7 @@ import {currentUserStateQueryContainer} from '../userStores/userStateStore.js';
 import {projectsQueryContainer} from '../scopeStores/project/projectStore.js';
 import {isActive} from '../userStores/activityStore';
 import {loggers} from '@rescapes/log';
+
 const log = loggers.get('rescapeDefault');
 
 /**
@@ -179,135 +180,144 @@ export const scopeObjMapboxOutputParamsCreator = (scopeName, mapboxOutputParamsF
  * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
  */
 export const queryScopesMergeScopePropPathValueContainer = v(R.curry((apolloConfig, {
-    outputParams,
+    filterOutputParamsForSettingsQuery,
     filterOutputParamsForRegionsQuery,
     filterOutputParamsForProjectsQuery,
-    filterOutputParamsForSettingsQuery,
     mergeFunction,
     scopePropPath,
-    userScopePropPath
+    userScopePropPath,
+    outputParams,
   }, props) => {
     return composeWithComponentMaybeOrTaskChain([
-      settingsResponse => {
-        if (!R.prop('data', settingsResponse)) {
-          // return the previous response if loading. The requests are independent but we don't have a compose
-          // call for parallel requests yet
-          // Loading
-          return containerForApolloType(
-            apolloConfig,
-            {
-              render: getRenderPropFunction(props),
-              response: settingsResponse
-            }
-          );
-        }
-        // Merge the mapbox results. This takes the most last defined viewport to give use the viewport
-        // for the most specific scope
-        // TODO if we need to deep merge anything in the mapboxes we need to add it here
-        return containerForApolloType(
-          apolloConfig,
-          {
-            render: getRenderPropFunction(props),
-            // Override the data with the consolidated mapbox
-            response: R.over(
-              R.lensPath(data, ...R.split('.', 'propPath')),
-              () => {
-                return R.mergeAll(
-                  R.map(
-                    path => strPathOr(null, path, settingsResponse),
-                    ['data.mapbox', 'props.regionsMapbox', 'props.projectsMapbox', 'props.userStateMapbox']
-                  )
-                );
-              },
-              settingsResponse
-            )
-          }
-        );
-      },
-
-      mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projectMergedScopeValueResponse',
-        ({userStateMergedScopeValueResponse, ...props}) => {
-          if (!R.prop('projectFilter', props) || !R.prop('data', userStateMergedScopeValueResponse)) {
-            // If we are loading (for component queries) or are loaded but there is no projectFilter specified,
-            // return userStateScopeMergedValueResponse.
+        ({
+           userStateMergedScopeValueResponse,
+           settingsScopeValueResponse,
+           regionMergedScopeValueResponse,
+           projectMergedScopeValueResponse,
+           ...props
+         }) => {
+          if (!R.prop('data', projectMergedScopeValueResponse)) {
+            // If loading the previous response, return it
             return containerForApolloType(
               apolloConfig,
               {
                 render: getRenderPropFunction(props),
-                response: userStateMergedScopeValueResponse
+                response: projectMergedScopeValueResponse
               }
             );
           }
-          return scopeQueryResolveDataPropPathValueContainer(
+          // Merge the prop path value results of the various scopes
+          const mergedValue = mergeFunction(compact([
+            strPathOr({}, 'data.userStateMergedScopePropPathValue', userStateMergedScopeValueResponse),
+            strPathOr({}, 'data.mergedScopePropPathValue', settingsScopeValueResponse),
+            strPathOr({}, 'data.mergedScopePropPathValue', regionMergedScopeValueResponse),
+            strPathOr({}, 'data.mergedScopePropPathValue', projectMergedScopeValueResponse)
+          ]));
+
+          return containerForApolloType(
             apolloConfig,
             {
-              outputParams: projectMapboxOutputParamsCreator(outputParams),
-              scopePropPath
-            },
-            props
+              render: getRenderPropFunction(props),
+              // Use our previous response and override it's data with the final merged value
+              response: R.over(
+                R.lensProp('data'),
+                data => mergedValue,
+                projectMergedScopeValueResponse
+              )
+            }
           );
-        }
-      ),
+        },
 
-      mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'regionMergedScopeValueResponse',
-        ({userStateMergedScopeValueResponse}) => {
-          const previousResponse = userStateMergedScopeValueResponse;
+        // When regionMergedScopeValueResponse is done,
+        // Query for project objects, merging the scope object prop path value of each that is found
+        // with the merge function. E.g. if we want project.data.mapbox and we find 3 projects, merge
+        // the data.mapbox property of the 3 with mergeFunction
+        // If there are not active projects, this just returns regionMergedScopeValueResponse
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projectMergedScopeValueResponse',
+          ({userStateMergedScopeValueResponse, regionMergedScopeValueResponse: previousResponse}) => {
+            return activeScopeQueryResolveDataPropPathValueContainer(apolloConfig,
+              {
+                userStateMergedScopeValueResponse,
+                previousResponse,
+                scopeQueryContainer: projectsQueryContainer,
+                outputParams: filterOutputParamsForRegionsQuery(outputParams),
+                scopePropPath,
+                scopeReturnPath: 'projects',
+                mergeFunction
+              },
+              props);
+          }
+        ),
+        // Query for region objects, merging the scope object prop path value of each that is found
+        // with the merge function. E.g. if we want region.data.mapbox and we find 3 regions, merge
+        // the data.mapbox property of the 3 with mergeFunction
+        // Warn if there are no active regions, and return userStateMergedScopeValueResponse
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'regionMergedScopeValueResponse',
+          ({userStateMergedScopeValueResponse, settingsScopeValueResponse: previousResponse}) => {
+            return activeScopeQueryResolveDataPropPathValueContainer(apolloConfig,
+              {
+                warnIfNoneActive: true,
+                userStateMergedScopeValueResponse,
+                previousResponse,
+                scopeQueryContainer: settingsQueryContainer,
+                outputParams: settingsMapboxOutputParamsCreator(outputParams),
+                scopePropPath,
+                scopeReturnPath: 'settings',
+                mergeFunction
+              },
+              props);
+          }
+        ),
 
-          activeScopeQueryResolveDataPropPathValueContainer(apolloConfig,
-            {
-              userStateMergedScopeValueResponse,
-              previousResponse,
-              scopeQuery: regionsQueryContainer,
-              outputParams: regionMapboxOutputParamsCreator(outputParams),
-              scopePropPath,
-              scopeReturnPath: 'regions',
-              mergeFunction
-            },
-            props);
-        }
-      ),
+        // Query for the settings object to get its version of the prop path value
+        // E.g. if we want settings.data.mapbox, this returns the settings response
+        // with the data overridden to {mergedScopePropPathValue}, which is simply the value at 'settings.data.mapbox'
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'settingsScopeValueResponse',
+          ({userStateMergedScopeValueResponse, settingsResponse: previousResponse}) => {
+            return scopeQueryResolveDataPropPathValueContainer(apolloConfig,
+              {
+                userStateMergedScopeValueResponse,
+                previousResponse,
+                scopeQueryContainer: settingsQueryContainer,
+                outputParams: filterOutputParamsForSettingsQuery(outputParams),
+                scopePropPath,
+                scopeReturnPath: 'settings',
+                mergeFunction
+              },
+              props);
+          }
+        ),
 
-      regionsResponse => {
-        if (!R.prop('settings') || !R.prop('data', regionsResponse)) {
-          // return the previous response if loading or no settings
-          // The requests are independent but we don't have a compose call for parallel requests yet
-          return regionsResponse;
-        }
-        return _makeSettingsQueryResolveMapboxContainer(
-          apolloConfig,
-          outputParams,
-          // Pass the last mapbox results with the props to accumulate mapboxes
-          R.merge(
-            reqStrPathThrowing('props', regionsResponse),
-            {regionsMapbox: strPathOr(null, 'data.mapbox', regionsResponse)}
-          )
-        );
-      },
-
-      // Start by merging the value at the scope propPaths in the UserState
-      // The UserState values are prioritized ascending global, regions, [projects, [locations]]
-      mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateMergedScopeValueResponse',
-        props => {
-          return queryCurrentUserStateMergeScopePropPathValueContainer(
-            apolloConfig,
-            {
-              outputParams,
-              userScopePropPath: 'mapBox',
-              mergeFunction
-            },
-            props
-          );
-        }
-      )
+        // Start by merging the value at the scope propPaths in the UserState
+        // The UserState values are prioritized ascending global, regions, [projects, [locations]]
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateMergedScopeValueResponse',
+          props => {
+            return queryCurrentUserStateMergeScopePropPathValueContainer(
+              apolloConfig,
+              {
+                outputParams,
+                userScopePropPath,
+                mergeFunction
+              },
+              props
+            );
+          }
+        )
     ])(props);
   }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
-    ['outputParams', PropTypes.shape().isRequired],
-    ['propSets', PropTypes.shape({
+    ['options', PropTypes.shape({
+      filterOutputParamsForSettingsQuery: PropTypes.shape(),
+      filterOutputParamsForRegionsQuery: PropTypes.shape(),
+      filterOutputParamsForProjectsQuery: PropTypes.shape(),
+      mergeFunction: PropTypes.func,
+      scopePropPath: PropTypes.string.isRequired,
+      userScopePropPath: PropTypes.string.isRequired,
+      outputParams: PropTypes.shape().isRequired
+    }).isRequired],
+    ['props', PropTypes.shape({
       user: PropTypes.shape().isRequired,
-      regionFilter: PropTypes.shape().isRequired,
-      projectFilter: PropTypes.shape().isRequired
     }).isRequired]
   ], 'queryScopesMergeScopePropPathValueContainer');
 
@@ -498,7 +508,7 @@ const queryCurrentUserStateMergeScopePropPathValueContainer = (apolloConfig, {
  * and one didn't. We still return both here.
  */
 const scopeQueryResolveDataPropPathValueContainer = (apolloConfig, {
-  scopeQuery,
+  scopeQueryContainer,
   scopePropsFilter,
   outputParams,
   scopePropPath,
@@ -544,17 +554,21 @@ const scopeQueryResolveDataPropPathValueContainer = (apolloConfig, {
       );
     },
     props => {
-      return regionsQueryContainer(
+      return scopeQueryContainer(
         R.merge(apolloConfig, {
           options: {
             variables: props => {
-              return R.prop('regionFilter', props);
+              return scopePropsFilter(props);
             },
             errorPolicy: 'all',
             partialRefetch: true
           }
         }),
-        {name: 'regions', readInputTypeMapper, outputParams},
+        {
+          // TODO I don't think any of the scopeQueryContainer we call need to have the named passed
+          name: scopeReturnPath,
+          readInputTypeMapper, outputParams
+        },
         props
       );
     }
@@ -570,7 +584,7 @@ const scopeQueryResolveDataPropPathValueContainer = (apolloConfig, {
  * @param {Object} options.previousResponse  Required the response from the previous scope query
  * (e.g. the regions response when querying projects). Set to userStateMergedScopeValueResponse for regions
  * @param {Boolean } options.warnIfNoneActive Warn if no active scope instance are found
- * @param {Function} options.regionsQueryContainer
+ * @param {Function} options.scopeQueryContainer
  * @param {String} options.scopeName
  * @param {Object} options.outputParams
  * @param {String} options.scopePropPath
@@ -585,7 +599,7 @@ const activeScopeQueryResolveDataPropPathValueContainer = (
     userStateMergedScopeValueResponse,
     previousResponse,
     warnIfNoneActive,
-    scopeQuery: regionsQueryContainer,
+    scopeQueryContainer,
     scopeName,
     outputParams,
     scopePropPath,
@@ -593,7 +607,7 @@ const activeScopeQueryResolveDataPropPathValueContainer = (
     mergeFunction
   },
   props) => {
-  if (!R.prop('data', userStateMergedScopeValueResponse)) {
+  if (!R.prop('data', previousResponse)) {
     // return the previous response if loading
     return previousResponse;
   }
@@ -602,26 +616,29 @@ const activeScopeQueryResolveDataPropPathValueContainer = (
   const userStates = reqStrPathThrowing('userState', userStateMergedScopeValueResponse);
   const activeScopeObjects = apolloResponseFilterOrEmpty(
     `0.data.user${capitalize(scopeName)}`,
-    userRegion => isActive(userRegion),
+    userScopeObject => isActive(userScopeObject),
     userStates
   );
   // Return the previous response if we have no active scope objects
   if (!R.length(activeScopeObjects)) {
     if (warnIfNoneActive) {
-      log.warn(`No active ${scopeName} found in the userState. Cannot query for ${scopePropPath}`)
+      log.warn(`No active ${scopeName} found in the userState. Cannot query for ${scopePropPath}`);
     }
     return previousResponse;
   }
   return scopeQueryResolveDataPropPathValueContainer(
     apolloConfig,
     {
-      scopeQuery: regionsQueryContainer,
+      scopeQueryContainer,
       scopePropsFilter: props => {
-        return {idIn: R.map(R.pick(['id']), activeScopeObjects)};
+        // Filter by the matching ids of the active scope objects
+        return {
+          idIn: R.map(R.pick(['id']), activeScopeObjects)
+        };
       },
       outputParams,
       scopePropPath,
-      scopeReturnPath: 'regions',
+      scopeReturnPath,
       mergeFunction
     },
     props

@@ -62,9 +62,7 @@ describe('mapboxStore', () => {
           },
           {
             settings: {key: rescapePlaceDefaultSettingsKey},
-            user: R.pick(['id'], user),
-            regionFilter: {idIn: R.map(region => R.prop('id', region), regions)},
-            projectFilter: {idIn: R.map(project => R.prop('id', project), projects)}
+            user: R.pick(['id'], user)
           }
         );
       },

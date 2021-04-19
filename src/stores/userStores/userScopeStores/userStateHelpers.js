@@ -496,7 +496,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
       }),
 
       // Find the scope instances that match the ids of userScopeObj
-      nameComponent('scopeQuery', props => {
+      nameComponent('scopeQueryContainer', props => {
         const {userScope, userScopeObjs} = props;
         const scopeProps = R.prop(scopeName, userScope);
         return scopeQueryContainer(
