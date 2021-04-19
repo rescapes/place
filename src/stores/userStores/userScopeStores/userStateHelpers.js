@@ -16,7 +16,8 @@ import {
   compact,
   mergeDeep,
   mergeDeepAll,
-  onlyOneThrowing, pathOr,
+  onlyOneThrowing,
+  pathOr,
   pickDeepPaths,
   renameKey,
   reqPathThrowing,
@@ -30,7 +31,7 @@ import {
   containerForApolloType,
   filterOutReadOnlyVersionProps,
   getRenderPropFunction,
-  makeQueryContainer, mapTaskOrComponentToNamedResponseAndInputs,
+  makeQueryContainer,
   nameComponent
 } from '@rescapes/apollo';
 import PropTypes from 'prop-types';

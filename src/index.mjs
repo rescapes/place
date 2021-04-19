@@ -10,7 +10,7 @@
  */
 
 export {
-  makeMapboxQueryContainer,
+  queryScopesMergeScopePropPathValueContainer,
   projectMapboxOutputParamsCreator,
   regionMapboxOutputParamsCreator,
   scopeObjMapboxOutputParamsCreator,

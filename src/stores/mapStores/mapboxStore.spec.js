@@ -4,7 +4,11 @@ import {
   currentUserStateQueryContainer, userStateMutationContainer,
   userStateOutputParamsFull
 } from '../userStores/userStateStore.js';
-import {makeMapboxQueryContainer} from '../mapStores/mapboxStore.js';
+import {
+  mergeMapboxes, projectMapboxOutputParamsCreator,
+  queryScopesMergeScopePropPathValueContainer, regionMapboxOutputParamsCreator,
+  settingsMapboxOutputParamsCreator
+} from '../mapStores/mapboxStore.js';
 import * as R from 'ramda';
 import {
   composeWithChain,
@@ -47,66 +51,40 @@ describe('mapboxStore', () => {
     composeWithChain([
       // Now that we have a user, region, and project, we query
       ({apolloConfig, user, regions, projects}) => {
-        return makeMapboxQueryContainer(
+        return queryScopesMergeScopePropPathValueContainer(
           apolloConfig,
-          {outputParams: mapboxOutputParamsFragment},
+          {
+            outputParams: mapboxOutputParamsFragment,
+            filterOutputParamsForSettingsQuery: settingsMapboxOutputParamsCreator,
+            filterOutputParamsForRegionsQuery: regionMapboxOutputParamsCreator,
+            filterOutputParamsForProjectsQuery: projectMapboxOutputParamsCreator,
+            mergeFunction: mergeMapboxes,
+          },
           {
             settings: {key: rescapePlaceDefaultSettingsKey},
-            user: {id: parseInt(user.id)},
+            user: R.pick(['id'], user),
             regionFilter: {idIn: R.map(region => R.prop('id', region), regions)},
             projectFilter: {idIn: R.map(project => R.prop('id', project), projects)}
           }
         );
       },
 
-      // Set the UserState
       mapToMergedResponseAndInputs(
         ({apolloConfig, user}) => {
-          const now = moment().format('HH-mm-ss-SSS');
-          return mutateSampleUserStateWithProjectsAndRegionsContainer(
-            apolloConfig, {forceDelete: true}, {
-              user,
-              regionKeys: [`testAntarctica${now}`],
-              projectKeys: [`testRefrost${now}`, `testPoleVault${now}`]
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(apolloConfig, {forceDelete: true},
+            {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila', 'pangea']
             });
         }
       ),
-      // Get the current user if we didn't get a userState
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloConfig, userState}) => R.ifElse(
-          R.identity,
-          userState => of({data: {currentUser: R.prop('user', userState)}}),
-          () => currentUserQueryContainer(apolloConfig, userOutputParams, {})
-        )(userState)
+        ({apolloConfig}) => {
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
       ),
-      mapToNamedResponseAndInputs('void',
-        ({apolloConfig, userStateResponses}) => {
-          return R.ifElse(
-            R.identity,
-            userStateResponses => {
-              return deleteItemsOfExistingResponses(
-                apolloConfig, {
-                  queryResponsePath: 'data.userStates',
-                  forceDelete: true,
-                  mutationContainer: userStateMutationContainer,
-                  responsePath: 'result.data.mutate.userState',
-                  outputParams: {id: 1, deleted: 1}
-                },
-                {existingItemResponses: userStateResponses}
-              )
-            },
-            () => of({})
-          )(userStateResponses);
-        }),
 
-      // Get the current user state
-      mapToNamedResponseAndInputs('userStateResponses',
-        ({apolloConfig}) => currentUserStateQueryContainer(
-          apolloConfig,
-          {outputParams: userStateOutputParamsFull()},
-          {}
-        )
-      ),
       // Authenticate
       mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask()

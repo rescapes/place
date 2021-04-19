@@ -450,6 +450,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
  * @param {Object} scopeConfig.readInputTypeMapper
  * @param {Object} scopeConfig.scopeName e.g. 'project' or 'region'
  * @param {Object} scopeConfig.scopeProps The scope props to match test the scope, such as {keyContains: 'test'}
+ * @param {Object} props
  * @param {Object} props.userState The user state for which to delete scope objects
  * @param {Function} [props.render] Render function, required for component requests
  * @return {Object} {deleted[scope name]s: deleted objects, clearedScopeObjsUserState: Response after mutating the
@@ -532,8 +533,9 @@ export const deleteScopeObjectsContainer = (
  * Soft-delete the regions give by props. If userState is passed it will remove the deleted regions
  * from the userState (TODO perhaps we should search for all userStates containing the regions and remove themn)
  * @param apolloConfig
- * @param {Object} requestConfig
- * @param {Object} [requestConfig.userState] optional
+ * @param {Object} options. None for now
+ * @param {Object} props
+ * @param {Object} [props.userState] optional
  * @param props
  * @return {Object} {deleteRegions: deleted region, clearedScopeObjsUserState: The user state post clearing}
  */
