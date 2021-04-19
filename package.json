@@ -1,6 +1,6 @@
 {
   "name": "@rescapes/place",
-  "version": "0.0.412",
+  "version": "0.0.413",
   "description": "Apollo-backed place schema",
   "main": "./src/index.mjs",
   "module": "./src/index.mjs",
@@ -46,6 +46,7 @@
     "folktale": "^2.3.2",
     "graphql-tag": "^2.11.0",
     "http-https": "^1.0.0",
+    "inflected": "^2.1.0",
     "path": "^0.12.7",
     "pluralize": "^8.0.0",
     "prop-types": "^15.7.2",
