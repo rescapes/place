@@ -1,38 +1,3 @@
-import {testAuthTask} from '../../helpers/testHelpers.js';
-import moment from 'moment';
-import {
-  currentUserStateQueryContainer, userStateMutationContainer,
-  userStateOutputParamsFull
-} from '../userStores/userStateStore.js';
-import {
-  mergeMapboxes, projectMapboxOutputParamsCreator,
-  queryScopesMergeScopePropPathValueContainer, regionMapboxOutputParamsCreator,
-  settingsMapboxOutputParamsCreator
-} from '../mapStores/mapboxStore.js';
-import * as R from 'ramda';
-import {
-  composeWithChain,
-  defaultRunConfig, mapToMergedResponseAndInputs,
-  mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs,
-  strPathOr
-} from '@rescapes/ramda';
-import {mapboxOutputParamsFragment} from './mapboxOutputParams.js';
-import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings.js';
-import T from 'folktale/concurrency/task/index.js';
-
-const {of} = T;
-import {
-  expectKeys,
-  currentUserQueryContainer,
-  userOutputParams,
-  deleteItemsOfExistingResponses
-} from '@rescapes/apollo';
-import {
-  mutateSampleUserStateWithProjectsAndRegionsContainer
-} from '../../stores/userStores/userStateStore.sample.js';
-import {projectMutationContainer} from '../scopeStores/project/projectStore';
-
 /**
  * Created by Andy Likuski on 2018.12.31
  * Copyright (c) 2018 Andy Likuski
@@ -43,6 +8,23 @@ import {projectMutationContainer} from '../scopeStores/project/projectStore';
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+import {testAuthTask} from '../../helpers/testHelpers.js';
+import {mergeMapboxes, queryScopesMergeScopePropPathValueContainer} from '../mapStores/mapboxStore.js';
+import * as R from 'ramda';
+import {
+  composeWithChain,
+  defaultRunConfig,
+  mapToMergedResponseAndInputs,
+  mapToNamedPathAndInputs,
+  mapToNamedResponseAndInputs
+} from '@rescapes/ramda';
+import {mapboxOutputParamsFragment} from './mapboxOutputParams.js';
+import {rescapePlaceDefaultSettingsKey} from '../../helpers/privateSettings.js';
+import T from 'folktale/concurrency/task/index.js';
+import {currentUserQueryContainer, expectKeys, userOutputParams} from '@rescapes/apollo';
+import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../../stores/userStores/userStateStore.sample.js';
+
 describe('mapboxStore', () => {
   test('makeMapboxStore', done => {
     const someMapboxKeys = ['data.mapbox.viewport.extent'];
@@ -54,11 +36,10 @@ describe('mapboxStore', () => {
         return queryScopesMergeScopePropPathValueContainer(
           apolloConfig,
           {
-            outputParams: mapboxOutputParamsFragment,
-            filterOutputParamsForSettingsQuery: settingsMapboxOutputParamsCreator,
-            filterOutputParamsForRegionsQuery: regionMapboxOutputParamsCreator,
-            filterOutputParamsForProjectsQuery: projectMapboxOutputParamsCreator,
+            outputParamsFragment: mapboxOutputParamsFragment,
             mergeFunction: mergeMapboxes,
+            scopePropPath: 'mapbox',
+            userScopePropPath: 'mapbox'
           },
           {
             settings: {key: rescapePlaceDefaultSettingsKey},
