@@ -10,12 +10,8 @@
  */
 
 export {
-  queryScopesMergeScopePropPathValueContainer,
-  projectMapboxOutputParamsCreator,
-  regionMapboxOutputParamsCreator,
-  scopeObjMapboxOutputParamsCreator,
-  userStateMapboxOutputParamsCreator
-} from './stores/mapStores/mapboxStore.js';
+  queryScopesMergeScopePropPathValueContainer
+} from './stores/scopePropertyStore.js'
 
 export {
   mapboxOutputParamsFragment

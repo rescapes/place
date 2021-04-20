@@ -19,8 +19,7 @@ const externals = [
   'numeral',
   'parse-decimal-number',
   'moment',
-  'graphql-geojson',
-  'fast-json-stable-stringify'
+  'graphql-geojson'
 ];
 
 const configs = R.map(c => {

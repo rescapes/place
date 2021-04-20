@@ -18,27 +18,28 @@ import {
   apolloResponseFilterOrEmpty,
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
-  getRenderPropFunction, mapTaskOrComponentToNamedResponseAndInputs,
+  getRenderPropFunction,
+  mapTaskOrComponentToNamedResponseAndInputs,
   settingsQueryContainer
 } from '@rescapes/apollo';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {
   capitalize,
-  compact, composeWithMap, composeWithMapMDeep,
+  compact,
+  composeWithMap,
   mergeDeepAll,
-  pickDeepPaths, reqPathThrowing,
-  reqStrPath,
+  reqPathThrowing,
   reqStrPathThrowing,
   strPathOr
 } from '@rescapes/ramda';
-import {regionsQueryContainer} from '../scopeStores/region/regionStore.js';
+import {regionsQueryContainer} from './scopeStores/region/regionStore.js';
 import {
   currentUserStateQueryContainer,
   userStateScopePropPathOutputParamsCreator
-} from '../userStores/userStateStore.js';
-import {projectsQueryContainer} from '../scopeStores/project/projectStore.js';
-import {isActive} from '../userStores/activityStore';
+} from './userStores/userStateStore.js';
+import {projectsQueryContainer} from './scopeStores/project/projectStore.js';
+import {isActive} from './userStores/activityStore';
 import {loggers} from '@rescapes/log';
 
 const log = loggers.get('rescapeDefault');
@@ -84,7 +85,9 @@ const log = loggers.get('rescapeDefault');
  * user-specific queries are made, meaning no user state is merged into the result
  * @params {Object} propSets.regionFilter Arguments to limit the region to zero or one region. If unspecified no
  * region queries are made
- * @returns {Task} A Task containing the Regions in an object with obj.data.regions or errors in obj.errors
+ * @returns {Task|Object} Task or component resolving to a response that is loading (for components) or if
+ * complete having {data: ...scopePropPath: the merge value}, where scopePropPath is expanded so 'mapbox.viewport'
+ * would be data: {mapbox: {viewport: {the merged value}}}
  */
 export const queryScopesMergeScopePropPathValueContainer = v(R.curry((apolloConfig, {
     mergeFunction,
@@ -115,7 +118,7 @@ export const queryScopesMergeScopePropPathValueContainer = v(R.curry((apolloConf
           strPathOr({}, 'data.mergedScopePropPathValue', settingsScopeValueResponse),
           strPathOr({}, 'data.mergedScopePropPathValue', regionMergedScopeValueResponse),
           strPathOr({}, 'data.mergedScopePropPathValue', projectMergedScopeValueResponse),
-          strPathOr({}, 'data.userStateMergedScopePropPathValue', userStateMergedScopeValueResponse),
+          strPathOr({}, 'data.userStateMergedScopePropPathValue', userStateMergedScopeValueResponse)
         ]));
 
         return containerForApolloType(
@@ -124,8 +127,8 @@ export const queryScopesMergeScopePropPathValueContainer = v(R.curry((apolloConf
             render: getRenderPropFunction(props),
             // Use our previous response and override it's data with the final merged value
             response: R.over(
-              R.lensProp('data'),
-              data => mergedValue,
+              R.lensPath(['data', ...R.split('.', scopePropPath)]),
+              () => mergedValue,
               projectMergedScopeValueResponse
             )
           }
@@ -187,7 +190,7 @@ export const queryScopesMergeScopePropPathValueContainer = v(R.curry((apolloConf
                 return R.pick(['key'], reqStrPathThrowing('settings', props));
               },
               scopeQueryContainer: settingsQueryContainer,
-              outputParams: settingsMapboxOutputParamsCreator(outputParamsFragment),
+              outputParams: {data: outputParamsFragment},
               scopePropPath,
               scopeName: 'settings',
               mergeFunction
@@ -476,7 +479,7 @@ const scopeQueryResolveDataPropPathValueContainer = v((apolloConfig, {
           }
         }),
         {
-          readInputTypeMapper, outputParams
+          outputParams
         },
         props
       );
@@ -519,7 +522,7 @@ const activeScopeQueryResolveDataPropPathValueContainer = v((
   {
     userStateMergedScopeValueResponse,
     previousResponse,
-    warnIfNoneActive=false,
+    warnIfNoneActive = false,
     scopeQueryContainer,
     scopeName,
     outputParams,

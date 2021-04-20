@@ -173,6 +173,39 @@ export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
   ...userScopeOutputParamsFragmentDefaultOnlyIds('project')
 });
 
+/**
+ * Creates UserState output params for a certain scope prop path value fragment.
+ * For example if we want mapbox data from userState.data.regions[*].mapbox,  userState.data.projects[*].mapbox,
+ * we would pass in
+ mapbox: {
+    viewport: {
+      latitude: 1,
+      longitude: 1,
+      zoom: 1
+    }
+  }
+ * @param {Object} scopePropPathValueOutputParamsFragment The fragment
+ * @return {*[]}
+ */
+export const userStateScopePropPathOutputParamsCreator = scopePropPathValueOutputParamsFragment => {
+  // Merge in {[scopeName]: {id: true}} and {activity: {isActive: true}} since we use often use that to filter the scope instances
+  // we want
+  const mergedOutputFragment = scopeName => R.merge({
+      [scopeName]: {id: true},
+      activity: {
+        isActive: true
+      }
+    },
+    scopePropPathValueOutputParamsFragment
+  );
+  return {
+    data: {
+      userGlobal: scopePropPathValueOutputParamsFragment,
+      userRegions: mergedOutputFragment('region'),
+      userProjects: mergedOutputFragment('project')
+    }
+  };
+};
 
 export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
 
