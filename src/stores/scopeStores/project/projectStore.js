@@ -89,7 +89,7 @@ export const projectOutputParams = {
   ...versionOutputParamsMixin
 };
 
-export const projectVariationQueries = ['queryProjects', 'queryProjectsMinimized', 'queryProjectsPaginated', 'queryProjectsPaginatedAll']
+export const projectVariationQueries = ['queryProjects', 'queryProjectsMinimized', 'queryProjectsPaginated', 'queryProjectsPaginatedAll'];
 
 /**
  * Normalized project props for for querying
@@ -191,11 +191,17 @@ export const projectMutationContainer = v(R.curry((
  * Returns an object with different versions of the project query container: 'minimized', 'paginated', 'paginatedAll'
  * with only one potentially skip: false based on the prop value of projectQueryKey.
  * The prop user or userState.user must also exist to avoid skipping all.
- * @param apolloConfig
- * @return {Object} keyed by the variation: 'projects', 'projectsMinimized', 'projectsPaginated', 'projectsPaginatedAll',
+ * @param {Object} apolloConfig
+ * @param {Object} options
+ * @param {String} [allowRequestPropPath] Default 'projectQueryKey'
+ * @param {String} [outputParams] Default projectOutputParams
+ * @returns {Object} keyed by the variation: 'projects', 'projectsMinimized', 'projectsPaginated', 'projectsPaginatedAll',
  * valued by the query container
  */
-export const projectQueryVariationContainers = apolloConfig => {
+export const projectQueryVariationContainers = (apolloConfig, {
+  allowRequestPropPath = 'projectQueryKey',
+  outputParams = projectOutputParams
+}) => {
   return queryVariationContainers(
     apolloConfig,
     {
@@ -203,7 +209,7 @@ export const projectQueryVariationContainers = apolloConfig => {
       // Only allow the query matching the value of props.projectQueryKey so we never run multiple
       // query variations. This allows us to dynamically change which query we use, so that if
       // we expect a large list we can page, or if we need to minimize or maximize outputParams
-      allowRequestPropPath: 'projectQueryKey',
+      allowRequestPropPath,
       requestTypes: [
         {},
         {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},
@@ -215,7 +221,7 @@ export const projectQueryVariationContainers = apolloConfig => {
         {type: 'paginatedAll', args: {}}
       ],
       queryConfig: {
-        outputParams: projectOutputParams,
+        outputParams,
         readInputTypeMapper: projectReadInputTypeMapper
       },
       queryContainer: projectsQueryContainer
