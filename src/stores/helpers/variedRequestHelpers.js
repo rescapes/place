@@ -10,7 +10,7 @@
  */
 import * as R from 'ramda';
 import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers.js';
-import {capitalize, mergeDeep, strPathOr} from '@rescapes/ramda';
+import {capitalize, mergeDeep, strPathEq, strPathOr} from '@rescapes/ramda';
 import {
   composeFuncAtPathIntoApolloConfig,
   containerForApolloType,
@@ -76,7 +76,7 @@ export const queryVariationContainers = R.curry((
           // Skip if our skipFilter returns true or authRequestFilter returns false
           const skip = R.anyPass([
             props => !R.propOr(false, 'queryVariationContainersTestAll', props) &&
-              R.complement(R.strPathEq)(allowRequestPropPath, key)(props),
+              R.complement(strPathEq)(allowRequestPropPath, key)(props),
             // If apolloConfig.options.skip is defined, test it
             props => strPathOr(R.always(false), 'options.skip', apolloConfig)(props),
             // If an authRequestFilter is provided test it. Usually it's better to test authentication
