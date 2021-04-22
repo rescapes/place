@@ -41,15 +41,15 @@ import {
  * }
  * @param {Function} [queryConfig.normalizeProps] Optional function that takes props and limits what props are
  * passed to the query. Defaults to passing all of them
- * @param {String} queryConfig.allowRequestProp The prop to check for a string match of key of the query that should not be skipped.
+ * @param {String} queryConfig.allowRequestPropPath The prop to check for a string match of key of the query that should not be skipped.
  * This makes all queries inactive except 0 or 1, since there's no reason to use two variations of query at the same time.
- * If there ever was we could make allowRequestProp match a prop that could be a list of strings.
+ * If there ever was we could make allowRequestPropPath match a prop that could be a list of strings.
  * Note that if queryContainer defines it's own skip, it should be set up to OR the skip passed in by queryVariationContainers
  * @param {Function} [queryConfig.authRequestFilter] If specified accepts props and returns true
  * if the queries are authorized to run, otherwise all queries are skipped. Note again that if queryContainer
  * defines it's own skip, it should be set up to OR the skip passed in by queryVariationContainers
  * @param {Object} props
- * @param {Boolean} props.queryVariationContainersTestAll Use this test prop to override allowRequestProp
+ * @param {Boolean} props.queryVariationContainersTestAll Use this test prop to override allowRequestPropPath
  * and run all the query container
  * @returns {Object} keyed by query names, e.g. queryFoos, queryFoosPaginated, queryFoosMinimized, valued by
  * the query container
@@ -62,7 +62,7 @@ export const queryVariationContainers = R.curry((
     queryConfig,
     queryContainer,
     normalizeProps = R.identity,
-    allowRequestProp,
+    allowRequestPropPath,
     authRequestFilter,
   }
 ) => {
@@ -76,7 +76,7 @@ export const queryVariationContainers = R.curry((
           // Skip if our skipFilter returns true or authRequestFilter returns false
           const skip = R.anyPass([
             props => !R.propOr(false, 'queryVariationContainersTestAll', props) &&
-              R.complement(R.propEq)(allowRequestProp, key)(props),
+              R.complement(R.strPathEq)(allowRequestPropPath, key)(props),
             // If apolloConfig.options.skip is defined, test it
             props => strPathOr(R.always(false), 'options.skip', apolloConfig)(props),
             // If an authRequestFilter is provided test it. Usually it's better to test authentication

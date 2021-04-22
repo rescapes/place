@@ -203,7 +203,7 @@ export const projectQueryVariationContainers = apolloConfig => {
       // Only allow the query matching the value of props.projectQueryKey so we never run multiple
       // query variations. This allows us to dynamically change which query we use, so that if
       // we expect a large list we can page, or if we need to minimize or maximize outputParams
-      allowRequestProp: 'projectQueryKey',
+      allowRequestPropPath: 'projectQueryKey',
       requestTypes: [
         {},
         {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},

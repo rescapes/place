@@ -93,7 +93,7 @@ describe('variedRequestHelpers', () => {
             ),
             {
               name: 'project',
-              allowRequestProp: 'projectQueryKey',
+              allowRequestPropPath: 'projectQueryKey',
               requestTypes: [
                 {},
                 {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},
