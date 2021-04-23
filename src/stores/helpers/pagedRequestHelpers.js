@@ -357,7 +357,7 @@ export const _modifyApolloConfigOptionsVariablesForPagination = apolloConfig => 
       return props => {
         return R.merge(
           // Page props and render are combined with the objects prop
-          R.pick(['render', 'page', 'pageSize'], props),
+          R.pick(['render', 'page', 'pageSize', 'orderBy'], props),
           {
             // objects are always an array of propSets, but for now assume only one set
             // the variables function can return an array of sets here if it wants
