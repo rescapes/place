@@ -45,6 +45,8 @@ import {
  * This makes all queries inactive except 0 or 1, since there's no reason to use two variations of query at the same time.
  * If there ever was we could make allowRequestPropPath match a prop that could be a list of strings.
  * Note that if queryContainer defines it's own skip, it should be set up to OR the skip passed in by queryVariationContainers
+ * @param {[String]} [queryConfig.allowQueries] Disables allowRequestPropPath to allow the queries specified.
+ * Example ['queryLocationsPaginated'] would allow a query by that name and skip all others
  * @param {Function} [queryConfig.authRequestFilter] If specified accepts props and returns true
  * if the queries are authorized to run, otherwise all queries are skipped. Note again that if queryContainer
  * defines it's own skip, it should be set up to OR the skip passed in by queryVariationContainers
@@ -69,14 +71,21 @@ export const queryVariationContainers = R.curry((
   return R.fromPairs(R.map(
     ({type, name: typeName, args}) => {
       const pluralName = `${name}s`;
-      const key = `query${capitalize(pluralName)}${capitalize(typeName || type || '')}`;
+      const queryKey = `query${capitalize(pluralName)}${capitalize(typeName || type || '')}`;
       return [
-        key,
+        queryKey,
         props => {
           // Skip if our skipFilter returns true or authRequestFilter returns false
           const skip = R.anyPass([
+              // Skip unless the props['allowRequestPropPath'] equals queryKey
+              // This check is disabled by the presence of queryVariationContainersTestAll
+              // or allowQueries being non-null/non-empty
             props => !R.propOr(false, 'queryVariationContainersTestAll', props) &&
-              R.complement(strPathEq)(allowRequestPropPath, key)(props),
+                !R.propOr(false, 'allowQueries', props) &&
+              R.complement(strPathEq)(allowRequestPropPath, queryKey)(props),
+            // Skip queries not specified by queryKey in allowQueries if allowQueries is truthy
+            props => R.propOr(false, 'allowQueries', props) &&
+              !R.include(queryKey, R.prop('allowQueries', props)),
             // If apolloConfig.options.skip is defined, test it
             props => strPathOr(R.always(false), 'options.skip', apolloConfig)(props),
             // If an authRequestFilter is provided test it. Usually it's better to test authentication
@@ -145,7 +154,7 @@ export const queryVariationContainers = R.curry((
             [R.T,
               () => {
                 // Perform the normal query
-                return nameComponent(key, queryContainer(
+                return nameComponent(queryKey, queryContainer(
                   _apolloConfig,
                   R.mergeAll([queryConfig, args]),
                   props
