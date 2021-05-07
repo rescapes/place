@@ -37,7 +37,7 @@ import {
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample';
 import {selectionOutputParamsFragment} from '../selectionStore.js';
-import {activityOutputParamsFragment} from '../activityStore.js';
+import {activityOutputParamsMixin} from '../activityStore.js';
 import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
 import {
   projectMutationContainer,
@@ -228,7 +228,7 @@ describe('userProjectStore', () => {
                 // By outputting this we ensure it survives the update (since we don't set it below)
                 // If we didn't put this here, {selection: {isSelected: true}} would be the only thing
                 // written to the updated userProject
-                ...activityOutputParamsFragment
+                ...activityOutputParamsMixin
               }
             },
             {
@@ -256,7 +256,7 @@ describe('userProjectStore', () => {
                   locations: {id: 1}
                 },
                 ...selectionOutputParamsFragment,
-                ...activityOutputParamsFragment
+                ...activityOutputParamsMixin
               }
             },
             {

@@ -23,6 +23,7 @@ import {mapboxOutputParamsFragment} from '../stores/mapStores/mapboxOutputParams
 import {rescapePlaceDefaultSettingsKey} from '../helpers/privateSettings.js';
 import {currentUserQueryContainer, expectKeys, userOutputParams} from '@rescapes/apollo';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from './userStores/userStateStore.sample.js';
+import {defaultSearchLocationOutputParamsMinimized} from "./search/searchLocation/defaultSearchLocationOutputParams";
 
 describe('scopePropertyStore', () => {
   test('queryScopesMergeScopePropPathValueContainer', done => {
@@ -49,7 +50,8 @@ describe('scopePropertyStore', () => {
 
       mapToMergedResponseAndInputs(
         ({apolloConfig, user}) => {
-          return mutateSampleUserStateWithProjectsAndRegionsContainer(apolloConfig, {forceDelete: true},
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(apolloConfig,
+            {forceDelete: true},
             {
               user: R.pick(['id'], user),
               regionKeys: ['earth'],

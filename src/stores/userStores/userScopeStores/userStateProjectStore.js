@@ -24,7 +24,7 @@ import {
   userStateReadInputTypeMapper
 } from '../userStateStore.js';
 import {selectionOutputParamsFragment} from '../selectionStore.js';
-import {activityOutputParamsFragment} from '../activityStore.js';
+import {activityOutputParamsMixin} from '../activityStore.js';
 import {renameKey} from '@rescapes/ramda';
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
@@ -48,7 +48,7 @@ export const userStateProjectOutputParams = (explicitProjectOutputParams = proje
     }
   },
   selectionOutputParamsFragment,
-  activityOutputParamsFragment]
+  activityOutputParamsMixin]
 );
 
 /**

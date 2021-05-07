@@ -23,7 +23,7 @@ import {
 } from '../userStateStore.js';
 import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore.js';
 import {selectionOutputParamsFragment} from '../selectionStore.js';
-import {activityOutputParamsFragment} from '../activityStore.js';
+import {activityOutputParamsMixin} from '../activityStore.js';
 import {renameKey} from '@rescapes/ramda';
 import {filterOutReadOnlyVersionProps} from '@rescapes/apollo';
 
@@ -39,7 +39,7 @@ export const userStateRegionOutputParams = (explicitRegionOuputParams = regionOu
     }
   },
   selectionOutputParamsFragment,
-  activityOutputParamsFragment
+  activityOutputParamsMixin
 ]);
 
 /**

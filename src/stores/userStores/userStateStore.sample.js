@@ -9,49 +9,34 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {
-  capitalize,
-  composeWithChain,
-  mapToNamedPathAndInputs,
-  reqStrPathThrowing,
-  pickDeepPaths, mapToResponseAndInputs, strPathOr
-} from '@rescapes/ramda';
-import {
-  adminUserStateQueryContainer, currentUserStateQueryContainer,
-  userStateMutationContainer,
-  userStateOutputParamsFullMetaOnlyScopeIds
-} from './userStateStore.js';
-import {createSampleProjectContainer} from '../scopeStores/project/projectStore.sample.js'
-import {createSampleRegionContainer, sampleRegion} from '../scopeStores/region/regionStore.sample.js';
+import {capitalize, reqStrPathThrowing} from '@rescapes/ramda';
+import {userStateMutationContainer, userStateOutputParamsMetaAndScopeIds} from './userStateStore.js';
+import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample.js';
 import * as R from 'ramda';
 import {
   callMutationNTimesAndConcatResponses,
   composeWithComponentMaybeOrTaskChain,
-  containerForApolloType, deleteItemsOfExistingResponses,
+  containerForApolloType,
   getRenderPropFunction,
   mapTaskOrComponentToNamedResponseAndInputs,
   mutateOnceAndWaitContainer
 } from '@rescapes/apollo';
-import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
-import {deleteLocationsContainer, queryLocationsContainer} from '../scopeStores/location/locationStore';
-import {
-  regionMutationContainer,
-  regionsQueryContainer,
-  regionOutputParams
-} from '../scopeStores/region/regionStore';
+import {regionsQueryContainer} from '../scopeStores/region/regionStore';
 import {
   projectMutationContainer,
   projectOutputParams,
   projectsQueryContainer
 } from '../scopeStores/project/projectStore';
-import {queryScopeObjsOfUserStateContainer} from './userScopeStores/userStateHelpers';
 import {projectSample} from '../scopeStores/project/projectStore.sample';
+import {defaultSearchLocationOutputParamsMinimized} from "../search/searchLocation/defaultSearchLocationOutputParams";
 
 /***
  * Helper to create scope objects and set the user state to them
  * @param {Object} apolloConfig
  * @param {Object} options
  * @param {Boolean} options.forceDelete
+ * @param {Object} options.searchLocationOutputParamsMinimized Defaults defaultSearchLocationOutputParamsMinimized.
+ * search location outputParams based on the application's location search params
  * @param {Object} props
  * @param {Object} props.user A real user object
  * @param [{String}] props.regionKeys Region keys to use to make sample regions
@@ -60,12 +45,12 @@ import {projectSample} from '../scopeStores/project/projectStore.sample';
  * This function expects two arguments, apolloConfig and props.
  * Props will be based in as {user: {id: user.id}}
  * @param {Function} props.render
- * @returns {Task<Object>} Task resolving to {projects, regions, userState} for apollo client, apollo component
+ * @returns {Task|Object} Task or React container resolving to {projects, regions, userState} for apollo client, apollo component
  * for components
  */
 export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   apolloConfig,
-  {forceDelete},
+  {forceDelete, searchLocationOutputParamsMinimized = defaultSearchLocationOutputParamsMinimized},
   {user, regionKeys, projectKeys, locationsContainer, render}
 ) => {
   return composeWithComponentMaybeOrTaskChain([
@@ -80,7 +65,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       ({user, regions, projects, render}) => {
         return userStateMutationContainer(
           apolloConfig,
-          {outputParams: userStateOutputParamsFullMetaOnlyScopeIds()},
+          {outputParams: userStateOutputParamsMetaAndScopeIds(searchLocationOutputParamsMinimized)},
           {userState: createSampleUserStateProps({user, regions, projects}), render}
         );
       }
@@ -155,6 +140,38 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       }
     ),
 
+    // Create sample searchLocations
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'searchLocations',
+      ({render, searchLocationNames}) => {
+        return callMutationNTimesAndConcatResponses(
+          apolloConfig,
+          {
+            items: searchLocationNames,
+
+            // These help us find existing regions from the API and either reuse them or destroy and recreate them
+            forceDelete,
+            existingMatchingProps: {nameIn: searchLocationNames},
+            existingItemMatch: (item, existingItemsResponses) => R.find(
+              existingItem => R.propEq('name', item, existingItem),
+              existingItemsResponses
+            ),
+            queryForExistingContainer: searchLocationsQueryContainer,
+            queryResponsePath: 'data.regions',
+
+            mutationContainer: createSampleRegionContainer,
+            responsePath: 'result.data.mutate.region',
+            propVariationFunc: ({item: regionKey}) => {
+              return {
+                key: regionKey,
+                name: capitalize(regionKey)
+              };
+            }
+          },
+          {render}
+        );
+      }
+    ),
+
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'locations',
       // Create sample locations (optional)
       ({locationsContainer, render}) => {
@@ -175,6 +192,12 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     )
   ])({user, regionKeys, projectKeys, locationsContainer, render});
 };
+
+const sampleUserSearchLocation = {
+  searchLocation: {street: {name: 'Paddy Wack St'}},
+  activity: {isActive: true}
+}
+
 /**
  * Populates the UserRegion properties with defaults based on the region's properties
  * @param {Object} region
@@ -200,6 +223,9 @@ export const createUserRegionWithDefaults = region => {
     },
     activity: {
       isActive: false
+    },
+    userSearch: {
+      userSearchLocations: [sampleUserSearchLocation]
     }
   };
 };
@@ -224,6 +250,9 @@ export const createUserProjectWithDefaults = project => {
     },
     activity: {
       isActive: false
+    },
+    userSearch: {
+      userSearchLocations: [sampleUserSearchLocation]
     }
   };
 };

@@ -25,7 +25,7 @@ import {
   adminUserStateQueryContainer,
   currentUserStateQueryContainer,
   userStateMutationContainer,
-  userStateOutputParamsFull
+  userStateLocalOutputParamsFull
 } from './userStateStore.js';
 import {
   mutateSampleUserStateWithProjectsAndRegionsContainer
@@ -35,7 +35,7 @@ import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample';
 
 
-describe('userStore', () => {
+describe('userStateStore', () => {
   test('currentUserQueryContainer', done => {
     const someUserKeys = ['id', 'email', 'username'];
     const errors = [];
@@ -56,12 +56,12 @@ describe('userStore', () => {
   test('makeCurrentUserStateQueryContainer', done => {
     const errors = [];
     const someUserStateKeys = ['user.id', 'data'];
-    R.composeK(
+    composeWithChain([
       mapMonadByConfig({name: 'userStates'},
         ({apolloConfig}) => {
           return currentUserStateQueryContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull()},
+            {outputParams: userStateLocalOutputParamsFull()},
             {}
           );
         }
@@ -85,7 +85,7 @@ describe('userStore', () => {
       mapMonadByConfig({name: 'apolloConfig'},
         () => testAuthTask()
       )
-    )({}).run().listen(
+    ])({}).run().listen(
       defaultRunConfig({
         onResolved: ({userStates}) => {
           expectKeysAtPath(someUserStateKeys, 'data.userStates.0', userStates);
@@ -101,7 +101,7 @@ describe('userStore', () => {
       ({apolloConfig, user}) => {
         return adminUserStateQueryContainer(
           apolloConfig,
-          {outputParams: userStateOutputParamsFull()},
+          {outputParams: userStateLocalOutputParamsFull()},
           {user: R.pick(['id'], user)}
         );
       },
@@ -150,7 +150,7 @@ describe('userStore', () => {
         ({apolloConfig, mutatedUserStateSecond}) => {
           return adminUserStateQueryContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull()},
+            {outputParams: userStateLocalOutputParamsFull()},
             {id: reqStrPathThrowing('id', mutatedUserStateSecond)}
           );
         }
@@ -174,7 +174,7 @@ describe('userStore', () => {
         ({apolloConfig, mutatedUserStateFirst}) => {
           return adminUserStateQueryContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull()},
+            {outputParams: userStateLocalOutputParamsFull()},
             {id: reqStrPathThrowing('id', mutatedUserStateFirst)}
           );
         }
@@ -221,7 +221,7 @@ describe('userStore', () => {
         ({apolloConfig, userState}) => {
           return currentUserStateQueryContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull()},
+            {outputParams: userStateLocalOutputParamsFull()},
             R.pick(['id'], userState)
           );
         }
@@ -242,7 +242,7 @@ describe('userStore', () => {
           );
           return userStateMutationContainer(
             apolloConfig,
-            {outputParams: userStateOutputParamsFull()},
+            {outputParams: userStateLocalOutputParamsFull()},
             {userState: modifiedUserState}
           );
         }

@@ -12,10 +12,10 @@
 import {strPathOr} from '@rescapes/ramda';
 
 /**
- * Activity fragment
+ * Activity mixin
  * @type {*{}}
  */
-export const activityOutputParamsFragment = {
+export const activityOutputParamsMixin = {
   activity: {
     isActive: 1
   }

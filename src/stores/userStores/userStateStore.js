@@ -11,7 +11,9 @@
 
 import * as R from 'ramda';
 import {
-  addMutateKeyToMutationResponse, composeFuncAtPathIntoApolloConfig,
+  addMutateKeyToMutationResponse,
+  callMutationNTimesAndConcatResponses,
+  composeFuncAtPathIntoApolloConfig,
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
   createCacheOnlyProps,
@@ -20,16 +22,15 @@ import {
   filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
   getRenderPropFunction,
-  makeMutationRequestContainer,
   makeCacheMutationContainer,
+  makeMutationRequestContainer,
   makeQueryContainer,
+  mapTaskOrComponentToNamedResponseAndInputs,
   mergeCacheable,
   omitClientFields,
   relatedObjectsToIdForm,
-  versionOutputParamsMixin,
-  callMutationNTimesAndConcatResponses, mapTaskOrComponentToNamedResponseAndInputs, nameComponent
+  versionOutputParamsMixin
 } from '@rescapes/apollo';
-import {e} from '@rescapes/helpers-component';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {
@@ -42,26 +43,26 @@ import {
   projectOutputParamsMinimized,
   projectReadInputTypeMapper
 } from '../scopeStores/project/projectStore.js';
-import {
-  capitalize,
-  composeWithChain,
-  mapToMergedResponseAndInputs,
-  mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs,
-  mergeDeep, pathOr,
-  reqStrPathThrowing,
-  strPathOr
-} from '@rescapes/ramda';
+import {capitalize, mergeDeep, pathOr, reqStrPathThrowing, strPathOr} from '@rescapes/ramda';
 import {selectionOutputParamsFragment} from './selectionStore.js';
-import {activityOutputParamsFragment} from './activityStore.js';
+import {activityOutputParamsMixin} from './activityStore.js';
 import T from 'folktale/concurrency/task/index.js';
 import moment from 'moment';
+import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore";
+import {
+  defaultSearchLocationOutputParams,
+  defaultSearchLocationOutputParamsMinimized
+} from "../search/searchLocation/defaultSearchLocationOutputParams";
 
 const {of} = T;
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = ['user'];
-const RELATED_DATA_PROPS = ['data.userRegions.region', 'data.userProjects.project'];
+const RELATED_DATA_PROPS = [
+  'data.userRegions.region', 'data.userProjects.project',
+  'data.userRegions.userSearch.userSearchLocations.searchLocation',
+  'data.userProjects.userSearch.userSearchLocations.searchLocation',
+];
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -90,54 +91,70 @@ export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
 /**
  * User state output params with full scope output params. This should only be used for querying when values of the scope
  * instances are needed beyond the ids
- * @return {{data: {userProjects: *, userRegions: *}, id: number, user: {id: number}}}
+ * @return {Object} The outputParams
  */
-export const userStateOutputParamsFull = () => {
+export const createUserStateOutputParamsFull = searchLocationOutputParams => {
   return {
     id: 1,
     user: {id: 1},
     data: {
-      userRegions: R.mergeAll([{
-        region: regionOutputParams
-      },
+      userRegions: R.mergeAll([
+        {
+          region: regionOutputParams,
+          userSearch: createUserSearchOutputParams(searchLocationOutputParams)
+        },
         selectionOutputParamsFragment,
-        activityOutputParamsFragment
+        activityOutputParamsMixin
       ]),
-      userProjects: R.mergeAll([{
-        project: projectOutputParams
-      },
+      userProjects: R.mergeAll([
+        {
+          project: projectOutputParams,
+          userSearch: createUserSearchOutputParams(searchLocationOutputParams)
+        },
         selectionOutputParamsFragment,
-        activityOutputParamsFragment
+        activityOutputParamsMixin
       ])
     }
   };
 };
+
+// Local version of createUserStateOutputParamsFull for tests
+export const userStateLocalOutputParamsFull = () => createUserStateOutputParamsFull(defaultSearchLocationOutputParams)
 
 /**
  * When meta data of the user scope instances is needed but only the id of the scope instances
  * @returns {Object} Props such as activity and selection for each userScope instance, but just
  * ids for the scope instance
  */
-export const userStateOutputParamsFullMetaOnlyScopeIds = () => {
+export const userStateOutputParamsMetaAndScopeIds = searchLocationOutputParamsMinimized => {
   return {
     id: 1,
     user: {id: 1},
     data: {
-      userRegions: R.mergeAll([{
-        region: regionOutputParamsMinimized
-      },
+      userRegions: R.mergeAll([
+        {
+          region: regionOutputParamsMinimized,
+          userSearch: createUserSearchOutputParams(searchLocationOutputParamsMinimized)
+        },
         selectionOutputParamsFragment,
-        activityOutputParamsFragment
+        activityOutputParamsMixin
       ]),
-      userProjects: R.mergeAll([{
-        project: projectOutputParamsMinimized
-      },
+      userProjects: R.mergeAll([
+        {
+          project: projectOutputParamsMinimized,
+          userSearch: createUserSearchOutputParams(searchLocationOutputParamsMinimized)
+        },
         selectionOutputParamsFragment,
-        activityOutputParamsFragment
+        activityOutputParamsMixin
       ])
     }
   };
 };
+
+// Local version of createUserStateOutputParamsFull for tests
+export const userStateLocalOutputParamsMetaAndScopeIds = () => createUserStateOutputParamsFull(
+  defaultSearchLocationOutputParamsMinimized
+)
 
 /***
  * userState data for scope objects (Project, Region, etc) output params fragment when we only want the project ids or
@@ -443,7 +460,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
                 {
                   name: 'userState',
                   // Always pass the full params so can pick out the cache only props
-                  outputParams: userStateOutputParamsFull(),
+                  outputParams: userStateLocalOutputParamsFull(),
                   // For merging cached array items of userState.data.userRegions|userProjedts
                   idPathLookup: userStateDataTypeIdPathLookup
                 },
@@ -542,7 +559,7 @@ export const deleteScopeObjectsContainer = (
             return userStateMutationContainer(
               apolloConfig,
               // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
-              {outputParams: omitClientFields(userStateOutputParamsFull())},
+              {outputParams: omitClientFields(userStateLocalOutputParamsFull())},
               {userState: modifiedUserState, render}
             );
           },

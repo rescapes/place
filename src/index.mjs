@@ -43,11 +43,11 @@ export {
   adminUserStateQueryContainer,
   userStateMutateOutputParams,
   userStateOutputParamsCreator,
-  userStateOutputParamsFull,
+  userStateLocalOutputParamsFull,
   userStateOutputParamsOnlyIds,
   currentUserStateQueryContainer,
   userScopeOutputParamsFragmentDefaultOnlyIds,
-  userStateOutputParamsFullMetaOnlyScopeIds
+  userStateOutputParamsMetaAndScopeIds
 } from './stores/userStores/userStateStore.js';
 
 export {
@@ -97,7 +97,7 @@ export {
   matchingUserStateScopeInstances, matchingUserStateScopeInstance, findUserScopeInstance
 } from './stores/userStores/userScopeStores/userStateHelpers.js';
 
-export {activityOutputParamsFragment, isActive} from './stores/userStores/activityStore.js';
+export {activityOutputParamsMixin, isActive} from './stores/userStores/activityStore.js';
 export {selectionOutputParamsFragment, isSelected} from './stores/userStores/selectionStore.js';
 
 export {

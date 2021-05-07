@@ -25,6 +25,7 @@ import {v} from '@rescapes/validate';
 import {locationOutputParams, locationOutputParamsMinimized} from './locationOutputParams.js';
 import T from 'folktale/concurrency/task/index.js';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
+import {composeFuncAtPathIntoApolloConfig} from "@rescapes/apollo/src/helpers/queryHelpers";
 
 const {of} = T;
 
@@ -49,7 +50,6 @@ export const locationReadInputTypeMapper = createReadInputTypeMapper(
  */
 export const queryLocationsContainer = v(R.curry(
   (apolloConfig, {outputParams}, props) => {
-    // TODO this has to support components. Move the two steps below to the server to make it easy
     return makeQueryContainer(
       apolloConfig,
       {
@@ -85,26 +85,27 @@ export const queryLocationsContainer = v(R.curry(
  */
 export const makeLocationMutationContainer = v(R.curry(
   (apolloConfig, {outputParams, locationPropsPath}, props) => {
-    return R.compose(
-      normalizedProps => {
-        return makeMutationRequestContainer(
-          apolloConfig,
-          {
-            name: 'location',
-            outputParams
-          },
-          normalizedProps
-        );
-      },
-      props => R.over(
-        // If locationPropsPath is null, over will operate on props
-        R.lensPath(locationPropsPath ? R.split('.', locationPropsPath) : []),
+    return makeMutationRequestContainer(
+      composeFuncAtPathIntoApolloConfig(
+        apolloConfig,
+        'options.variables',
         props => {
-          return props;
-        },
-        props
-      )
-    )(props);
+          return R.over(
+            // If locationPropsPath is null, over will operate on props
+            R.lensPath(locationPropsPath ? R.split('.', locationPropsPath) : []),
+            props => {
+              return props;
+            },
+            props
+          )
+        }
+      ),
+      {
+        name: 'location',
+        outputParams
+      },
+      props
+    );
   }), [
   ['apolloConfig', PropTypes.shape().isRequired],
   ['mutationStructure', PropTypes.shape({

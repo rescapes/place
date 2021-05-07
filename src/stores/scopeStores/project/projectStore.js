@@ -12,21 +12,22 @@
 import * as R from 'ramda';
 import {v} from '@rescapes/validate';
 import {
-  composeFuncAtPathIntoApolloConfig,
-  createReadInputTypeMapper, filterOutNullDeleteProps,
-  filterOutReadOnlyVersionProps,
-  makeMutationRequestContainer,
-  makeQueryContainer, relatedObjectsToIdForm,
-  versionOutputParamsMixin
+    composeFuncAtPathIntoApolloConfig,
+    createReadInputTypeMapper,
+    filterOutNullDeleteProps,
+    filterOutReadOnlyVersionProps,
+    makeMutationRequestContainer,
+    makeQueryContainer,
+    relatedObjectsToIdForm,
+    versionOutputParamsMixin
 } from '@rescapes/apollo';
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams.js';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
-import {strPathOr} from '@rescapes/ramda';
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [
-  'user', 'locations', 'region'
+    'user', 'locations', 'region'
 ];
 
 // Every complex input type needs a type specified in graphql. Our type names are
@@ -34,60 +35,55 @@ const RELATED_PROPS = [
 // Following this location.data is represented as follows:
 // TODO These value should be derived from the schema
 export const projectReadInputTypeMapper = createReadInputTypeMapper(
-  'project', R.concat(['geojson'], RELATED_PROPS)
+    'project', R.concat(['geojson'], RELATED_PROPS)
 );
 
-export const projectOutputParamsMinimized = {
-  id: 1,
-  key: 1,
-  name: 1,
-  createdAt: 1,
-  updatedAt: 1
-};
-
-export const projectOutputParamsMinimizedWithLocations = {
-  id: 1,
-  key: 1,
-  name: 1,
-  locations: {
-    id: 1
-  },
-  createdAt: 1,
-  updatedAt: 1
-};
 
 export const projectOutputParams = {
-  id: 1,
-  deleted: 1,
-  key: 1,
-  name: 1,
-  locations: {
-    id: 1
-  },
-  geojson: {
-    type: 1,
-    features: {
-      type: 1,
-      id: 1,
-      geometry: {
+    id: 1,
+    deleted: 1,
+    key: 1,
+    name: 1,
+    locations: {
+        id: 1
+    },
+    geojson: {
         type: 1,
-        coordinates: 1
-      },
-      properties: 1
+        features: {
+            type: 1,
+            id: 1,
+            geometry: {
+                type: 1,
+                coordinates: 1
+            },
+            properties: 1
+        },
+        generator: 1,
+        copyright: 1
     },
-    generator: 1,
-    copyright: 1
-  },
-  data: R.merge({
-      locations: {
-        // unstructured json represent location search params
-        params: 1
-      }
-    },
-    mapboxOutputParamsFragment
-  ),
-  ...versionOutputParamsMixin
+    data: R.merge({
+            locations: {
+                // unstructured json represent location search params
+                params: 1
+            }
+        },
+        mapboxOutputParamsFragment
+    ),
+    ...versionOutputParamsMixin
 };
+
+// Minimized plus locations: {id}
+export const projectOutputParamsMinimizedWithLocations = R.compose(
+    R.over(R.lensProp('locations'), R.pick(['id'])),
+    R.pick(
+        ['id', 'key', 'name', 'createdAt', 'updatedAt', 'deleted', 'locations'])
+)(projectOutputParams)
+
+// Minimized
+export const projectOutputParamsMinimized = R.pick(
+    ['id', 'key', 'name', 'createdAt', 'updatedAt', 'deleted'],
+    projectOutputParams
+)
 
 export const projectVariationQueries = ['queryProjects', 'queryProjectsMinimized', 'queryProjectsPaginated', 'queryProjectsPaginatedAll'];
 
@@ -97,7 +93,7 @@ export const projectVariationQueries = ['queryProjects', 'queryProjectsMinimized
  * @return {Object} the props modified
  */
 export const normalizeProjectPropsForQuerying = project => {
-  return filterOutNullDeleteProps(project);
+    return filterOutNullDeleteProps(project);
 };
 
 /**
@@ -110,24 +106,24 @@ export const normalizeProjectPropsForQuerying = project => {
  * @returns {Task} A Task containing the Projects in an object with obj.data.projects or errors in obj.errors
  */
 export const projectsQueryContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
-    return makeQueryContainer(
-      composeFuncAtPathIntoApolloConfig(
-        apolloConfig,
-        'options.variables',
-        normalizeProjectPropsForQuerying
-      ),
-      {name: 'projects', readInputTypeMapper: projectReadInputTypeMapper, outputParams},
-      props
-    );
-  }),
-  [
-    ['apolloConfig', PropTypes.shape().isRequired],
-    ['queryConfig', PropTypes.shape({
-      outputParams: PropTypes.shape().isRequired
-    })],
-    ['props', PropTypes.shape().isRequired]
-  ],
-  'projectsQueryContainer');
+        return makeQueryContainer(
+            composeFuncAtPathIntoApolloConfig(
+                apolloConfig,
+                'options.variables',
+                normalizeProjectPropsForQuerying
+            ),
+            {name: 'projects', readInputTypeMapper: projectReadInputTypeMapper, outputParams},
+            props
+        );
+    }),
+    [
+        ['apolloConfig', PropTypes.shape().isRequired],
+        ['queryConfig', PropTypes.shape({
+            outputParams: PropTypes.shape().isRequired
+        })],
+        ['props', PropTypes.shape().isRequired]
+    ],
+    'projectsQueryContainer');
 
 /**
  * Normalized project props for for mutation
@@ -135,12 +131,12 @@ export const projectsQueryContainer = v(R.curry((apolloConfig, {outputParams}, p
  * @return {Object} the props modified
  */
 export const normalizeProjectPropsForMutating = projectOrObj => {
-  return R.compose(
-    // Make sure related objects only have an id
-    project => relatedObjectsToIdForm(RELATED_PROPS, project),
-    project => filterOutNullDeleteProps(project),
-    project => filterOutReadOnlyVersionProps(project)
-  )(R.when(R.has('project'), R.prop('project'))(projectOrObj));
+    return R.compose(
+        // Make sure related objects only have an id
+        project => relatedObjectsToIdForm(RELATED_PROPS, project),
+        project => filterOutNullDeleteProps(project),
+        project => filterOutReadOnlyVersionProps(project)
+    )(R.when(R.has('project'), R.prop('project'))(projectOrObj));
 };
 
 /**
@@ -165,26 +161,26 @@ export const normalizeProjectPropsForMutating = projectOrObj => {
  *  we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const projectMutationContainer = v(R.curry((
-  apolloConfig,
-  {outputParams = projectOutputParamsMinimized, projectPropsPath = null},
-  props
-) => {
-  return makeMutationRequestContainer(
-    // if apolloConfig.options.variables is defined, call it and then call normalizeProjectPropsForMutating
-    composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeProjectPropsForMutating),
-    {
-      name: 'project',
-      outputParams
-    },
+    apolloConfig,
+    {outputParams = projectOutputParamsMinimized, projectPropsPath = null},
     props
-  );
+) => {
+    return makeMutationRequestContainer(
+        // if apolloConfig.options.variables is defined, call it and then call normalizeProjectPropsForMutating
+        composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables', normalizeProjectPropsForMutating),
+        {
+            name: 'project',
+            outputParams
+        },
+        props
+    );
 }), [
-  ['apolloConfig', PropTypes.shape().isRequired],
-  ['mutationStructure', PropTypes.shape({
-    outputParams: PropTypes.shape()
-  })
-  ],
-  ['props', PropTypes.shape().isRequired]
+    ['apolloConfig', PropTypes.shape().isRequired],
+    ['mutationStructure', PropTypes.shape({
+        outputParams: PropTypes.shape()
+    })
+    ],
+    ['props', PropTypes.shape().isRequired]
 ], 'projectMutationContainer');
 
 /**
@@ -199,33 +195,33 @@ export const projectMutationContainer = v(R.curry((
  * valued by the query container
  */
 export const projectQueryVariationContainers = (apolloConfig, {
-  allowRequestPropPath = 'projectQueryKey',
-  outputParams = projectOutputParams
+    allowRequestPropPath = 'projectQueryKey',
+    outputParams = projectOutputParams
 }) => {
-  return queryVariationContainers(
-    apolloConfig,
-    {
-      name: 'project',
-      // Only allow the query matching the value of props.projectQueryKey so we never run multiple
-      // query variations. This allows us to dynamically change which query we use, so that if
-      // we expect a large list we can page, or if we need to minimize or maximize outputParams
-      allowRequestPropPath,
-      requestTypes: [
-        {},
-        {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},
-        // Note that we don't pass page and page size here because we want to be able to query for different pages
-        // We either pass page and page size here or in props instead
-        {type: 'paginated', args: {}},
-        // Note that we don't pass page size here because we want to be able to query for different pages
-        // We either pass page and page size here or in props instead
-        {type: 'paginatedAll', args: {}}
-      ],
-      queryConfig: {
-        outputParams,
-        readInputTypeMapper: projectReadInputTypeMapper
-      },
-      queryContainer: projectsQueryContainer
-    }
-  );
+    return queryVariationContainers(
+        apolloConfig,
+        {
+            name: 'project',
+            // Only allow the query matching the value of props.projectQueryKey so we never run multiple
+            // query variations. This allows us to dynamically change which query we use, so that if
+            // we expect a large list we can page, or if we need to minimize or maximize outputParams
+            allowRequestPropPath,
+            requestTypes: [
+                {},
+                {type: 'minimized', args: {outputParams: projectOutputParamsMinimized}},
+                // Note that we don't pass page and page size here because we want to be able to query for different pages
+                // We either pass page and page size here or in props instead
+                {type: 'paginated', args: {}},
+                // Note that we don't pass page size here because we want to be able to query for different pages
+                // We either pass page and page size here or in props instead
+                {type: 'paginatedAll', args: {}}
+            ],
+            queryConfig: {
+                outputParams,
+                readInputTypeMapper: projectReadInputTypeMapper
+            },
+            queryContainer: projectsQueryContainer
+        }
+    );
 };
 
