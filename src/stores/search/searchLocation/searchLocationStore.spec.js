@@ -33,13 +33,13 @@ import {
 
 const {of} = T;
 
-const someSearchLocationKeys = ['name', 'key', 'data'];
+const someSearchLocationKeys = ['name', 'street'];
 
 // These test REQUIRE an SOP server running at localhost:8004. See README.md
 describe('searchLocationStore', () => {
 
   test('querySearchLocations', done => {
-    expect.assertions(5);
+    expect.assertions(1);
     const task = composeWithChain([
       mapToNamedResponseAndInputs('searchLocationsResponse',
         ({apolloConfig, searchLocations}) => {
@@ -89,7 +89,10 @@ describe('searchLocationStore', () => {
     const now = moment().format('MMMM Do YYYY, h:mm:ss');
     composeWithChain([
       mapToNamedPathAndInputs('searchLocation', 'result.data.createSearchLocation.searchLocation',
-        ({apolloConfig}) => createSampleSearchLocationContainer(apolloConfig, {}, {key: `cool${now}`, name: `cool${now}`})
+        ({apolloConfig}) => createSampleSearchLocationContainer(apolloConfig, {}, {
+          name: `cool${now}`,
+          street: {name: 'Andthegang St'}
+        })
       ),
       mapToNamedResponseAndInputs('deleted',
         // Delete all searchLocations

@@ -4,7 +4,10 @@ import * as R from 'ramda';
 import T from 'folktale/concurrency/task/index.js';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
-import {defaultSearchLocationOutputParamsMinimized} from './defaultSearchLocationOutputParams.js';
+import {
+  defaultSearchLocationOutputParams,
+  defaultSearchLocationOutputParamsMinimized
+} from './defaultSearchLocationOutputParams.js';
 import {callMutationNTimesAndConcatResponses} from '@rescapes/apollo';
 
 const {fromPromised, of} = T;
@@ -31,7 +34,7 @@ const {fromPromised, of} = T;
 export const createSampleSearchLocationContainer = ({apolloClient}, {}, props) => {
   return makeSearchLocationMutationContainer(
     {apolloClient},
-    {outputParams: defaultSearchLocationOutputParamsMinimized},
+    {outputParams: defaultSearchLocationOutputParams},
     props
   );
 };
