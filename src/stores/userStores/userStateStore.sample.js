@@ -29,6 +29,7 @@ import {
 } from '../scopeStores/project/projectStore';
 import {projectSample} from '../scopeStores/project/projectStore.sample';
 import {defaultSearchLocationOutputParamsMinimized} from "../search/searchLocation/defaultSearchLocationOutputParams";
+import {querySearchLocationsContainer} from "../search/searchLocation/searchLocationStore";
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -39,9 +40,12 @@ import {defaultSearchLocationOutputParamsMinimized} from "../search/searchLocati
  * search location outputParams based on the application's location search params
  * @param {Object} props
  * @param {Object} props.user A real user object
- * @param [{String}] props.regionKeys Region keys to use to make sample regions
- * @param [{String}] props.projectKeys Project keys to use to make sample projects
+ * @param {[String]} props.regionKeys Region keys to use to make sample regions
+ * @param {[String]} props.projectKeys Project keys to use to make sample projects
  * @param {Function} props.locationsContainer Optional function to create locations
+ * This function expects two arguments, apolloConfig and props.
+ * Props will be based in as {user: {id: user.id}}
+ * @param {[String]} props.searchLocationNames Optional search location names
  * This function expects two arguments, apolloConfig and props.
  * Props will be based in as {user: {id: user.id}}
  * @param {Function} props.render
@@ -51,7 +55,7 @@ import {defaultSearchLocationOutputParamsMinimized} from "../search/searchLocati
 export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   apolloConfig,
   {forceDelete, searchLocationOutputParamsMinimized = defaultSearchLocationOutputParamsMinimized},
-  {user, regionKeys, projectKeys, locationsContainer, render}
+  {user, regionKeys, projectKeys, locationsContainer, searchLocationNames, render}
 ) => {
   return composeWithComponentMaybeOrTaskChain([
     // This creates one userState and puts it in userStates
@@ -140,35 +144,48 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       }
     ),
 
-    // Create sample searchLocations
+    // Create sample searchLocations if needed
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'searchLocations',
       ({render, searchLocationNames}) => {
-        return callMutationNTimesAndConcatResponses(
-          apolloConfig,
-          {
-            items: searchLocationNames,
+        return R.ifElse(
+          R.identity,
+          searchLocationNames => {
+            return callMutationNTimesAndConcatResponses(
+              apolloConfig,
+              {
+                items: searchLocationNames,
 
-            // These help us find existing regions from the API and either reuse them or destroy and recreate them
-            forceDelete,
-            existingMatchingProps: {nameIn: searchLocationNames},
-            existingItemMatch: (item, existingItemsResponses) => R.find(
-              existingItem => R.propEq('name', item, existingItem),
-              existingItemsResponses
-            ),
-            queryForExistingContainer: searchLocationsQueryContainer,
-            queryResponsePath: 'data.regions',
+                // These help us find existing regions from the API and either reuse them or destroy and recreate them
+                forceDelete,
+                existingMatchingProps: {nameIn: searchLocationNames},
+                existingItemMatch: (item, existingItemsResponses) => R.find(
+                  existingItem => R.propEq('name', item, existingItem),
+                  existingItemsResponses
+                ),
+                queryForExistingContainer: querySearchLocationsContainer,
+                queryResponsePath: 'data.searchLocations',
 
-            mutationContainer: createSampleRegionContainer,
-            responsePath: 'result.data.mutate.region',
-            propVariationFunc: ({item: regionKey}) => {
-              return {
-                key: regionKey,
-                name: capitalize(regionKey)
-              };
-            }
+                mutationContainer: createSampleRegionContainer,
+                responsePath: 'result.data.mutate.region',
+                propVariationFunc: ({item: locationSearchName}) => {
+                  return {
+                    name: capitalize(locationSearchName)
+                  };
+                }
+              },
+              {render}
+            )
           },
-          {render}
-        );
+          () => {
+            return containerForApolloType(
+              apolloConfig,
+              {
+                render: getRenderPropFunction({render}),
+                response: {objects: []}
+              }
+            );
+          }
+        )(searchLocationNames);
       }
     ),
 
@@ -190,7 +207,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         )(locationsContainer);
       }
     )
-  ])({user, regionKeys, projectKeys, locationsContainer, render});
+  ])({user, regionKeys, projectKeys, locationsContainer, searchLocationNames, render});
 };
 
 const sampleUserSearchLocation = {

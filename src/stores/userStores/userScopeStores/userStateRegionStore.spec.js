@@ -92,7 +92,7 @@ describe('userRegionStore', () => {
           expectKeysAtPath(someRegionKeys, 'data.userStates.0.data.userRegions.0.region', response);
         }
     }, errors, done));
-  });
+  }, 1200000);
 
   test('userRegionQueryTaskWithRegionFilter', done => {
     expect.assertions(1);

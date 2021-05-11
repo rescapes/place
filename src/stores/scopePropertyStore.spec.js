@@ -23,7 +23,6 @@ import {mapboxOutputParamsFragment} from '../stores/mapStores/mapboxOutputParams
 import {rescapePlaceDefaultSettingsKey} from '../helpers/privateSettings.js';
 import {currentUserQueryContainer, expectKeys, userOutputParams} from '@rescapes/apollo';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from './userStores/userStateStore.sample.js';
-import {defaultSearchLocationOutputParamsMinimized} from "./search/searchLocation/defaultSearchLocationOutputParams";
 
 describe('scopePropertyStore', () => {
   test('queryScopesMergeScopePropPathValueContainer', done => {

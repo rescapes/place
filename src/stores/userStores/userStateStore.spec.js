@@ -160,13 +160,13 @@ describe('userStateStore', () => {
         ({apolloConfig, user}) => {
           return mutateSampleUserStateWithProjectsAndRegionsContainer(
             apolloConfig,
-            {
-              mutateSampleLocationsContainer: createSampleLocationsContainer
-            },
+            { },
             {
               user,
               regionKeys: ['mars'],
-              projectKeys: ['tharsisVolcanoes']
+              projectKeys: ['tharsisVolcanoes'],
+              locationsContainer: createSampleLocationsContainer,
+              searchLocationNames: ['search me', 'i am innocent'],
             });
         }
       ),
@@ -183,13 +183,13 @@ describe('userStateStore', () => {
       mapMonadByConfig({name: 'mutatedUserStateFirst', strPath: 'userState'},
         ({apolloConfig, user}) => {
           return mutateSampleUserStateWithProjectsAndRegionsContainer(apolloConfig,
-            {
-              mutateSampleLocationsContainer: createSampleLocationsContainer
-            },
+            { },
             {
               user,
               regionKeys: ['earth'],
-              projectKeys: ['shrangrila']
+              projectKeys: ['shrangrila'],
+              locationsContainer: createSampleLocationsContainer,
+              searchLocationNames: ['search me', 'i am innocent'],
             }
           );
         }
