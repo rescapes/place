@@ -267,10 +267,16 @@ const cacheIdProps = [
   'data.userRegions.*.region',
   'data.userRegions.*.region.id',
   'data.userRegions.*.region.__typename',
+  'data.userRegions.*.userSearch.userSearchLocations.*.searchLocation',
+  'data.userRegions.*.userSearch.userSearchLocations.*.searchLocation.id',
+  'data.userRegions.*.userSearch.userSearchLocations.*.searchLocation.__typename',
   // Use project.id to identify the userProject
   'data.userProjects.*.project',
   'data.userProjects.*.project.id',
-  'data.userProjects.*.project.__typename'
+  'data.userProjects.*.project.__typename',
+  'data.userProjects.*.userSearch.userSearchLocations.*.searchLocation',
+  'data.userProjects.*.userSearch.userSearchLocations.*.searchLocation.id',
+  'data.userProjects.*.userSearch.userSearchLocations.*.searchLocation.__typename',
 ];
 
 export const userStateDataTypeIdPathLookup = {
