@@ -30,6 +30,7 @@ import {
 import {projectSample} from '../scopeStores/project/projectStore.sample';
 import {defaultSearchLocationOutputParamsMinimized} from "../search/searchLocation/defaultSearchLocationOutputParams";
 import {querySearchLocationsContainer} from "../search/searchLocation/searchLocationStore";
+import {createSampleSearchLocationContainer} from "../search/searchLocation/searchLocationStore.sample";
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -165,8 +166,8 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                 queryForExistingContainer: querySearchLocationsContainer,
                 queryResponsePath: 'data.searchLocations',
 
-                mutationContainer: createSampleRegionContainer,
-                responsePath: 'result.data.mutate.region',
+                mutationContainer: createSampleSearchLocationContainer,
+                responsePath: 'result.data.mutate.searchLocation',
                 propVariationFunc: ({item: locationSearchName}) => {
                   return {
                     name: capitalize(locationSearchName)
