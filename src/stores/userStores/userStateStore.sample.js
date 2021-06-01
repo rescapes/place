@@ -219,7 +219,7 @@ const sampleUserSearchLocations = searchLocations => {
         activity: {isActive: i===0}
       }
     },
-    searchLocations || [{street: {name: 'Paddy Wack St'}]
+    searchLocations || [{street: {name: 'Paddy Wack St'}}]
   )
 }
 
