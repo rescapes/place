@@ -31,10 +31,10 @@ const {fromPromised, of} = T;
  * @params {Number} props.user.id Required
  * @return {Object} {data: searchLocation: {...}}
  */
-export const createSampleSearchLocationContainer = ({apolloClient}, {}, props) => {
+export const createSampleSearchLocationContainer = ({apolloClient}, {outputParams= defaultSearchLocationOutputParams}, props) => {
   return makeSearchLocationMutationContainer(
     {apolloClient},
-    {outputParams: defaultSearchLocationOutputParams},
+    {outputParams},
     props
   );
 };

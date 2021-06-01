@@ -165,7 +165,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                 ),
                 queryForExistingContainer: querySearchLocationsContainer,
                 queryResponsePath: 'data.searchLocations',
-
+                outputParams: searchLocationOutputParamsMinimized,
                 mutationContainer: createSampleSearchLocationContainer,
                 responsePath: 'result.data.mutate.searchLocation',
                 propVariationFunc: ({item: locationSearchName}) => {
