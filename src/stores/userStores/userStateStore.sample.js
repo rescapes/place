@@ -211,9 +211,16 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   ])({user, regionKeys, projectKeys, locationsContainer, searchLocationNames, render});
 };
 
-const sampleUserSearchLocation = {
-  searchLocation: {street: {name: 'Paddy Wack St'}},
-  activity: {isActive: true}
+const sampleUserSearchLocations = searchLocations => {
+  return R.addIndex(R.map)(
+    (searchLocation, i) => {
+      return {
+        searchLocation,
+        activity: {isActive: i===0}
+      }
+    },
+    searchLocations || [{street: {name: 'Paddy Wack St'}]
+  )
 }
 
 /**
@@ -223,7 +230,7 @@ const sampleUserSearchLocation = {
  * @param {[Object]} [searchLocations] Optional searchLocations, otherwise defaults to a sample one
  * @return {{mapbox: {viewport: {latitude: number, zoom: number, longitude: (number|null)}}, region: {id: number}}}
  */
-export const createUserRegionWithDefaults = (region, searchLocations = []) => {
+export const createUserRegionWithDefaults = (region, searchLocations = null) => {
   return {
     region: {
       id: parseInt(reqStrPathThrowing('id', region))
@@ -244,7 +251,7 @@ export const createUserRegionWithDefaults = (region, searchLocations = []) => {
       isActive: false
     },
     userSearch: {
-      userSearchLocations: searchLocations || [sampleUserSearchLocation]
+      userSearchLocations: sampleUserSearchLocations(searchLocations)
     }
   };
 };
@@ -256,7 +263,7 @@ export const createUserRegionWithDefaults = (region, searchLocations = []) => {
  * @param {[Object]} [searchLocations] Optional searchLocations, otherwise defaults to a sample one
  * @return {{mapbox: {viewport: {latitude: number, zoom: number, longitude: (number|null)}}, project: {id: number}}}
  */
-export const createUserProjectWithDefaults = (project, searchLocations = []) => {
+export const createUserProjectWithDefaults = (project, searchLocations = null) => {
   return {
     project: {
       id: parseInt(reqStrPathThrowing('id', project))
@@ -272,7 +279,7 @@ export const createUserProjectWithDefaults = (project, searchLocations = []) => 
       isActive: false
     },
     userSearch: {
-      userSearchLocations: searchLocations || [sampleUserSearchLocation]
+      userSearchLocations: sampleUserSearchLocations(searchLocations)
     }
   };
 };
