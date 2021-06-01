@@ -67,11 +67,11 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     ),
     // Set the user state of the given user to the region and project
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
-      ({user, regions, projects, render}) => {
+      ({user, regions, projects, searchLocations, render}) => {
         return userStateMutationContainer(
           apolloConfig,
           {outputParams: userStateOutputParamsMetaAndScopeIds(searchLocationOutputParamsMinimized)},
-          {userState: createSampleUserStateProps({user, regions, projects}), render}
+          {userState: createSampleUserStateProps({user, regions, projects, searchLocations}), render}
         );
       }
     ),
@@ -220,9 +220,10 @@ const sampleUserSearchLocation = {
  * Populates the UserRegion properties with defaults based on the region's properties
  * @param {Object} region
  * @param {Number} region.id The region id
+ * @param {[Object]} [searchLocations] Optional searchLocations, otherwise defaults to a sample one
  * @return {{mapbox: {viewport: {latitude: number, zoom: number, longitude: (number|null)}}, region: {id: number}}}
  */
-export const createUserRegionWithDefaults = region => {
+export const createUserRegionWithDefaults = (region, searchLocations = []) => {
   return {
     region: {
       id: parseInt(reqStrPathThrowing('id', region))
@@ -243,7 +244,7 @@ export const createUserRegionWithDefaults = region => {
       isActive: false
     },
     userSearch: {
-      userSearchLocations: [sampleUserSearchLocation]
+      userSearchLocations: searchLocations || [sampleUserSearchLocation]
     }
   };
 };
@@ -252,9 +253,10 @@ export const createUserRegionWithDefaults = region => {
  * Populates the UserProject properties with defaults based on the region's properties
  * @param {Object} project
  * @param {Number} project.id The project id
+ * @param {[Object]} [searchLocations] Optional searchLocations, otherwise defaults to a sample one
  * @return {{mapbox: {viewport: {latitude: number, zoom: number, longitude: (number|null)}}, project: {id: number}}}
  */
-export const createUserProjectWithDefaults = project => {
+export const createUserProjectWithDefaults = (project, searchLocations = []) => {
   return {
     project: {
       id: parseInt(reqStrPathThrowing('id', project))
@@ -270,25 +272,32 @@ export const createUserProjectWithDefaults = project => {
       isActive: false
     },
     userSearch: {
-      userSearchLocations: [sampleUserSearchLocation]
+      userSearchLocations: searchLocations || [sampleUserSearchLocation]
     }
   };
 };
 
 /**
  * Helper to create sample props for a UserState
- * @param {Object} user
- * @param {[Object]} regions
- * @param {[Object]} projects
+ * @param {Object} user The user
+ * @param {[Object]} regions Sample regions
+ * @param {[Object]} projects Sample projects
+ * @param {[Objecdt]} searchLocations Sample searchLocations. These are assigned to all userRegions and userProjects
  * @returns {Object} {
  * data: {
- * userProjects: [{project: {mapbox: {viewport: {latitude: (*|number), zoom: *, longitude: (*|number)}}, id: number}}],
- * userRegions: [{region: {mapbox: {viewport: {latitude: (*|number), zoom: *, longitude: (*|number)}}, id: number}}]
+ * userProjects: [{
+ *  project: {mapbox: {viewport: {latitude: (*|number), zoom: *, longitude: (*|number)}}, id: number},
+ *  searchLocations: [...]
+ * }],
+ * userRegions: [{
+ * region: {mapbox: {viewport: {latitude: (*|number), zoom: *, longitude: (*|number)}}, id: number}
+ * searchLocations: [...]
+ * }]
  * },
  * user: {id: number}
  * }
  */
-const createSampleUserStateProps = ({user, regions, projects}) => {
+const createSampleUserStateProps = ({user, regions, projects, searchLocations}) => {
   return {
     user: {id: parseInt(reqStrPathThrowing('id', user))},
     data: {
@@ -296,7 +305,7 @@ const createSampleUserStateProps = ({user, regions, projects}) => {
       userRegions: R.addIndex(R.map)(
         (region, i) => {
           return R.merge(
-            createUserRegionWithDefaults(region),
+            createUserRegionWithDefaults(region, searchLocations),
             {activity: {isActive: !i}}
           );
         },
@@ -305,7 +314,7 @@ const createSampleUserStateProps = ({user, regions, projects}) => {
       userProjects: R.addIndex(R.map)(
         (project, i) => {
           return R.merge(
-            createUserProjectWithDefaults(project),
+            createUserProjectWithDefaults(project, searchLocations),
             {activity: {isActive: !i}}
           );
         },
