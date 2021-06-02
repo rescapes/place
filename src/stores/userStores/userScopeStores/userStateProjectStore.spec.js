@@ -9,26 +9,21 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {
-  userStateProjectMutationContainer,
-  userStateProjectOutputParams,
-  userStateProjectsQueryContainer
-} from './userStateProjectStore.js';
+import {userStateProjectMutationContainer, userStateProjectsQueryContainer} from './userStateProjectStore.js';
+import {userStateProjectOutputParams} from './userStateProjectStoreHelpers.js'
 import {
   composeWithChain,
   composeWithChainMDeep,
   defaultRunConfig,
-  expectKeysAtPath, mapToMergedResponseAndInputs,
+  expectKeysAtPath,
+  mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
   strPathOr
 } from '@rescapes/ramda';
 import * as R from 'ramda';
-import {
-  currentUserStateQueryContainer,
-  userStateOutputParamsOnlyIds
-} from '../userStateStore.js';
+import {currentUserStateQueryContainer, userStateOutputParamsOnlyIds} from '../userStateStore.js';
 import moment from 'moment';
 import {
   createUserProjectWithDefaults,
@@ -41,8 +36,8 @@ import {activityOutputParamsMixin} from '../activityStore.js';
 import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
 import {
   projectMutationContainer,
-  projectsQueryContainer,
-  projectOutputParamsMinimized
+  projectOutputParamsMinimized,
+  projectsQueryContainer
 } from '../../scopeStores/project/projectStore.js';
 import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample.js';
 

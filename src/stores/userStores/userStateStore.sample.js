@@ -70,8 +70,18 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       ({user, regions, projects, searchLocations, render}) => {
         return userStateMutationContainer(
           apolloConfig,
-          {outputParams: userStateOutputParamsMetaAndScopeIds(searchLocationOutputParamsMinimized)},
-          {userState: createSampleUserStateProps({user, regions, projects, searchLocations}), render}
+          {
+            outputParams: userStateOutputParamsMetaAndScopeIds({
+                searchLocationOutputParams: searchLocationOutputParamsMinimized
+              }
+            )
+          },
+          {
+            userState: createSampleUserStateProps(
+              {user, regions, projects, searchLocations}
+            ),
+            render
+          }
         );
       }
     ),
@@ -216,7 +226,7 @@ const sampleUserSearchLocations = searchLocations => {
     (searchLocation, i) => {
       return {
         searchLocation,
-        activity: {isActive: i===0}
+        activity: {isActive: i === 0}
       }
     },
     searchLocations || [{street: {name: 'Paddy Wack St'}}]

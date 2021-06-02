@@ -12,54 +12,23 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
-import {regionsQueryContainer, regionOutputParamsMinimized} from '../../scopeStores/region/regionStore.js';
+import {regionOutputParams, regionsQueryContainer} from '../../scopeStores/region/regionStore.js';
 import {
+  userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
-  userStateScopeObjsQueryContainer, userScopeOrNullAndProps
+  userStateScopeObjsQueryContainer
 } from './userStateHelpers.js';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
-  userStateOutputParamsCreator, userStateReadInputTypeMapper
+  userStateOutputParamsCreator,
+  userStateReadInputTypeMapper
 } from '../userStateStore.js';
-import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore.js';
 import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsMixin} from '../activityStore.js';
 import {renameKey} from '@rescapes/ramda';
 import {createUserSearchOutputParams} from "./userSearchStore";
 import {defaultSearchLocationOutputParams} from "../../search/searchLocation/defaultSearchLocationOutputParams";
 
-/***
- * Creates userStateRegion output params.
- * @param {Object} [searchLocationOutputParams] Defaults to defaultSearchLocationOutputParams,
- * searchLocationOutputParams are passed to createUserSearchOutputParams
- * and the result of that call is assigned to userSearch
- * @param {Object} [explicitRegionOutputParams] Defaults to regionOutputParams
- * @param {Object} [explicitUserScopeOutputParams] Adds more outputParams to the userStateRegion beyond
- * region, mapbox, and userSearch
- * @returns {*}
- */
-export const userStateRegionOutputParams = ({
-    searchLocationOutputParams = defaultSearchLocationOutputParams,
-    explicitRegionOutputParams = regionOutputParams,
-    explicitUserScopeOutputParams = {}
-  }) => {
-  return R.mergeAll([
-    {
-      region: explicitRegionOutputParams,
-      mapbox: {
-        viewport: {
-          latitude: 1,
-          longitude: 1,
-          zoom: 1
-        }
-      },
-      ...searchLocationOutputParams ? {userSearch: createUserSearchOutputParams(searchLocationOutputParams)} : {},
-      ...explicitUserScopeOutputParams
-    },
-    selectionOutputParamsFragment,
-    activityOutputParamsMixin
-  ])
-};
 
 /**
  * Queries regions that are in the scope of the user and the values of that region

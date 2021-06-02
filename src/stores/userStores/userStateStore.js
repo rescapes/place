@@ -46,15 +46,15 @@ import {
 import {capitalize, mergeDeep, pathOr, reqStrPathThrowing, strPathOr} from '@rescapes/ramda';
 import {selectionOutputParamsFragment} from './selectionStore.js';
 import {activityOutputParamsMixin} from './activityStore.js';
-import T from 'folktale/concurrency/task/index.js';
 import moment from 'moment';
 import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore";
 import {
   defaultSearchLocationOutputParams,
   defaultSearchLocationOutputParamsMinimized
 } from "../search/searchLocation/defaultSearchLocationOutputParams";
+import {userStateRegionOutputParams} from "./userScopeStores/userStateRegionStoreHelpers";
+import {userStateProjectOutputParams} from "./userScopeStores/userStateProjectStoreHelpers";
 
-const {of} = T;
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = ['user'];
@@ -72,6 +72,29 @@ export const userStateReadInputTypeMapper = createReadInputTypeMapper(
   'userState', R.concat(['data'], RELATED_PROPS)
 );
 
+/***
+ * userState data for scope objects (Project, Region, etc) output params fragment when we only want the project ids or
+ * something custom.
+ * The project property represents a single project and the other properties represent the relationship
+ * between the user and the project. This can be properties that are stored on the server or only in cache.
+ * @param {String} scopeName 'project' or 'region'
+ * @param {Object} [userScopeOutputParams] Defaults to {} deep merged with {[scopeName]: {id: 1, deleted: 1}} We include deleted
+ * for the odd case that the userState has maintained references to deleted scope instances. The Server
+ * returns deleted instances when they are referenced.
+ */
+export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScopeOutputParams = {}) => {
+  const capitalized = capitalize((scopeName));
+  return {
+    [`user${capitalized}s`]: R.merge({
+        [scopeName]: mergeDeep(
+          {id: 1, deleted: true},
+          R.propOr({}, scopeName, userScopeOutputParams)
+        )
+      },
+      R.omit([scopeName], userScopeOutputParams)
+    )
+  };
+};
 /**
  * Creates userState output params
  * @param userScopeFragmentOutputParams Object keyed by 'region', 'project', etc with
@@ -86,7 +109,7 @@ export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
     data: userScopeFragmentOutputParams,
     ...versionOutputParamsMixin
   });
-};
+}
 
 /**
  * User state output params with full scope output params. This should only be used for querying when values of the scope
@@ -123,30 +146,26 @@ export const userStateLocalOutputParamsFull = () => createUserStateOutputParamsF
 
 /**
  * When meta data of the user scope instances is needed but only the id of the scope instances
+ * @param {Object} searchLocationOutputParams Required searchLocation outputParams
+ * @param {Object} [explicitUserScopeOutputParams] Defaults to {}, use to add outputParams to userRegion and userProject
  * @returns {Object} Props such as activity and selection for each userScope instance, but just
  * ids for the scope instance
  */
-export const userStateOutputParamsMetaAndScopeIds = searchLocationOutputParamsMinimized => {
+export const userStateOutputParamsMetaAndScopeIds = ({searchLocationOutputParams, explicitUserScopeOutputParams={}}) => {
   return {
     id: 1,
     user: {id: 1},
     data: {
-      userRegions: R.mergeAll([
-        {
-          region: regionOutputParamsMinimized,
-          userSearch: createUserSearchOutputParams(searchLocationOutputParamsMinimized)
-        },
-        selectionOutputParamsFragment,
-        activityOutputParamsMixin
-      ]),
-      userProjects: R.mergeAll([
-        {
-          project: projectOutputParamsMinimized,
-          userSearch: createUserSearchOutputParams(searchLocationOutputParamsMinimized)
-        },
-        selectionOutputParamsFragment,
-        activityOutputParamsMixin
-      ])
+      userRegions: userStateRegionOutputParams({
+        searchLocationOutputParams: searchLocationOutputParams,
+        explicitRegionOutputParams: regionOutputParamsMinimized,
+        explicitUserScopeOutputParams
+      }),
+      userProjects: userStateProjectOutputParams({
+        searchLocationOutputParams: searchLocationOutputParams,
+        explicitRegionOutputParams: projectOutputParamsMinimized,
+        explicitUserScopeOutputParams
+      }),
     }
   };
 };
@@ -156,29 +175,6 @@ export const userStateLocalOutputParamsMetaAndScopeIds = () => createUserStateOu
   defaultSearchLocationOutputParamsMinimized
 )
 
-/***
- * userState data for scope objects (Project, Region, etc) output params fragment when we only want the project ids or
- * something custom.
- * The project property represents a single project and the other properties represent the relationship
- * between the user and the project. This can be properties that are stored on the server or only in cache.
- * @param {String} scopeName 'project' or 'region'
- * @param {Object} [userScopeOutputParams] Defaults to {} deep merged with {[scopeName]: {id: 1, deleted: 1}} We include deleted
- * for the odd case that the userState has maintained references to deleted scope instances. The Server
- * returns deleted instances when they are referenced.
- */
-export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScopeOutputParams = {}) => {
-  const capitalized = capitalize((scopeName));
-  return {
-    [`user${capitalized}s`]: R.merge({
-        [scopeName]: mergeDeep(
-          {id: 1, deleted: true},
-          R.propOr({}, scopeName, userScopeOutputParams)
-        )
-      },
-      R.omit([scopeName], userScopeOutputParams)
-    )
-  };
-};
 
 
 /**

@@ -43,15 +43,17 @@ export {
   userStateMutationContainer,
   adminUserStateQueryContainer,
   userStateMutateOutputParams,
-  userStateOutputParamsCreator,
   userStateLocalOutputParamsFull,
   userStateOutputParamsOnlyIds,
   currentUserStateQueryContainer,
-  userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsMetaAndScopeIds,
-  userStateReadInputTypeMapper,
   userStateLocalOutputParamsMetaAndScopeIds
 } from './stores/userStores/userStateStore.js';
+export {
+  userStateOutputParamsCreator,
+  userScopeOutputParamsFragmentDefaultOnlyIds,
+  userStateReadInputTypeMapper
+} from './stores/userStores/userStateStoreHelpers'
 
 export {
   userStateRegionsQueryContainer,

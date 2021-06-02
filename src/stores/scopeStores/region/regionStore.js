@@ -23,7 +23,6 @@ import {
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
-import {strPathOr} from '@rescapes/ramda';
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [];

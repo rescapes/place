@@ -12,7 +12,7 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
-import {projectsQueryContainer, projectOutputParams} from '../../scopeStores/project/projectStore.js';
+import {projectOutputParams, projectsQueryContainer} from '../../scopeStores/project/projectStore.js';
 import {
   userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
@@ -26,7 +26,6 @@ import {
 import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsMixin} from '../activityStore.js';
 import {renameKey} from '@rescapes/ramda';
-import {regionOutputParams} from "../../scopeStores/region/regionStore";
 import {createUserSearchOutputParams} from "./userSearchStore";
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
@@ -36,39 +35,6 @@ import {createUserSearchOutputParams} from "./userSearchStore";
 const readInputTypeMapper = {
   //'data': 'DataTypeofLocationTypeRelatedReadInputType'
   'user': 'UserTypeofUserStateTypeRelatedReadInputType'
-};
-
-/***
- * Creates userStateProject output params.
- * @param {Object} [searchLocationOutputParams] Optional searchLocationOutputParams are passed to createUserSearchOutputParams
- * and the result of that call is assigned to userSearch
- * @param {Object} [explicitProjectOutputParams] Defaults to projectOutputParams
- * @param {Object} [explicitUserScopeOutputParams] Adds more outputParams to the userStateProject beyond
- * project, mapbox, and userSearch
- * @returns {*}
- */
-export const userStateProjectOutputParams = (
-  {
-    searchLocationOutputParams = null,
-    explicitProjectOutputParams = projectOutputParams,
-    explicitUserScopeOutputParams = {}
-  }) => {
-  return R.mergeAll([
-    {
-      project: explicitProjectOutputParams,
-      mapbox: {
-        viewport: {
-          latitude: 1,
-          longitude: 1,
-          zoom: 1
-        }
-      },
-      ...searchLocationOutputParams ? {userSearch: createUserSearchOutputParams(searchLocationOutputParams)} : {},
-      ...explicitUserScopeOutputParams
-    },
-    selectionOutputParamsFragment,
-    activityOutputParamsMixin
-  ])
 };
 
 /**

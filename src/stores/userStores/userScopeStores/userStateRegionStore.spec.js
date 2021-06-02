@@ -11,9 +11,9 @@
 
 import {
   userStateRegionMutationContainer,
-  userStateRegionOutputParams,
   userStateRegionsQueryContainer
 } from './userStateRegionStore.js';
+import {userStateRegionOutputParams} from './userStateRegionStoreHelpers.js'
 import {
   composeWithChainMDeep,
   defaultRunConfig,
