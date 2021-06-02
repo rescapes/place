@@ -55,7 +55,7 @@ describe('userProjectStore', () => {
         return userStateProjectsQueryContainer(
           apolloConfig,
           {
-            userProjectOutputParams: userStateProjectOutputParams(projectOutputParamsMinimized)
+            userProjectOutputParams: userStateProjectOutputParams({explicitProjectOutputParams: projectOutputParamsMinimized})
           },
           {
             userState: {user: R.pick(['id'], user)},
@@ -103,7 +103,7 @@ describe('userProjectStore', () => {
         // Get the name since it will be Shrangrila29 or whatever
         const projectNames = R.map(R.prop('name'), projects);
         return userStateProjectsQueryContainer(apolloConfig, {
-          userProjectOutputParams: userStateProjectOutputParams(projectOutputParamsMinimized)
+          userProjectOutputParams: userStateProjectOutputParams({explicitProjectOutputParams: projectOutputParamsMinimized})
         }, {
           userState: {user: R.pick(['id'], user)},
           // Limit by geojson (both pass this) and by name (1 passes this)
@@ -199,7 +199,7 @@ describe('userProjectStore', () => {
           return userStateProjectMutationContainer(
             apolloConfig,
             {
-              userProjectOutputParams: userStateProjectOutputParams()
+              userProjectOutputParams: userStateProjectOutputParams({})
             },
             {
               userState,

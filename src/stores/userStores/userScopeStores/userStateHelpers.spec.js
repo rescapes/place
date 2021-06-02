@@ -107,7 +107,7 @@ describe('userStateHelpers', () => {
                 userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
               );
             },
-            userScopeOutputParams: userStateProjectOutputParams()
+            userScopeOutputParams: userStateProjectOutputParams({})
           },
           {
             // Just use the current user

@@ -26,6 +26,8 @@ import {
 import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsMixin} from '../activityStore.js';
 import {renameKey} from '@rescapes/ramda';
+import {regionOutputParams} from "../../scopeStores/region/regionStore";
+import {createUserSearchOutputParams} from "./userSearchStore";
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -36,20 +38,38 @@ const readInputTypeMapper = {
   'user': 'UserTypeofUserStateTypeRelatedReadInputType'
 };
 
-export const userStateProjectOutputParams = (explicitProjectOutputParams = projectOutputParams) => R.mergeAll([
+/***
+ * Creates userStateProject output params.
+ * @param {Object} [searchLocationOutputParams] Optional searchLocationOutputParams are passed to createUserSearchOutputParams
+ * and the result of that call is assigned to userSearch
+ * @param {Object} [explicitProjectOutputParams] Defaults to projectOutputParams
+ * @param {Object} [explicitUserScopeOutputParams] Adds more outputParams to the userStateProject beyond
+ * project, mapbox, and userSearch
+ * @returns {*}
+ */
+export const userStateProjectOutputParams = (
   {
-    project: explicitProjectOutputParams,
-    mapbox: {
-      viewport: {
-        latitude: 1,
-        longitude: 1,
-        zoom: 1
-      }
-    }
-  },
-  selectionOutputParamsFragment,
-  activityOutputParamsMixin]
-);
+    searchLocationOutputParams = null,
+    explicitProjectOutputParams = projectOutputParams,
+    explicitUserScopeOutputParams = {}
+  }) => {
+  return R.mergeAll([
+    {
+      project: explicitProjectOutputParams,
+      mapbox: {
+        viewport: {
+          latitude: 1,
+          longitude: 1,
+          zoom: 1
+        }
+      },
+      ...searchLocationOutputParams ? {userSearch: createUserSearchOutputParams(searchLocationOutputParams)} : {},
+      ...explicitUserScopeOutputParams
+    },
+    selectionOutputParamsFragment,
+    activityOutputParamsMixin
+  ])
+};
 
 /**
  * Queries projects that are in the scope of the user and the values of that project
@@ -89,7 +109,9 @@ export const userStateProjectsQueryContainer = v(R.curry((
         },
         // Default to the user state params with only ids for the project. This prevents an extra query to
         // load the project data
-        userScopeOutputParams: explicitUserProjectOutputParams || userStateProjectOutputParams({id: 1})
+        userScopeOutputParams: explicitUserProjectOutputParams || userStateProjectOutputParams({
+          explicitProjectOutputParams: {id: 1}
+        })
       },
       renameKey(R.lensPath([]), 'userProject', 'userScope', propSets)
     );

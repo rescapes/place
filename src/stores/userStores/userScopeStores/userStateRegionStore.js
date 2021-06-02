@@ -25,22 +25,41 @@ import {regionOutputParams} from '../../../stores/scopeStores/region/regionStore
 import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsMixin} from '../activityStore.js';
 import {renameKey} from '@rescapes/ramda';
-import {filterOutReadOnlyVersionProps} from '@rescapes/apollo';
+import {createUserSearchOutputParams} from "./userSearchStore";
+import {defaultSearchLocationOutputParams} from "../../search/searchLocation/defaultSearchLocationOutputParams";
 
-export const userStateRegionOutputParams = (explicitRegionOuputParams = regionOutputParams) => R.mergeAll([
-  {
-    region: explicitRegionOuputParams,
-    mapbox: {
-      viewport: {
-        latitude: 1,
-        longitude: 1,
-        zoom: 1
-      }
-    }
-  },
-  selectionOutputParamsFragment,
-  activityOutputParamsMixin
-]);
+/***
+ * Creates userStateRegion output params.
+ * @param {Object} [searchLocationOutputParams] Defaults to defaultSearchLocationOutputParams,
+ * searchLocationOutputParams are passed to createUserSearchOutputParams
+ * and the result of that call is assigned to userSearch
+ * @param {Object} [explicitRegionOutputParams] Defaults to regionOutputParams
+ * @param {Object} [explicitUserScopeOutputParams] Adds more outputParams to the userStateRegion beyond
+ * region, mapbox, and userSearch
+ * @returns {*}
+ */
+export const userStateRegionOutputParams = ({
+    searchLocationOutputParams = defaultSearchLocationOutputParams,
+    explicitRegionOutputParams = regionOutputParams,
+    explicitUserScopeOutputParams = {}
+  }) => {
+  return R.mergeAll([
+    {
+      region: explicitRegionOutputParams,
+      mapbox: {
+        viewport: {
+          latitude: 1,
+          longitude: 1,
+          zoom: 1
+        }
+      },
+      ...searchLocationOutputParams ? {userSearch: createUserSearchOutputParams(searchLocationOutputParams)} : {},
+      ...explicitUserScopeOutputParams
+    },
+    selectionOutputParamsFragment,
+    activityOutputParamsMixin
+  ])
+};
 
 /**
  * Queries regions that are in the scope of the user and the values of that region

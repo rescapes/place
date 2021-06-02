@@ -104,7 +104,7 @@ describe('userRegionStore', () => {
       ({apolloConfig, user}) => {
         return userStateRegionsQueryContainer(
           apolloConfig,
-          {userRegionOutputParams: userStateRegionOutputParams(regionOutputParamsMinimized)},
+          {userRegionOutputParams: userStateRegionOutputParams({explicitRegionOutputParams: regionOutputParamsMinimized})},
           {
             userState: {user: R.pick(['id'], user)},
             userRegion: {region: {geojson: {type: 'FeatureCollection'}}}
@@ -197,7 +197,7 @@ describe('userRegionStore', () => {
           return userStateRegionMutationContainer(
             apolloConfig,
             {
-              userRegionOutputParams: userStateRegionOutputParams()
+              userRegionOutputParams: userStateRegionOutputParams({})
             },
             {
               userState,
@@ -212,7 +212,7 @@ describe('userRegionStore', () => {
           return userStateRegionMutationContainer(
             apolloConfig,
             {
-              userRegionOutputParams: userStateRegionOutputParams()
+              userRegionOutputParams: userStateRegionOutputParams({})
             },
             {
               userState,
