@@ -147,11 +147,11 @@ export const userStateLocalOutputParamsFull = () => createUserStateOutputParamsF
 /**
  * When meta data of the user scope instances is needed but only the id of the scope instances
  * @param {Object} searchLocationOutputParams Required searchLocation outputParams
- * @param {Object} [explicitUserScopeOutputParams] Defaults to {}, use to add outputParams to userRegion and userProject
+ * @param {Object} [additionalUserScopeOutputParams] Defaults to {}, use to add outputParams to userRegion and userProject
  * @returns {Object} Props such as activity and selection for each userScope instance, but just
  * ids for the scope instance
  */
-export const userStateOutputParamsMetaAndScopeIds = ({searchLocationOutputParams, explicitUserScopeOutputParams={}}) => {
+export const userStateOutputParamsMetaAndScopeIds = ({searchLocationOutputParams, additionalUserScopeOutputParams={}}) => {
   return {
     id: 1,
     user: {id: 1},
@@ -159,12 +159,12 @@ export const userStateOutputParamsMetaAndScopeIds = ({searchLocationOutputParams
       userRegions: userStateRegionOutputParams({
         searchLocationOutputParams: searchLocationOutputParams,
         explicitRegionOutputParams: regionOutputParamsMinimized,
-        explicitUserScopeOutputParams
+        additionalUserScopeOutputParams
       }),
       userProjects: userStateProjectOutputParams({
         searchLocationOutputParams: searchLocationOutputParams,
         explicitRegionOutputParams: projectOutputParamsMinimized,
-        explicitUserScopeOutputParams
+        additionalUserScopeOutputParams
       }),
     }
   };

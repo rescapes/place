@@ -22,14 +22,14 @@ import {defaultSearchLocationOutputParams} from "../../search/searchLocation/def
  * searchLocationOutputParams are passed to createUserSearchOutputParams
  * and the result of that call is assigned to userSearch
  * @param {Object} [explicitRegionOutputParams] Defaults to regionOutputParams
- * @param {Object} [explicitUserScopeOutputParams] Adds more outputParams to the userStateRegion beyond
+ * @param {Object} [additionalUserScopeOutputParams] Adds more outputParams to the userStateRegion beyond
  * region, mapbox, and userSearch
  * @returns {*}
  */
 export const userStateRegionOutputParams = ({
     searchLocationOutputParams = defaultSearchLocationOutputParams,
     explicitRegionOutputParams = regionOutputParams,
-    explicitUserScopeOutputParams = {}
+    additionalUserScopeOutputParams = {}
   }) => {
   return R.mergeAll([
     {
@@ -42,7 +42,7 @@ export const userStateRegionOutputParams = ({
         }
       },
       ...searchLocationOutputParams ? {userSearch: createUserSearchOutputParams(searchLocationOutputParams)} : {},
-      ...explicitUserScopeOutputParams
+      ...additionalUserScopeOutputParams
     },
     selectionOutputParamsFragment,
     activityOutputParamsMixin

@@ -37,8 +37,10 @@ import {createSampleSearchLocationContainer} from "../search/searchLocation/sear
  * @param {Object} apolloConfig
  * @param {Object} options
  * @param {Boolean} options.forceDelete
- * @param {Object} options.searchLocationOutputParamsMinimized Defaults defaultSearchLocationOutputParamsMinimized.
+ * @param {Object} [options.searchLocationOutputParamsMinimized] Defaults defaultSearchLocationOutputParamsMinimized.
  * search location outputParams based on the application's location search params
+ * @param {Object} [options.additionalUserScopeOutputParams] Defaults to {} Specify additional outputParmams
+ * that are applied to userRegion and userProject outputParams
  * @param {Object} props
  * @param {Object} props.user A real user object
  * @param {[String]} props.regionKeys Region keys to use to make sample regions
@@ -55,7 +57,11 @@ import {createSampleSearchLocationContainer} from "../search/searchLocation/sear
  */
 export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   apolloConfig,
-  {forceDelete, searchLocationOutputParamsMinimized = defaultSearchLocationOutputParamsMinimized},
+  {
+    forceDelete,
+    searchLocationOutputParamsMinimized = defaultSearchLocationOutputParamsMinimized,
+    additionalUserScopeOutputParams = {}
+  },
   {user, regionKeys, projectKeys, locationsContainer, searchLocationNames, render}
 ) => {
   return composeWithComponentMaybeOrTaskChain([
@@ -72,7 +78,8 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
           apolloConfig,
           {
             outputParams: userStateOutputParamsMetaAndScopeIds({
-                searchLocationOutputParams: searchLocationOutputParamsMinimized
+                searchLocationOutputParams: searchLocationOutputParamsMinimized,
+                additionalUserScopeOutputParams,
               }
             )
           },

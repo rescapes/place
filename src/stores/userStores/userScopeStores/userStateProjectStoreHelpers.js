@@ -20,7 +20,7 @@ import {createUserSearchOutputParams} from "./userSearchStore";
  * @param {Object} [searchLocationOutputParams] Optional searchLocationOutputParams are passed to createUserSearchOutputParams
  * and the result of that call is assigned to userSearch
  * @param {Object} [explicitProjectOutputParams] Defaults to projectOutputParams
- * @param {Object} [explicitUserScopeOutputParams] Adds more outputParams to the userStateProject beyond
+ * @param {Object} [additionalUserScopeOutputParams] Adds more outputParams to the userStateProject beyond
  * project, mapbox, and userSearch
  * @returns {*}
  */
@@ -28,7 +28,7 @@ export const userStateProjectOutputParams = (
   {
     searchLocationOutputParams = null,
     explicitProjectOutputParams = projectOutputParams,
-    explicitUserScopeOutputParams = {}
+    additionalUserScopeOutputParams = {}
   }) => {
   return R.mergeAll([
     {
@@ -41,7 +41,7 @@ export const userStateProjectOutputParams = (
         }
       },
       ...searchLocationOutputParams ? {userSearch: createUserSearchOutputParams(searchLocationOutputParams)} : {},
-      ...explicitUserScopeOutputParams
+      ...additionalUserScopeOutputParams
     },
     selectionOutputParamsFragment,
     activityOutputParamsMixin
