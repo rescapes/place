@@ -78,20 +78,20 @@ export const userStateReadInputTypeMapper = createReadInputTypeMapper(
  * The project property represents a single project and the other properties represent the relationship
  * between the user and the project. This can be properties that are stored on the server or only in cache.
  * @param {String} scopeName 'project' or 'region'
- * @param {Object} [userScopeOutputParams] Defaults to {} deep merged with {[scopeName]: {id: 1, deleted: 1}} We include deleted
+ * @param {Object} [scopeOutputParams] Defaults to {} deep merged with {[scopeName]: {id: 1, deleted: 1}} We include deleted
  * for the odd case that the userState has maintained references to deleted scope instances. The Server
  * returns deleted instances when they are referenced.
  */
-export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, userScopeOutputParams = {}) => {
+export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, scopeOutputParams = {}) => {
   const capitalized = capitalize((scopeName));
   return {
     [`user${capitalized}s`]: R.merge({
         [scopeName]: mergeDeep(
           {id: 1, deleted: true},
-          R.propOr({}, scopeName, userScopeOutputParams)
+          R.propOr({}, scopeName, scopeOutputParams)
         )
       },
-      R.omit([scopeName], userScopeOutputParams)
+      R.omit([scopeName], scopeOutputParams)
     )
   };
 };
@@ -151,7 +151,10 @@ export const userStateLocalOutputParamsFull = () => createUserStateOutputParamsF
  * @returns {Object} Props such as activity and selection for each userScope instance, but just
  * ids for the scope instance
  */
-export const userStateOutputParamsMetaAndScopeIds = ({searchLocationOutputParams, additionalUserScopeOutputParams={}}) => {
+export const userStateOutputParamsMetaAndScopeIds = ({
+                                                       searchLocationOutputParams,
+                                                       additionalUserScopeOutputParams = {}
+                                                     }) => {
   return {
     id: 1,
     user: {id: 1},
@@ -174,7 +177,6 @@ export const userStateOutputParamsMetaAndScopeIds = ({searchLocationOutputParams
 export const userStateLocalOutputParamsMetaAndScopeIds = () => createUserStateOutputParamsFull(
   defaultSearchLocationOutputParamsMinimized
 )
-
 
 
 /**
@@ -420,12 +422,11 @@ export const normalizeUserStatePropsForMutating = userState => {
  */
 export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeMutationRequestContainer(
-      mergeDeep(
-        apolloConfig,
-        {
-          // Skip if passed in or in apolloConfig
-          options: {
-            variables: props => {
+      R.compose(
+        apolloConfig => {
+          // Compose 'options.variables' with a function that might have been passed in
+          return composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables',
+            props => {
               // If the userState is specified use it, otherwise assume the userState props are at the top-level
               const userState = R.ifElse(
                 R.has('userState'),
@@ -438,40 +439,46 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
                 () => ({}),
                 normalizeUserStatePropsForMutating
               )(userState);
-            },
-            update: (store, {data, render, ...rest}) => {
-              const response = {result: {data}, ...rest};
-              // Add mutate to response.data so we dont' have to guess if it's a create or update
-              const userState = reqStrPathThrowing(
-                'result.data.mutate.userState',
-                addMutateKeyToMutationResponse({silent: true}, response)
-              );
-              // Add the cache only values to the persisted settings
-              // Deep merge the result of the mutation with the props so that we can add cache only values
-              // in props. We'll only cache values that are cache only since the mutation will have put
-              // the other return objects from the server into the cache
-              // TODO this is a bit redundant since the cache write also triggers a merge
-              const propsWithCacheOnlyItems = mergeCacheable({idPathLookup: userStateDataTypeIdPathLookup}, userState, {
-                userState,
-                render
-              });
-
-              // Mutate the cache to save settings to the database that are not stored on the server
-              makeCacheMutationContainer(
-                R.merge(apolloConfig, {store}),
-                {
-                  name: 'userState',
-                  // Always pass the full params so can pick out the cache only props
-                  outputParams: userStateLocalOutputParamsFull(),
-                  // For merging cached array items of userState.data.userRegions|userProjedts
-                  idPathLookup: userStateDataTypeIdPathLookup
-                },
-                filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
-              );
             }
-          }
+          )
+        },
+        // Merge in the update function
+        apolloConfig => {
+          return R.merge(apolloConfig, {
+              update: (store, {data, render, ...rest}) => {
+                const response = {result: {data}, ...rest};
+                // Add mutate to response.data so we dont' have to guess if it's a create or update
+                const userState = reqStrPathThrowing(
+                  'result.data.mutate.userState',
+                  addMutateKeyToMutationResponse({silent: true}, response)
+                );
+                // Add the cache only values to the persisted settings
+                // Deep merge the result of the mutation with the props so that we can add cache only values
+                // in props. We'll only cache values that are cache only since the mutation will have put
+                // the other return objects from the server into the cache
+                // TODO this is a bit redundant since the cache write also triggers a merge
+                const propsWithCacheOnlyItems = mergeCacheable({idPathLookup: userStateDataTypeIdPathLookup}, userState, {
+                  userState,
+                  render
+                });
+
+                // Mutate the cache to save settings to the database that are not stored on the server
+                makeCacheMutationContainer(
+                  R.merge(apolloConfig, {store}),
+                  {
+                    name: 'userState',
+                    // Always pass the full params so can pick out the cache only props
+                    outputParams: userStateLocalOutputParamsFull(),
+                    // For merging cached array items of userState.data.userRegions|userProjedts
+                    idPathLookup: userStateDataTypeIdPathLookup
+                  },
+                  filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
+                );
+              }
+            }
+          )
         }
-      ),
+      )(apolloConfig),
       {
         name: 'userState',
         outputParams
