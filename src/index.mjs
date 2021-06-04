@@ -10,7 +10,6 @@
  */
 
 
-import {USER_STATE_RELATED_DATA_PROPS} from "./stores/userStores/userStateStore.js";
 
 export {
   queryScopesMergeScopePropPathValueContainer
@@ -51,9 +50,10 @@ export {
   userStateOutputParamsMetaAndScopeIds,
   userStateLocalOutputParamsMetaAndScopeIds,
   userStateOutputParamsCreator,
-  userScopeOutputParamsFragmentDefaultOnlyIds,
+  userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateReadInputTypeMapper,
-  USER_STATE_RELATED_DATA_PROPS
+  USER_STATE_RELATED_DATA_PROPS,
+  userScopeOutputParamsOnlyIds,
 } from './stores/userStores/userStateStore.js';
 export {
   userStateRegionsQueryContainer,

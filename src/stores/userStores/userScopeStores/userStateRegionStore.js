@@ -19,7 +19,7 @@ import {
   userStateScopeObjsQueryContainer
 } from './userStateHelpers.js';
 import {
-  userScopeOutputParamsFragmentDefaultOnlyIds,
+  userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore.js';
@@ -51,15 +51,15 @@ export const userStateRegionsQueryContainer = v(R.curry(
         scopeQueryContainer: regionsQueryContainer,
         scopeName,
         readInputTypeMapper: userStateReadInputTypeMapper,
-        userStateOutputParamsCreator: scopeOutputParams => {
+        userStateOutputParamsCreator: userScopeOutputParams => {
           const params = userStateOutputParamsCreator(
-            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, scopeOutputParams)
+            userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
           );
           return params;
         },
         // Default to the user state params with only ids for the regions. This prevents an extra query to
         // load the region data
-        userScopeOutputParams: explicitUserRegionOutputParams || userStateRegionOutputParams({id: 1})
+        userScopeOutputParams: explicitUserRegionOutputParams || {region: {id: 1}}
       },
       renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
     );
@@ -109,7 +109,7 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRe
         readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: userScopeOutputParams => {
           return userStateOutputParamsCreator(
-            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+            userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
           );
         },
         userScopeOutputParams: userRegionOutputParams

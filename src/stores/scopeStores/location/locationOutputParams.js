@@ -1,51 +1,51 @@
 import {versionOutputParamsMixin} from '@rescapes/apollo';
 
 export const locationOutputParamsMinimized = {
-  id: true,
-  key: true,
-  name: true,
+  id: 1,
+  key: 1,
+  name: 1,
   data: {
     example: 1
   },
   geojson: {
-    type: true,
+    type: 1,
     features: {
-      type: true,
-      id: true,
+      type: 1,
+      id: 1,
       geometry: {
-        type: true,
-        coordinates: true
+        type: 1,
+        coordinates: 1
       },
-      properties: true
+      properties: 1
     },
-    generator: true,
-    copyright: true
+    generator: 1,
+    copyright: 1
   },
-  deleted: true,
+  deleted: 1,
   ...versionOutputParamsMixin
 };
 
 export const locationOutputParams = {
-  id: true,
-  key: true,
-  name: true,
+  id: 1,
+  key: 1,
+  name: 1,
   data: {
     example: 1
   },
   geojson: {
-    type: true,
+    type: 1,
     features: {
-      type: true,
-      id: true,
+      type: 1,
+      id: 1,
       geometry: {
-        type: true,
-        coordinates: true
+        type: 1,
+        coordinates: 1
       },
-      properties: true
+      properties: 1
     },
-    generator: true,
-    copyright: true
+    generator: 1,
+    copyright: 1
   },
-  deleted: true,
+  deleted: 1,
   ...versionOutputParamsMixin
 };

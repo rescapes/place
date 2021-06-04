@@ -19,7 +19,7 @@ import {
   userStateScopeObjsQueryContainer
 } from './userStateHelpers.js';
 import {
-  userScopeOutputParamsFragmentDefaultOnlyIds,
+  userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore.js';
@@ -67,7 +67,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
         readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: userScopeOutputParams => {
           const params = userStateOutputParamsCreator(
-            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+            userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
           );
           return params;
         },
@@ -119,7 +119,7 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userP
         readInputTypeMapper,
         userStateOutputParamsCreator: scopeOutputParams => {
           return userStateOutputParamsCreator(
-            userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, scopeOutputParams)
+            userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, scopeOutputParams)
           );
         },
         userScopeOutputParams: userProjectOutputParams

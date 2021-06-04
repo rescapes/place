@@ -3,7 +3,7 @@ import {
   matchingUserStateScopeInstance,
   matchingUserStateScopeInstances, setPathOnResolvedUserScopeInstance,
   userScopeFromProps,
-  userStateScopeObjsQueryContainer
+  userStateScopeObjsQueryContainer, userStateScopeObjsSetPropertyThenMutationContainer
 } from './userStateHelpers.js';
 import {
   composeWithChain,
@@ -22,7 +22,7 @@ import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import {projectsQueryContainer} from '../../scopeStores/project/projectStore.js';
 import {
-  userScopeOutputParamsFragmentDefaultOnlyIds,
+  userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore.js';
@@ -104,7 +104,7 @@ describe('userStateHelpers', () => {
             readInputTypeMapper: userStateReadInputTypeMapper,
             userStateOutputParamsCreator: userScopeOutputParams => {
               return userStateOutputParamsCreator(
-                userScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+                userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
               );
             },
             userScopeOutputParams: userStateProjectOutputParams({})
@@ -245,5 +245,17 @@ describe('userStateHelpers', () => {
       scopeInstancePropPath: 'region'
     }, {userState, region: {id: 'fred'}});
     expect(notFound).toEqual(undefined);
+  })
+
+  test('userStateScopeObjsSetPropertyThenMutationContainer', () => {
+    userStateScopeObjsSetPropertyThenMutationContainer(apolloConfig, {
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region',
+      setPath: 'foo',
+      setPropPath: 'fooData'
+    },
+      {userState, region, fooData});
   })
 });

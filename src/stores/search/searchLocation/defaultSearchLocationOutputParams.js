@@ -8,79 +8,79 @@ import {pickDeepPaths} from "@rescapes/ramda";
  * TODO this is just a copy from the server. It should be built by reading the remote schema instead
  */
 export const defaultSearchLocationOutputParams = {
-    id: true,
-    name: true,
+    id: 1,
+    name: 1,
     identification: {
-        identifier: true,
-        identifierContains: true,
-        identifierContainsNot: true
+        identifier: 1,
+        identifierContains: 1,
+        identifierContainsNot: 1
     },
     street: {
-        name: true,
-        nameContains: true,
-        nameContainsNot: true,
+        name: 1,
+        nameContains: 1,
+        nameContainsNot: 1,
     },
     jurisdictions: {
-        id: true,
+        id: 1,
         geojson: {
-            type: true,
+            type: 1,
             features: {
-                type: true,
-                id: true,
+                type: 1,
+                id: 1,
                 geometry: {
-                    type: true,
-                    coordinates: true,
+                    type: 1,
+                    coordinates: 1,
                 },
-                properties: true
+                properties: 1
             },
-            generator: true,
-            copyright: true
+            generator: 1,
+            copyright: 1
         },
         data: {
-            country: true,
-            countryContains: true,
-            countryContainsNot: true,
-            state: true,
-            stateContains: true,
-            stateContainsNot: true,
-            city: true,
-            cityContains: true,
-            cityContainsNot: true,
-            county: true,
-            countyContains: true,
-            countyContainsNot: true,
-            borough: true,
-            boroughContains: true,
-            boroughContainsNot: true,
-            district: true,
-            districtContains: true,
-            districtContainsNot: true,
-            neighborhood: true,
-            neighborhoodContains: true,
-            neighborhoodContainsNot: true,
+            country: 1,
+            countryContains: 1,
+            countryContainsNot: 1,
+            state: 1,
+            stateContains: 1,
+            stateContainsNot: 1,
+            city: 1,
+            cityContains: 1,
+            cityContainsNot: 1,
+            county: 1,
+            countyContains: 1,
+            countyContainsNot: 1,
+            borough: 1,
+            boroughContains: 1,
+            boroughContainsNot: 1,
+            district: 1,
+            districtContains: 1,
+            districtContainsNot: 1,
+            neighborhood: 1,
+            neighborhoodContains: 1,
+            neighborhoodContainsNot: 1,
         },
-        deleted: true,
-        createdAt: true,
-        updatedAt: true,
-        versionNumber: true,
-        revisionId: true,
+        deleted: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        versionNumber: 1,
+        revisionId: 1,
     },
     geojson: {
-        type: true,
+        type: 1,
         features: {
-            type: true,
-            id: true,
+            type: 1,
+            id: 1,
             geometry: {
-                type: true,
-                coordinates: true,
+                type: 1,
+                coordinates: 1,
             },
-            properties: true,
+            properties: 1,
         },
-        generator: true,
-        copyright: true
+        generator: 1,
+        copyright: 1
     },
     ...versionOutputParamsMixin,
-    deleted: true
+    deleted: 1
 }
 
 // Minimized default search location output params. I've picked these arbitrary.

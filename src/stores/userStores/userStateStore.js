@@ -43,7 +43,15 @@ import {
   projectOutputParamsMinimized,
   projectReadInputTypeMapper
 } from '../scopeStores/project/projectStore.js';
-import {capitalize, mergeDeep, pathOr, reqStrPathThrowing, strPathOr} from '@rescapes/ramda';
+import {
+  capitalize,
+  mergeDeep,
+  pathOr,
+  pickDeepPaths,
+  reqPathThrowing,
+  reqStrPathThrowing,
+  strPathOr
+} from '@rescapes/ramda';
 import {selectionOutputParamsFragment} from './selectionStore.js';
 import {activityOutputParamsMixin} from './activityStore.js';
 import moment from 'moment';
@@ -82,7 +90,7 @@ export const userStateReadInputTypeMapper = createReadInputTypeMapper(
  * for the odd case that the userState has maintained references to deleted scope instances. The Server
  * returns deleted instances when they are referenced.
  */
-export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, scopeOutputParams = {}) => {
+export const userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, scopeOutputParams = {}) => {
   const capitalized = capitalize((scopeName));
   return {
     [`user${capitalized}s`]: R.merge({
@@ -95,6 +103,34 @@ export const userScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, scopeOutp
     )
   };
 };
+
+/**
+ * Gets all the django model ids as output params for userState.date.userRegions|userProjects
+ * @param {String} scopeName 'region' or 'project'
+ * @returns {Object} The userRegion or userProject outputParams
+ */
+export const userScopeOutputParamsOnlyIds = scopeName => {
+  return R.compose(
+    userScopeData => {
+      return pickDeepPaths(
+        [`${scopeName}.id`, 'userSearch.userSearchLocations.searchLocation.id', 'activity'],
+        userScopeData
+      )
+    },
+    userScopeName => {
+      return reqPathThrowing(['data', userScopeName], userStateOutputParamsMetaAndScopeIds({
+          searchLocationOutputParams: defaultSearchLocationOutputParamsMinimized,
+        })
+      )
+    },
+    scopeName => {
+      const capitalized = capitalize((scopeName));
+      return `user${capitalized}s`;
+    }
+  )(scopeName)
+}
+
+
 /**
  * Creates userState output params
  * @param userScopeFragmentOutputParams Object keyed by 'region', 'project', etc with
@@ -184,8 +220,8 @@ export const userStateLocalOutputParamsMetaAndScopeIds = () => createUserStateOu
  * only the scope ids of the user state are needed (because scope instances are already loaded, for instance)
  */
 export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
-  ...userScopeOutputParamsFragmentDefaultOnlyIds('region'),
-  ...userScopeOutputParamsFragmentDefaultOnlyIds('project')
+  ...userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds('region'),
+  ...userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds('project')
 });
 
 /**
@@ -203,7 +239,7 @@ export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
  * @return {*[]}
  */
 export const userStateScopePropPathOutputParamsCreator = scopePropPathValueOutputParamsFragment => {
-  // Merge in {[scopeName]: {id: true}} and {activity: {isActive: true}} since we use often use that to filter the scope instances
+  // Merge in {[scopeName]: {id: 1}} and {activity: {isActive: 1}} since we use often use that to filter the scope instances
   // we want
   const mergedOutputFragment = scopeName => R.merge({
       [scopeName]: {id: true},
