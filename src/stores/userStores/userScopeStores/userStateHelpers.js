@@ -674,8 +674,7 @@ export const findUserScopeInstance = (
  * @param {String} userScopeInstancePropPath Required propSets path the the scope instance, e.g' 'userRegion' or 'userProject'
  * @param propSets {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
  * at scopeInstancePropPath or a user scope instance at
- * @returns {Object} The resolved userScope instance at the key userScope along with the other props from propSets,
- * but with userScopeInstancePropPath or scopeInstancePropPath removed
+ * @returns {Object} The resolved userScope instance at the key userScope.
  * userScope can resolve to null/undefined if something isn't loaded yet, but an error is thrown if propSets
  * lacks both properties scopeInstancePropPath and scopeInstancePropPath, which indicates a bad configuration
  */
@@ -692,42 +691,34 @@ export const userScopeFromProps = (
       propSets => R.has(userScopeInstancePropPath, propSets),
       // Null is okay here. It means that the userScope instance is expected but not loaded yet
       // Returns propSets with userScope prop added
-      propSets => R.merge(
-        R.omit([userScopeInstancePropPath], propSets),
-        {
-          userScope: findUserScopeInstance({
-              userScopeCollectionName: `user${capitalize(scopeName)}s`,
-              scopeName,
-              userStatePropPath,
-              scopeInstancePropPath
-            },
-            R.compose(
-              // Remove the user scope instance from the propSets
-              propSets => R.omit([userScopeInstancePropPath], propSets),
-              // Get the scopeName instance from the userScopeInstance
-              propSets => R.merge({[scopeName]: pathOr(undefined, [userScopeInstancePropPath, scopeName], propSets)}, propSets)
-            )(propSets)
-          )
-        }
-      )
+      propSets => {
+        return findUserScopeInstance({
+            userScopeCollectionName: `user${capitalize(scopeName)}s`,
+            scopeName,
+            userStatePropPath,
+            scopeInstancePropPath
+          },
+          R.compose(
+            // Remove the user scope instance from the propSets
+            propSets => R.omit([userScopeInstancePropPath], propSets),
+            // Get the scopeName instance from the userScopeInstance
+            propSets => R.merge({[scopeName]: pathOr(undefined, [userScopeInstancePropPath, scopeName], propSets)}, propSets)
+          )(propSets)
+        )
+      }
     ],
     [
       // If the scope instance is given
       propSets => R.has(scopeInstancePropPath, propSets),
       propSets => {
         // Null is okay here. It means that the scope instance is expected but not loaded yet
-        return R.merge(
-          R.omit([scopeInstancePropPath], propSets),
-          {
-            userScope: findUserScopeInstance({
-                userScopeCollectionName: `user${capitalize(scopeName)}s`,
-                scopeName,
-                userStatePropPath,
-                scopeInstancePropPath
-              },
-              propSets
-            )
-          }
+        return findUserScopeInstance({
+            userScopeCollectionName: `user${capitalize(scopeName)}s`,
+            scopeName,
+            userStatePropPath,
+            scopeInstancePropPath
+          },
+          propSets
         )
       }
     ],

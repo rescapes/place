@@ -190,7 +190,7 @@ describe('userStateHelpers', () => {
       userScopeInstancePropPath: 'userRegion',
       scopeInstancePropPath: 'region'
     }, {userState, region});
-    expect(found).toEqual({userState, userScope: userState['data']['userRegions'][1]});
+    expect(found).toEqual(userState['data']['userRegions'][1]);
 
     const foundAgain = userScopeFromProps({
       scopeName: 'region',
@@ -198,7 +198,7 @@ describe('userStateHelpers', () => {
       userScopeInstancePropPath: 'userRegion',
       scopeInstancePropPath: 'region'
     }, {userState, userRegion});
-    expect(foundAgain).toEqual({userState, userScope: userState['data']['userRegions'][1]});
+    expect(foundAgain).toEqual(userState['data']['userRegions'][1]);
 
     const notFound = userScopeFromProps({
       scopeName: 'region',
@@ -206,7 +206,7 @@ describe('userStateHelpers', () => {
       userScopeInstancePropPath: 'userRegion',
       scopeInstancePropPath: 'region'
     }, {userState, region: {id: 'fred'}});
-    expect(notFound).toEqual({userState, userScope: undefined});
+    expect(notFound).toEqual(undefined);
 
     const notFoundNotAgain = userScopeFromProps({
       scopeName: 'region',
@@ -214,6 +214,6 @@ describe('userStateHelpers', () => {
       userScopeInstancePropPath: 'userRegion',
       scopeInstancePropPath: 'region'
     }, {userState, userRegion: {region: {id: 'fred'}}});
-    expect(notFoundNotAgain).toEqual({userState, userScope: undefined});
+    expect(notFoundNotAgain).toEqual(undefined);
   })
 });
