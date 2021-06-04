@@ -11,6 +11,8 @@
 
 
 
+import {userStateRegionSetPropertyThenMutationContainer} from "./stores/userStores/userScopeStores/userStateRegionStore.js";
+
 export {
   queryScopesMergeScopePropPathValueContainer
 } from './stores/scopePropertyStore.js'
@@ -58,6 +60,7 @@ export {
 export {
   userStateRegionsQueryContainer,
   userStateRegionMutationContainer,
+  userStateRegionSetPropertyThenMutationContainer
 } from './stores/userStores/userScopeStores/userStateRegionStore.js';
 
 export {
@@ -66,7 +69,8 @@ export {
 
 export {
   userStateProjectsQueryContainer,
-  userStateProjectMutationContainer,
+  userStateProjectMutationContainer,,
+  userStateProjectSetPropertyThenMutationContainer
 } from './stores/userStores/userScopeStores/userStateProjectStore.js';
 export {
   userStateProjectOutputParams

@@ -131,3 +131,46 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRe
   ],
   'userStateRegionMutationContainer'
 );
+
+/**
+ * Convenience method for updating the property of a userRegion and then mutating
+ * @type {(function(...[*]): *)|*}
+ */
+export const userStateRegionSetPropertyThenMutationContainer = v((apolloConfig, {
+    normalizeUserStatePropsForMutating,
+    userRegionOutputParams,
+    setPath,
+    setPropPath
+  }, propSets) => {
+    return userStateScopeObjsSetPropertyThenMutationContainer(
+      apolloConfig, {
+        scopeName: 'region',
+        userScopeOutputParams: userRegionOutputParams,
+        scopeQueryContainer: regionsQueryContainer,
+        normalizeUserStatePropsForMutating,
+        userStatePropPath: 'userState',
+        userScopeInstancePropPath: 'userRegion',
+        scopeInstancePropPath: 'region',
+        setPath,
+        setPropPath,
+      },
+      propSets
+    )
+  }, [
+    ['apolloConfig', PropTypes.shape().isRequired],
+    ['mutationStructure', PropTypes.shape({
+      normalizeUserStatePropsForMutating: PropTypes.func.isRequired,
+      userRegionOutputParams: PropTypes.shape().isRequired,
+      setPath: PropTypes.string.isRequired,
+      setPropPath: PropTypes.string.isRequired
+    })],
+    ['props', PropTypes.shape({
+      userState: PropTypes.shape(),
+      userRegion: PropTypes.shape({
+        region: PropTypes.shape()
+      }),
+      region: PropTypes.shape(),
+    }).isRequired]
+  ],
+  'userStateRegionSetPropertyThenMutationContainer'
+);

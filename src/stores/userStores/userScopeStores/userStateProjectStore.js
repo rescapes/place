@@ -25,6 +25,7 @@ import {
 } from '../userStateStore.js';
 import {renameKey} from '@rescapes/ramda';
 import {userStateProjectOutputParams} from './userStateProjectStoreHelpers.js'
+import {regionsQueryContainer} from "../../scopeStores/region/regionStore";
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -144,4 +145,47 @@ export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userP
     }).isRequired]
   ],
   'userStateProjectMutationContainer'
+);
+
+/**
+ * Convenience method for updating the property of a userProject and then mutating
+ * @type {(function(...[*]): *)|*}
+ */
+export const userStateProjectSetPropertyThenMutationContainer = v((apolloConfig, {
+    normalizeUserStatePropsForMutating,
+    userProjectOutputParams,
+    setPath,
+    setPropPath
+  }, propSets) => {
+    return userStateScopeObjsSetPropertyThenMutationContainer(
+      apolloConfig, {
+        scopeName: 'project',
+        userScopeOutputParams: userProjectOutputParams,
+        scopeQueryContainer: projectsQueryContainer,
+        normalizeUserStatePropsForMutating,
+        userStatePropPath: 'userState',
+        userScopeInstancePropPath: 'userProject',
+        scopeInstancePropPath: 'project',
+        setPath,
+        setPropPath,
+      },
+      propSets
+    )
+  }, [
+    ['apolloConfig', PropTypes.shape().isRequired],
+    ['mutationStructure', PropTypes.shape({
+      normalizeUserStatePropsForMutating: PropTypes.func.isRequired,
+      userProjectOutputParams: PropTypes.shape().isRequired,
+      setPath: PropTypes.string.isRequired,
+      setPropPath: PropTypes.string.isRequired
+    })],
+    ['props', PropTypes.shape({
+      userState: PropTypes.shape(),
+      userProject: PropTypes.shape({
+        project: PropTypes.shape()
+      }),
+      project: PropTypes.shape(),
+    }).isRequired]
+  ],
+  'userStateProjectSetPropertyThenMutationContainer'
 );
