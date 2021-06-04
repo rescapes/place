@@ -10,6 +10,9 @@
  */
 
 
+import {USER_STATE_RELATED_DATA_PROPS} from "./stores/userStores/userStateStore.js";
+import {userScopeFromProps} from "./stores/userStores/userScopeStores/userStateHelpers.js";
+
 export {
   queryScopesMergeScopePropPathValueContainer
 } from './stores/scopePropertyStore.js'
@@ -50,7 +53,8 @@ export {
   userStateLocalOutputParamsMetaAndScopeIds,
   userStateOutputParamsCreator,
   userScopeOutputParamsFragmentDefaultOnlyIds,
-  userStateReadInputTypeMapper
+  userStateReadInputTypeMapper,
+  USER_STATE_RELATED_DATA_PROPS
 } from './stores/userStores/userStateStore.js';
 export {
   userStateRegionsQueryContainer,
@@ -106,7 +110,8 @@ export {
   findUserScopeInstance,
   userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
-  userStateScopeObjsQueryContainer
+  userStateScopeObjsQueryContainer,
+  userScopeFromProps
 } from './stores/userStores/userScopeStores/userStateHelpers.js';
 
 export {activityOutputParamsMixin, isActive} from './stores/userStores/activityStore.js';

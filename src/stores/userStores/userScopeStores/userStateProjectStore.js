@@ -12,7 +12,7 @@
 import * as R from 'ramda';
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
-import {projectOutputParams, projectsQueryContainer} from '../../scopeStores/project/projectStore.js';
+import {projectsQueryContainer} from '../../scopeStores/project/projectStore.js';
 import {
   userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
@@ -23,10 +23,8 @@ import {
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore.js';
-import {selectionOutputParamsFragment} from '../selectionStore.js';
-import {activityOutputParamsMixin} from '../activityStore.js';
 import {renameKey} from '@rescapes/ramda';
-import {createUserSearchOutputParams} from "./userSearchStore";
+import {userStateProjectOutputParams} from './userStateProjectStoreHelpers.js'
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType

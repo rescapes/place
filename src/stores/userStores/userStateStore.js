@@ -58,7 +58,7 @@ import {userStateProjectOutputParams} from "./userScopeStores/userStateProjectSt
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = ['user'];
-const RELATED_DATA_PROPS = [
+export const USER_STATE_RELATED_DATA_PROPS = [
   'data.userRegions.region', 'data.userProjects.project',
   'data.userRegions.userSearch.userSearchLocations.searchLocation',
   'data.userProjects.userSearch.userSearchLocations.searchLocation',
@@ -309,7 +309,8 @@ export const createCacheOnlyPropsForUserState = props => {
 /**
  * Queries userState for the current user as identified by the apollo client.
  * @param {Object} apolloClient The Apollo Client
- * @param [Object] outputParams OutputParams for the query
+ * @param {Object} options
+ * @param [Object] options.outputParams OutputParams for the query
  * @param {Object} props Arguments for the UserState query. Likely null unless testing whether the current
  * user state has passes a certain predicate
  * @returns {Task|Object} A Task or apollo container resolving to the single item user state response {data: {usersStates: []}}
@@ -397,7 +398,7 @@ export const adminUserStateQueryContainer = v(R.curry(
 export const normalizeUserStatePropsForMutating = userState => {
   return R.compose(
     // Make sure related objects only have an id
-    userState => relatedObjectsToIdForm(R.concat(RELATED_PROPS, RELATED_DATA_PROPS), userState),
+    userState => relatedObjectsToIdForm(R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS), userState),
     userState => filterOutReadOnlyVersionProps(userState),
     userState => filterOutNullDeleteProps(userState),
     userState => filterOutCacheOnlyObjs(userState)

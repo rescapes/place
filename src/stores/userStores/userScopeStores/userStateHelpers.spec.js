@@ -1,26 +1,26 @@
 import {
   findUserScopeInstance,
   matchingUserStateScopeInstance,
-  matchingUserStateScopeInstances, queryScopeObjsOfUserStateContainer,
+  matchingUserStateScopeInstances,
+  userScopeFromProps,
   userStateScopeObjsQueryContainer
 } from './userStateHelpers.js';
 import {
   composeWithChain,
   defaultRunConfig,
-  expectKeysAtPath, mapToMergedResponseAndInputs,
+  expectKeysAtPath,
+  mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs,
   reqStrPathThrowing,
   strPathOr
 } from '@rescapes/ramda';
 import * as R from 'ramda';
-import {userStateProjectOutputParams} from './userStateProjectStore.js';
+import {userStateProjectOutputParams} from './userStateProjectStoreHelpers.js';
 import {mutateSampleUserStateWithProjectsAndRegionsContainer} from '../userStateStore.sample.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
-import {
-  projectsQueryContainer
-} from '../../scopeStores/project/projectStore.js';
+import {projectsQueryContainer} from '../../scopeStores/project/projectStore.js';
 import {
   userScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
@@ -157,7 +157,7 @@ describe('userStateHelpers', () => {
     };
     const region = {id: 2};
     const found = findUserScopeInstance({
-      userScopeCollectName: 'userRegions',
+      userScopeCollectionName: 'userRegions',
       scopeName: 'region',
       userStatePropPath: 'userState',
       scopeInstancePropPath: 'region'
@@ -165,11 +165,55 @@ describe('userStateHelpers', () => {
 
     expect(found).toEqual(userState['data']['userRegions'][1]);
     const notFound = findUserScopeInstance({
-      userScopeCollectName: 'userRegions',
+      userScopeCollectionName: 'userRegions',
       scopeName: 'region',
       userStatePropPath: 'userState',
       scopeInstancePropPath: 'region'
     }, {userState, region: {id: 'fred'}});
     expect(notFound).toEqual(undefined);
   });
+
+  test('userScopeFromProps', () => {
+    const userState = {
+      data: {
+        userRegions: [
+          {region: {id: 1}},
+          {region: {id: 2}}
+        ]
+      }
+    };
+    const region = {id: 2};
+    const userRegion = userState.data.userRegions[1]
+    const found = userScopeFromProps({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region'
+    }, {userState, region});
+    expect(found).toEqual({userState, userScope: userState['data']['userRegions'][1]});
+
+    const foundAgain = userScopeFromProps({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region'
+    }, {userState, userRegion});
+    expect(foundAgain).toEqual({userState, userScope: userState['data']['userRegions'][1]});
+
+    const notFound = userScopeFromProps({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region'
+    }, {userState, region: {id: 'fred'}});
+    expect(notFound).toEqual({userState, userScope: undefined});
+
+    const notFoundNotAgain = userScopeFromProps({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region'
+    }, {userState, userRegion: {region: {id: 'fred'}}});
+    expect(notFoundNotAgain).toEqual({userState, userScope: undefined});
+  })
 });
