@@ -673,7 +673,7 @@ export const findUserScopeInstance = (
  * @param {String} scopeInstancePropPath Required propSets path the the scope instance, e.g' 'region' or 'project'
  * @param {String} userScopeInstancePropPath Required propSets path the the scope instance, e.g' 'userRegion' or 'userProject'
  * @param propSets {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
- * at scopeInstancePropPath or a user scope instance at
+ * at scopeInstancePropPath or a user scope instance
  * @returns {Object} The resolved userScope instance at the key userScope.
  * userScope can resolve to null/undefined if something isn't loaded yet, but an error is thrown if propSets
  * lacks both properties scopeInstancePropPath and scopeInstancePropPath, which indicates a bad configuration
@@ -729,4 +729,56 @@ export const userScopeFromProps = (
       }
     ]
   ])(propSets)
+}
+
+/***
+ * Calls userScopeFromProps to resolve the user scope instance and additionally adds the value propSets[...setPropPath...]
+ * to userScope[...setPath...]. This method is used to create convenient API methods that set a given property of
+ * user.data.userRegions|userProjects[x].[...setPath...] when the caller specifies the userState and current
+ * region or project and the values to set. For instance, if a caller wanted to make a certain region the active region
+ * for the current user, they could pass the userState, that region, and {activity: {active: true}} to an API method
+ * designed to make the given region active and the others inactive.
+ * @param {Object} config
+ * @param {String} config.scopeName Required scope name 'region' for userRegions or 'project' for userProjects
+ * @param {String} config.userStatePropPath Required propSets path to the userState, e.g. 'userState'
+ * @param {String} config.scopeInstancePropPath Required propSets path the the scope instance, e.g' 'region' or 'project'
+ * @param {String} config.userScopeInstancePropPath Required propSets path the the scope instance, e.g' 'userRegion' or 'userProject'
+ * @param {String | [String]} config.setPath Array or string path used to make a lens to set the value at propSets[setPropPath]
+ * @param {String} config.setPropPath String path of value in propSets to use for setting
+ * @param propSets {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
+ * at scopeInstancePropPath or a user scope instance
+ * @returns {Object} The resolved and user scope instance with setPath set to propSets[...setPropPath...]
+ */
+export const setPathOnResolvedUserScopeInstance = (
+  {
+    scopeName,
+    userStatePropPath,
+    userScopeInstancePropPath,
+    scopeInstancePropPath,
+    setPath,
+    setPropPath
+  },
+  propSets) => {
+  return R.compose(
+    // Set setPath to the object at setPropPath if userScope was resolved
+    userScope => {
+      return R.when(
+        R.identity,
+        userScope => R.set(
+          R.lensPath(R.unless(Array.isArray, R.split('.'), setPath)),
+          reqStrPathThrowing(setPropPath, propSets),
+          userScope
+        )
+      )(userScope)
+    },
+    // Extract the userScope instance, either a userRegion or userProject
+    propSets => userScopeFromProps({
+        scopeName,
+        userStatePropPath,
+        userScopeInstancePropPath,
+        scopeInstancePropPath,
+      },
+      propSets
+    )
+  )(propSets)
 }

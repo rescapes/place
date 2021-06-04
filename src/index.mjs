@@ -11,7 +11,6 @@
 
 
 import {USER_STATE_RELATED_DATA_PROPS} from "./stores/userStores/userStateStore.js";
-import {userScopeFromProps} from "./stores/userStores/userScopeStores/userStateHelpers.js";
 
 export {
   queryScopesMergeScopePropPathValueContainer
@@ -111,7 +110,8 @@ export {
   userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
   userStateScopeObjsQueryContainer,
-  userScopeFromProps
+  userScopeFromProps,
+  setPathOnResolvedUserScopeInstance
 } from './stores/userStores/userScopeStores/userStateHelpers.js';
 
 export {activityOutputParamsMixin, isActive} from './stores/userStores/activityStore.js';

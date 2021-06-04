@@ -1,7 +1,7 @@
 import {
   findUserScopeInstance,
   matchingUserStateScopeInstance,
-  matchingUserStateScopeInstances,
+  matchingUserStateScopeInstances, setPathOnResolvedUserScopeInstance,
   userScopeFromProps,
   userStateScopeObjsQueryContainer
 } from './userStateHelpers.js';
@@ -215,5 +215,35 @@ describe('userStateHelpers', () => {
       scopeInstancePropPath: 'region'
     }, {userState, userRegion: {region: {id: 'fred'}}});
     expect(notFoundNotAgain).toEqual(undefined);
+  })
+
+  test('setPathOnResolvedUserScopeInstance', () => {
+    const userState = {
+      data: {
+        userRegions: [
+          {region: {id: 1}},
+          {region: {id: 2}}
+        ]
+      }
+    };
+    const region = {id: 2};
+    const fooData = {foo: true}
+    const found = setPathOnResolvedUserScopeInstance({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region',
+      setPath: 'foo',
+      setPropPath: 'fooData'
+    }, {userState, region, fooData});
+    expect(found).toEqual(R.set(R.lensProp('foo'), fooData, userState.data.userRegions[1]))
+
+    const notFound = setPathOnResolvedUserScopeInstance({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region'
+    }, {userState, region: {id: 'fred'}});
+    expect(notFound).toEqual(undefined);
   })
 });
