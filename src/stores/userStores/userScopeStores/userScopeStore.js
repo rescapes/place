@@ -1,10 +1,15 @@
 import {
+  currentUserStateQueryContainer,
   userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from "../userStateStore";
 import {setPathOnResolvedUserScopeInstance, userStateScopeObjsMutationContainer} from "./userStateHelpers";
 import * as R from 'ramda'
+import {composeWithChain, reqStrPathThrowing, strPathOr} from "@rescapes/ramda";
+import {mapTaskOrComponentToNamedResponseAndInputs} from "@rescapes/apollo";
+import {containerForApolloType} from "@rescapes/apollo/src/helpers/containerHelpers";
+import {getRenderPropFunction} from "@rescapes/apollo/src/helpers/componentHelpersMonadic";
 
 /***
  * Convenience method for mutating the userState after setting a property on a target userScope instance
@@ -39,39 +44,77 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
   setPath,
   setPropPath
 }, propSets) => {
-  return userStateScopeObjsMutationContainer(
-    R.merge(
-      apolloConfig,
-      {
-        options: {
-          variables: props => {
-            return normalizeUserStatePropsForMutating(props)
+  return composeWithChain([
+    ({userStateResponse, ...props}) => {
+      if (!strPathOr(null, 'data', userStateResponse)) {
+        // Loading
+        return containerForApolloType(
+          apolloConfig,
+          {
+            render: getRenderPropFunction(props),
+            response: userStateResponse
           }
-        }
-      }
-    ),
-    {
-      scopeQueryContainer,
-      scopeName,
-      readInputTypeMapper: userStateReadInputTypeMapper,
-      userStateOutputParamsCreator: userScopeOutputParams => {
-        return userStateOutputParamsCreator(
-          userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
         );
-      },
-      userScopeOutputParams,
+      }
+      // Update/Set userState to the response or what was passed in
+      const _props = R.merge(props, {userState: reqStrPathThrowing('data.userStates.0', userStateResponse)})
+      return userStateScopeObjsMutationContainer(
+        R.merge(
+          apolloConfig,
+          {
+            options: {
+              variables: props => {
+                return normalizeUserStatePropsForMutating(props)
+              }
+            }
+          }
+        ),
+        {
+          scopeQueryContainer,
+          scopeName,
+          readInputTypeMapper: userStateReadInputTypeMapper,
+          userStateOutputParamsCreator: userScopeOutputParams => {
+            return userStateOutputParamsCreator(
+              userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+            );
+          },
+          userScopeOutputParams,
+        },
+        R.merge(_props, {
+          // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
+          userScope: setPathOnResolvedUserScopeInstance({
+            scopeName,
+            userStatePropPath,
+            userScopeInstancePropPath,
+            scopeInstancePropPath,
+            // These mean set the value of the user scopeInstance[...setPath...]. from propSets[..setPropPath...]
+            setPath,
+            setPropPath
+          }, _props)
+        })
+      )
     },
-    R.merge(propSets, {
-      // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
-      userScope: setPathOnResolvedUserScopeInstance({
-        scopeName,
-        userStatePropPath,
-        userScopeInstancePropPath,
-        scopeInstancePropPath,
-        // These mean set the value of the user scopeInstance[...setPath...]. from propSets[..setPropPath...]
-        setPath,
-        setPropPath
-      }, propSets)
-    })
-  );
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
+      // Fetch the current userState if not passed in
+      propSets => {
+        return R.ifElse(
+          propSets => strPathOr(false, 'userState', propSets),
+          propSets => {
+            return containerForApolloType(
+              apolloConfig,
+              {
+                render: getRenderPropFunction(propSets),
+                response:  {data: {userStates: [reqStrPathThrowing('userState', propSets)]}}
+              }
+            );
+          },
+          propSets => currentUserStateQueryContainer(apolloConfig, {
+            outputParams: userStateOutputParamsCreator(
+              userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+            )
+          }, {})
+        )(propSets)
+      }
+    )
+  ])(propSets);
 }

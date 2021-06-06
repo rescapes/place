@@ -26,6 +26,7 @@ import {
 import {renameKey} from '@rescapes/ramda';
 import {userStateProjectOutputParams} from './userStateProjectStoreHelpers.js'
 import {regionsQueryContainer} from "../../scopeStores/region/regionStore";
+import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeStore";
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType

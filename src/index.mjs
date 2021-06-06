@@ -69,7 +69,7 @@ export {
 
 export {
   userStateProjectsQueryContainer,
-  userStateProjectMutationContainer,,
+  userStateProjectMutationContainer,
   userStateProjectSetPropertyThenMutationContainer
 } from './stores/userStores/userScopeStores/userStateProjectStore.js';
 export {

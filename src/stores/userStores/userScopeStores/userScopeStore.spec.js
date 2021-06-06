@@ -46,7 +46,8 @@ describe('userStateHelpers', () => {
               setPropPath: 'newIsActiveValue'
             },
             {
-              userState,
+              // The userState is optional. The current userState will be fetched from the cache or server
+              //userState,
               region,
               newIsActiveValue: !userRegion.activity.isActive
             }

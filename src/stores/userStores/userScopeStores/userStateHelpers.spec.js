@@ -1,9 +1,10 @@
 import {
   findUserScopeInstance,
   matchingUserStateScopeInstance,
-  matchingUserStateScopeInstances, setPathOnResolvedUserScopeInstance,
+  matchingUserStateScopeInstances,
+  setPathOnResolvedUserScopeInstance,
   userScopeFromProps,
-  userStateScopeObjsQueryContainer, userStateScopeObjsSetPropertyThenMutationContainer
+  userStateScopeObjsQueryContainer
 } from './userStateHelpers.js';
 import {
   composeWithChain,
@@ -247,15 +248,4 @@ describe('userStateHelpers', () => {
     expect(notFound).toEqual(undefined);
   })
 
-  test('userStateScopeObjsSetPropertyThenMutationContainer', () => {
-    userStateScopeObjsSetPropertyThenMutationContainer(apolloConfig, {
-      scopeName: 'region',
-      userStatePropPath: 'userState',
-      userScopeInstancePropPath: 'userRegion',
-      scopeInstancePropPath: 'region',
-      setPath: 'foo',
-      setPropPath: 'fooData'
-    },
-      {userState, region, fooData});
-  })
 });
