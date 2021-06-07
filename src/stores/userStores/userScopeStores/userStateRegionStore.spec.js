@@ -10,11 +10,12 @@
  */
 
 import {
-  userStateRegionMutationContainer,
+  userStateRegionMutationContainer, userStateRegionsActiveQueryContainer,
   userStateRegionsQueryContainer
 } from './userStateRegionStore.js';
 import {userStateRegionOutputParams} from './userStateRegionStoreHelpers.js'
 import {
+  composeWithChain,
   composeWithChainMDeep,
   defaultRunConfig,
   expectKeysAtPath,
@@ -143,20 +144,16 @@ describe('userRegionStore', () => {
     }, errors, done));
   });
 
-  test('makeActiveUserRegionQuery', done => {
+  test('userStateRegionsActiveQueryContainer', done => {
     const errors = [];
     const someRegionKeys = ['id'];
-    R.composeK(
-      ({apolloConfig, user}) => {
-        return userStateRegionsQueryContainer(
+    composeWithChain([
+      ({apolloConfig}) => {
+        return userStateRegionsActiveQueryContainer(
           apolloConfig,
           {},
-          {
-            userState: {
-              user: R.pick(['id'], user)
-            },
-            userRegion: {}
-          }
+            // UserState defaults to current. UserRegion will be set to {active: {isActive: true}
+          {}
         );
       },
       // Set the UserState, returns previous values and {userState, project, region}
@@ -167,7 +164,7 @@ describe('userRegionStore', () => {
           apolloConfig,
           {}, {
           user: R.pick(['id'], user),
-          regionKeys: ['earth'],
+          regionKeys: ['earth', 'mars'],
           projectKeys: ['shrangrila']
         });
       }),
@@ -177,10 +174,10 @@ describe('userRegionStore', () => {
       mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask()
       )
-    )({}).run().listen(defaultRunConfig({
+    ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expectKeysAtPath(someRegionKeys, 'data.userStates.0.data.userRegions.0.region', response);
+          expect(R.length(strPathOr([], 'data.userStates.0.data.userRegions', response))).toBe(1)
         }
     }, errors, done));
   }, 1000000);

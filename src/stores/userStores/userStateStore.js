@@ -81,25 +81,28 @@ export const userStateReadInputTypeMapper = createReadInputTypeMapper(
 );
 
 /***
- * userState data for scope objects (Project, Region, etc) output params fragment when we only want the project ids or
+ * userState data for scope objects (Project, Region, etc) output params fragment when we only want ids or
  * something custom.
  * The project property represents a single project and the other properties represent the relationship
  * between the user and the project. This can be properties that are stored on the server or only in cache.
  * @param {String} scopeName 'project' or 'region'
- * @param {Object} [scopeOutputParams] Defaults to {} deep merged with {[scopeName]: {id: 1, deleted: 1}} We include deleted
+ * @param {Object} [userScopeOutputParams] Defaults to {activity: {isActive:1}} deep merged with {[scopeName]: {id: 1, deleted: 1}} We include deleted
  * for the odd case that the userState has maintained references to deleted scope instances. The Server
  * returns deleted instances when they are referenced.
  */
-export const userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds = (scopeName, scopeOutputParams = {}) => {
+export const userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds = (
+  scopeName,
+  userScopeOutputParams = {[scopeName]: {id: 1, deleted: 1}}) => {
   const capitalized = capitalize((scopeName));
   return {
     [`user${capitalized}s`]: R.merge({
         [scopeName]: mergeDeep(
-          {id: 1, deleted: true},
-          R.propOr({}, scopeName, scopeOutputParams)
-        )
+          {id: 1, deleted: 1},
+          R.propOr({}, scopeName, userScopeOutputParams)
+        ),
+        activity: {isActive: 1}
       },
-      R.omit([scopeName], scopeOutputParams)
+      R.omit([scopeName], userScopeOutputParams)
     )
   };
 };

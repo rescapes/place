@@ -13,15 +13,15 @@ import * as R from 'ramda';
 import {v} from '@rescapes/validate';
 import {
   capitalize,
-  compact,
+  compact, eqStrPath, flattenObj,
   mergeDeep,
-  mergeDeepAll,
+  mergeDeepAll, omitDeep,
   onlyOneThrowing,
   pathOr,
   pickDeepPaths,
   renameKey,
   reqPathThrowing,
-  reqStrPathThrowing,
+  reqStrPathThrowing, strPathEq,
   strPathOr,
   toNamedResponseAndInputs
 } from '@rescapes/ramda';
@@ -73,8 +73,9 @@ const hasScopeParams = scope => {
  * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
  * and returning output parameters for each the scope class query. If don't have to query scope separately
  * then scopeOutputParams is passed to this. Otherwise we just was ['id'] since that's all the initial query needs
- * @param {[Object]} userScopeOutputParams Output parameters for each the user scope class query. For example
- * {region: {id: 1, name: 1, key: 1}, activity: {isActive: 1}}
+ * @param {[Object]} [userScopeOutputParams] Output parameters for each the user scope class query. For example
+ * {region: {id: 1, name: 1, key: 1}, activity: {isActive: 1}} If null it must be defaulted in the call to
+ * userStateOutputParamsCreator
  * @param {Object} userStateArgumentsCreator arguments for the UserStates query. {user: {id: }} is required to limit
  * the query to one user
  * @param {Object} props Props to query with. userState is required and a scope property that can contain none
@@ -88,7 +89,13 @@ const hasScopeParams = scope => {
  */
 export const userStateScopeObjsQueryContainer = v(R.curry(
   (apolloConfig,
-   {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
+   {
+     scopeQueryContainer,
+     scopeName,
+     readInputTypeMapper,
+     userStateOutputParamsCreator,
+     userScopeOutputParams = {[scopeName]: {id: 1}}
+   },
    props) => {
     const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams);
     // Since we only store the id of the scope obj in the userState, if there are other queryParams
@@ -166,7 +173,7 @@ export const userStateScopeObjsQueryContainer = v(R.curry(
       scopeName: PropTypes.string.isRequired,
       readInputTypeMapper: PropTypes.shape().isRequired,
       userStateOutputParamsCreator: PropTypes.func.isRequired,
-      userScopeOutputParams: PropTypes.shape().isRequired
+      userScopeOutputParams: PropTypes.shape()
     }).isRequired],
     ['props', PropTypes.shape({
       userState: PropTypes.shape({
@@ -198,11 +205,14 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
         // We don't need to query if we already have the scope ids we need and we don't need other properties
         // of those scope objects
         return R.and(
+          // userScope is empty or just filtering by scope id
           R.compose(
-            R.not,
-            scope => hasScopeParams(scope),
-            scope => R.omit(['id'], scope),
-            userScope => R.propOr({}, scopeName, userScope)
+            flattened => !R.length(R.keys(flattened)),
+            userScope => flattenObj(userScope),
+            userScope => R.over(
+              R.lensProp(scopeName),
+              scopeProps => R.omit(['id'], scopeProps), userScope
+            ),
           )(userScope),
           // Only requesting id from the userScope instances
           R.and(
@@ -420,7 +430,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
  * where scopeName is 'region', 'project', etc
  * @param {Object} [props.scope] The scope props for the queries, such as region, project, etc.
  * This can be null or {} to not filter by scope
- * @return {Task|Function} Task resolving to or Component resolving to the scope objs that match the scopeArguments
+ * @return {Task|Object} Task resolving to or Component resolving to the scope objs that match the scopeArguments
  */
 export const queryScopeObjsOfUserStateContainer = v(R.curry(
   (apolloConfig,
@@ -431,7 +441,6 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
     return composeWithComponentMaybeOrTaskChain([
       // Match any returned scope objs with the corresponding userScopeObjs
       nameComponent('matchUserScopeObjs', scopeObjsResponse => {
-
         // If we are in a loading or error state, return the response without proceeding
         if (R.any(prop => R.prop(prop, scopeObjsResponse), ['loading', 'error'])) {
           return containerForApolloType(
@@ -504,6 +513,13 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
       nameComponent('scopeQueryContainer', props => {
         const {userScope, userScopeObjs} = props;
         const scopeProps = R.prop(scopeName, userScope);
+        // Hack, filter by activity.isActive. We have no way to filter by non scope objects yet.
+        // TODO This should instead by done by setting variables within the graphql query: e.g. userRegions(variables)
+        // but we don't support that yet on the client
+        const _userScopeObjs = R.filter(
+          userScopeObj => !R.has('activity', userScope) || eqStrPath('activity.isActive', userScope, userScopeObj),
+          userScopeObjs
+        )
         return scopeQueryContainer(
           composeFuncAtPathIntoApolloConfig(
             R.mergeDeepRight(
@@ -545,7 +561,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
           {
             outputParams: scopeOutputParams
           },
-          props
+          R.merge(props, {userScopeObjs: _userScopeObjs})
         );
       })
     ])(props);

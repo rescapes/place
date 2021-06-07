@@ -29,12 +29,10 @@ import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeSto
 
 /**
  * Queries regions that are in the scope of the user and the values of that region
- * @param {Object} config
- * @param {Object} config.apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
+ * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
  * @param {Object} apolloConfig.apolloClient An authorized Apollo Client
  * @param {Object} outputParamSets Optional outputParam sets to override the defaults
- * @param {Object} [outputParamSets.userStateRegionOutputParams] Optional userRegion output params.
- * Defaults to regionStore.regionOutputParams
+ * @param {Object} [outputParamSets.userStateRegionOutputParams] Optional explicit userRegion output params.
  * @param {Object} userStateArguments arguments for the UserStates query. {user: {id: }} is required to limit
  * the query to one user
  * @param {Object} propSets The props used for the query. userState objects are required
@@ -44,7 +42,7 @@ import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeSto
  * @returns {Object} The resulting User Regions in a Task in {data: usersRegions: [...]}}
  */
 export const userStateRegionsQueryContainer = v(R.curry(
-  (apolloConfig, {userRegionOutputParams: explicitUserRegionOutputParams}, propSets) => {
+  (apolloConfig, {userRegionOutputParams}, propSets) => {
     const scopeName = 'region';
     return userStateScopeObjsQueryContainer(
       apolloConfig,
@@ -53,14 +51,13 @@ export const userStateRegionsQueryContainer = v(R.curry(
         scopeName,
         readInputTypeMapper: userStateReadInputTypeMapper,
         userStateOutputParamsCreator: userScopeOutputParams => {
-          const params = userStateOutputParamsCreator(
+          return userStateOutputParamsCreator(
             userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
           );
-          return params;
         },
         // Default to the user state params with only ids for the regions. This prevents an extra query to
         // load the region data
-        userScopeOutputParams: explicitUserRegionOutputParams || {region: {id: 1}}
+        userScopeOutputParams: userRegionOutputParams,
       },
       renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
     );
@@ -175,3 +172,24 @@ export const userStateRegionSetPropertyThenMutationContainer = v((apolloConfig, 
   ],
   'userStateRegionSetPropertyThenMutationContainer'
 );
+
+/**
+ * Convenience method that calls userStateRegionsQueryContainer but sets propSets.userRegion.activity.isActive to true
+ * so we only get userRegions that are active (normally just 1)
+ * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
+ * @param {Object} options Optional outputParam sets to override the defaults
+ * @param {Object} [options.userStateRegionOutputParams] Optional userRegion output params.
+ * Defaults to regionStore.regionOutputParams
+ * @param {Object} propSets The props used for the query. userState objects are required
+ * @param {Object} propSets.userState Props for the UserStates query. {user: {id: }} is required to limit
+ * the query to one user
+ * @returns {Object} The resulting User Regions in a Task in {data: usersRegions: [...]}}
+ */
+export const userStateRegionsActiveQueryContainer = (
+  apolloConfig,
+  {userRegionOutputParams},
+  propSets
+) => {
+  const userRegion = {activity: {isActive: true}}
+  return userStateRegionsQueryContainer(apolloConfig, {userRegionOutputParams}, R.merge(propSets, {userRegion}))
+}

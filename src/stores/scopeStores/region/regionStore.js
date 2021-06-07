@@ -23,6 +23,10 @@ import {
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
+import {makeQueryFromCacheContainer} from "@rescapes/apollo/src/helpers/queryCacheHelpers";
+import {containerForApolloType} from "@rescapes/apollo/src/helpers/containerHelpers";
+import {getRenderPropFunction} from "@rescapes/apollo/src/helpers/componentHelpersMonadic";
+import {readInputTypeMapper} from "@rescapes/apollo/src/helpers/settingsStore";
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [];
@@ -200,4 +204,32 @@ export const regionQueryVariationContainers = (apolloConfig) => {
   );
 };
 
+export const activeRegionLocalQueryContainer = (apolloConfig, {outputParams}, props) => {
+  // Unfortunately a cache miss throws
+  try {
+    return makeQueryFromCacheContainer(
+      composeFuncAtPathIntoApolloConfig(
+        apolloConfig,
+        'options.variables',
+        props => {
+          // We always query settings by key, because we cache it that way and don't care about the id
+          return R.pick(['key'], props);
+        }
+      ),
+      {name: 'settings', readInputTypeMapper, outputParams},
+      props
+    );
+  } catch (e) {
+    if (R.is(MissingFieldError, e)) {
+      return containerForApolloType(
+        apolloConfig,
+        {
+          render: getRenderPropFunction(props),
+          response: null
+        }
+      );
+    }
+    throw e;
+  }
+};
 

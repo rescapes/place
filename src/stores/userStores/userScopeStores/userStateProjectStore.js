@@ -27,6 +27,7 @@ import {renameKey} from '@rescapes/ramda';
 import {userStateProjectOutputParams} from './userStateProjectStoreHelpers.js'
 import {regionsQueryContainer} from "../../scopeStores/region/regionStore";
 import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeStore";
+import {userStateRegionsQueryContainer} from "./userStateRegionStore";
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -190,3 +191,24 @@ export const userStateProjectSetPropertyThenMutationContainer = v((apolloConfig,
   ],
   'userStateProjectSetPropertyThenMutationContainer'
 );
+
+/**
+ * Convenience method that calls userStateProjectsQueryContainer but sets propSets.userProject.activity.isActive to true
+ * so we only get userProjects that are active (normally just 1)
+ * @param {Object} apolloConfig Configuration of the Apollo Client when using one instead of an Apollo Component
+ * @param {Object} options Optional outputParam sets to override the defaults
+ * @param {Object} [options.userStateProjectOutputParams] Optional userProject output params.
+ * Defaults to projectStore.projectOutputParams
+ * @param {Object} propSets The props used for the query. userState objects are required
+ * @param {Object} propSets.userState Props for the UserStates query. {user: {id: }} is required to limit
+ * the query to one user
+ * @returns {Object} The resulting User Projects in a Task in {data: usersProjects: [...]}}
+ */
+export const userStateProjectsActiveQueryContainer = (
+  apolloConfig,
+  {userProjectOutputParams},
+  propSets
+) => {
+  const userProject = {activity: {isActive: true}}
+  return userStateProjectsQueryContainer(apolloConfig, {userProjectOutputParams}, R.merge(propSets, {userProject}))
+}
