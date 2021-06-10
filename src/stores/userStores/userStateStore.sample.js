@@ -178,7 +178,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                 forceDelete,
                 existingMatchingProps: {nameIn: searchLocationNames},
                 existingItemMatch: (item, existingItemsResponses) => R.find(
-                  existingItem => R.propEq('name', item, existingItem),
+                  existingItem => R.propEq('name', capitalize(item), existingItem),
                   existingItemsResponses
                 ),
                 queryForExistingContainer: querySearchLocationsContainer,
