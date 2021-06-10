@@ -105,7 +105,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
             forceDelete,
             existingMatchingProps: {user: R.pick(['id'], user), nameIn: R.map(capitalize, projectKeys)},
             existingItemMatch: (item, existingItemsResponses) => R.find(
-              existingItem => R.propEq('name', item, existingItem),
+              existingItem => R.propEq('name', capitalize(item), existingItem),
               existingItemsResponses
             ),
             queryForExistingContainer: projectsQueryContainer,
@@ -143,7 +143,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
             forceDelete,
             existingMatchingProps: {keyIn: regionKeys},
             existingItemMatch: (item, existingItemsResponses) => R.find(
-              existingItem => R.propEq('key', item, existingItem),
+              existingItem => R.propEq('key', capitalize(item), existingItem),
               existingItemsResponses
             ),
             queryForExistingContainer: regionsQueryContainer,

@@ -104,6 +104,15 @@ export const userStateScopeObjsQueryContainer = v(R.curry(
       // If we got Result.Ok and there are scope props, query for the user's scope objs
       // Result Object -> Task Object
       nameComponent('queryScopeObjsOfUserStateContainerIfUserScope', userStatesResponse => {
+        if (strPathOr(false, 'loading', userStatesResponse)) {
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: userStatesResponse
+            }
+          );
+        }
         const userScopeName = _userScopeName(scopeName);
         const userStateScopePath = `data.userStates.0.data.${userScopeName}`;
         const userScopeObjs = strPathOr(null, userStateScopePath, userStatesResponse);
