@@ -108,11 +108,11 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
               }
             );
           },
-          propSets => currentUserStateQueryContainer(apolloConfig, {
+          ({render, ...propSets}) => currentUserStateQueryContainer(apolloConfig, {
             outputParams: userStateOutputParamsCreator(
               userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
             )
-          }, {})
+          }, {render})
         )(propSets)
       }
     )

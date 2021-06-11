@@ -21,7 +21,7 @@ import {
   mapTaskOrComponentToNamedResponseAndInputs,
   mutateOnceAndWaitContainer
 } from '@rescapes/apollo';
-import {regionsQueryContainer} from '../scopeStores/region/regionStore';
+import {regionOutputParamsMinimized, regionsQueryContainer} from '../scopeStores/region/regionStore';
 import {
   projectMutationContainer,
   projectOutputParams,
@@ -63,7 +63,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     searchLocationOutputParamsMinimized = defaultSearchLocationOutputParamsMinimized,
     additionalUserScopeOutputParams = {}
   },
-  {user, regionKeys, projectKeys, locationsContainer, searchLocationNames, additionalUserScopeData,  render}
+  {user, regionKeys, projectKeys, locationsContainer, searchLocationNames, additionalUserScopeData, render}
 ) => {
   return composeWithComponentMaybeOrTaskChain([
     // This creates one userState and puts it in userStates
@@ -142,13 +142,17 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
             // These help us find existing regions from the API and either reuse them or destroy and recreate them
             forceDelete,
             existingMatchingProps: {keyIn: regionKeys},
-            existingItemMatch: (item, existingItemsResponses) => R.find(
-              existingItem => R.propEq('key', capitalize(item), existingItem),
-              existingItemsResponses
-            ),
+            existingItemMatch: (item, existingItemsResponses) => {
+              return R.find(
+                existingItem => {
+                  return R.propEq('name', capitalize(item), existingItem)
+                },
+                existingItemsResponses
+              )
+            },
             queryForExistingContainer: regionsQueryContainer,
+            outputParams: regionOutputParamsMinimized,
             queryResponsePath: 'data.regions',
-
             mutationContainer: createSampleRegionContainer,
             responsePath: 'result.data.mutate.region',
             propVariationFunc: ({item: regionKey}) => {
@@ -177,10 +181,14 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                 // These help us find existing regions from the API and either reuse them or destroy and recreate them
                 forceDelete,
                 existingMatchingProps: {nameIn: searchLocationNames},
-                existingItemMatch: (item, existingItemsResponses) => R.find(
-                  existingItem => R.propEq('name', capitalize(item), existingItem),
-                  existingItemsResponses
-                ),
+                existingItemMatch: (item, existingItemsResponses) => {
+                  return R.find(
+                    existingItem => {
+                      return R.propEq('name', capitalize(item), existingItem)
+                    },
+                    existingItemsResponses
+                  )
+                },
                 queryForExistingContainer: querySearchLocationsContainer,
                 queryResponsePath: 'data.searchLocations',
                 outputParams: searchLocationOutputParamsMinimized,
@@ -249,7 +257,7 @@ const sampleUserSearchLocations = searchLocations => {
  * @param {Object} [additionalUserScopeData] Default {}, optional extra data from the user scope
  * @return {{mapbox: {viewport: {latitude: number, zoom: number, longitude: (number|null)}}, region: {id: number}}}
  */
-export const createUserRegionWithDefaults = (region, searchLocations = null, additionalUserScopeData={}) => {
+export const createUserRegionWithDefaults = (region, searchLocations = null, additionalUserScopeData = {}) => {
   return {
     region: {
       id: parseInt(reqStrPathThrowing('id', region))
@@ -284,7 +292,7 @@ export const createUserRegionWithDefaults = (region, searchLocations = null, add
  * @param {Object} [additionalUserScopeData] Default {}, optional extra data from the user scope
  * @return {{mapbox: {viewport: {latitude: number, zoom: number, longitude: (number|null)}}, project: {id: number}}}
  */
-export const createUserProjectWithDefaults = (project, searchLocations = null, additionalUserScopeData={}) => {
+export const createUserProjectWithDefaults = (project, searchLocations = null, additionalUserScopeData = {}) => {
   return {
     project: {
       id: parseInt(reqStrPathThrowing('id', project))
