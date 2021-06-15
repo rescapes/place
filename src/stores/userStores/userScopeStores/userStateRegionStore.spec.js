@@ -105,7 +105,7 @@ describe('userRegionStore', () => {
       ({apolloConfig, user}) => {
         return userStateRegionsQueryContainer(
           apolloConfig,
-          {userRegionOutputParams: userStateRegionOutputParams({explicitRegionOutputParams: regionOutputParamsMinimized})},
+          {userStateRegionOutputParams: userStateRegionOutputParams({explicitRegionOutputParams: regionOutputParamsMinimized})},
           {
             userState: {user: R.pick(['id'], user)},
             userRegion: {region: {geojson: {type: 'FeatureCollection'}}}

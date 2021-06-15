@@ -42,7 +42,7 @@ import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeSto
  * @returns {Object} The resulting User Regions in a Task in {data: usersRegions: [...]}}
  */
 export const userStateRegionsQueryContainer = v(R.curry(
-  (apolloConfig, {userRegionOutputParams}, propSets) => {
+  (apolloConfig, {userStateRegionOutputParams}, propSets) => {
     const scopeName = 'region';
     return userStateScopeObjsQueryContainer(
       apolloConfig,
@@ -57,7 +57,7 @@ export const userStateRegionsQueryContainer = v(R.curry(
         },
         // Default to the user state params with only ids for the regions. This prevents an extra query to
         // load the region data
-        userScopeOutputParams: userRegionOutputParams,
+        userScopeOutputParams: userStateRegionOutputParams,
       },
       renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
     );
@@ -65,7 +65,7 @@ export const userStateRegionsQueryContainer = v(R.curry(
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['outputParamSets', PropTypes.shape({
-      userRegionOutputParams: PropTypes.shape()
+      userStateRegionOutputParams: PropTypes.shape()
     })],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape({
@@ -187,9 +187,9 @@ export const userStateRegionSetPropertyThenMutationContainer = v((apolloConfig, 
  */
 export const userStateRegionsActiveQueryContainer = (
   apolloConfig,
-  {userRegionOutputParams},
+  {userStateRegionOutputParams},
   propSets
 ) => {
   const userRegion = {activity: {isActive: true}}
-  return userStateRegionsQueryContainer(apolloConfig, {userRegionOutputParams}, R.merge(propSets, {userRegion}))
+  return userStateRegionsQueryContainer(apolloConfig, {userStateRegionOutputParams}, R.merge(propSets, {userRegion}))
 }

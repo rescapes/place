@@ -57,7 +57,7 @@ const readInputTypeMapper = {
  */
 export const userStateProjectsQueryContainer = v(R.curry((
   apolloConfig, {
-    userProjectOutputParams: explicitUserProjectOutputParams
+    userStateProjectOutputParams: explicitUserProjectOutputParams
   }, propSets) => {
     const scopeName = 'project';
     return userStateScopeObjsQueryContainer(
@@ -84,7 +84,7 @@ export const userStateProjectsQueryContainer = v(R.curry((
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['outputParamSets', PropTypes.shape({
-      projectOutputParams: PropTypes.shape()
+      userStateProjectOutputParams: PropTypes.shape()
     })],
     ['propSets', PropTypes.shape({
       userState: PropTypes.shape(),
@@ -204,9 +204,9 @@ export const userStateProjectSetPropertyThenMutationContainer = v((apolloConfig,
  */
 export const userStateProjectsActiveQueryContainer = (
   apolloConfig,
-  {userProjectOutputParams},
+  {userStateProjectOutputParams},
   propSets
 ) => {
   const userProject = {activity: {isActive: true}}
-  return userStateProjectsQueryContainer(apolloConfig, {userProjectOutputParams}, R.merge(propSets, {userProject}))
+  return userStateProjectsQueryContainer(apolloConfig, {userStateProjectOutputParams}, R.merge(propSets, {userProject}))
 }
