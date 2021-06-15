@@ -66,6 +66,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   },
   {user, userState, regionKeys, projectKeys, locationsContainer, searchLocationNames, additionalUserScopeData, render}
 ) => {
+  user = user || reqStrPathThrowing('user', userState)
   return composeWithComponentMaybeOrTaskChain([
     // This creates one userState and puts it in userStates
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userState',
