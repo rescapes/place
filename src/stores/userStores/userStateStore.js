@@ -62,6 +62,7 @@ import {
 } from "../search/searchLocation/defaultSearchLocationOutputParams";
 import {userStateRegionOutputParams} from "./userScopeStores/userStateRegionStoreHelpers";
 import {userStateProjectOutputParams} from "./userScopeStores/userStateProjectStoreHelpers";
+import {logicalOrValueAtPathIntoApolloConfig} from "@rescapes/apollo/src/helpers/queryHelpers";
 
 
 // TODO should be derived from the remote schema
@@ -463,25 +464,6 @@ export const normalizeUserStatePropsForMutating = userState => {
 export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
     return makeMutationRequestContainer(
       R.compose(
-        apolloConfig => {
-          // Compose 'options.variables' with a function that might have been passed in
-          return composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables',
-            props => {
-              // If the userState is specified use it, otherwise assume the userState props are at the top-level
-              const userState = R.ifElse(
-                R.has('userState'),
-                R.prop('userState'),
-                R.omit(['render', 'children'])
-              )(props);
-              // If it's null, we'll skip the request, but set to {} so other filtering works.
-              return R.ifElse(
-                R.isNil,
-                () => ({}),
-                normalizeUserStatePropsForMutating
-              )(userState);
-            }
-          )
-        },
         // Merge in the update function
         apolloConfig => {
           return R.merge(apolloConfig, {
@@ -515,6 +497,25 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
                   filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
                 );
               }
+            }
+          )
+        },
+        apolloConfig => {
+          // Compose 'options.variables' with a function that might have been passed in
+          return composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables',
+            props => {
+              // If the userState is specified use it, otherwise assume the userState props are at the top-level
+              const userState = R.ifElse(
+                R.has('userState'),
+                R.prop('userState'),
+                R.omit(['render', 'children'])
+              )(props);
+              // If it's null, we'll skip the request, but set to {} so other filtering works.
+              return R.ifElse(
+                R.isNil,
+                () => ({}),
+                normalizeUserStatePropsForMutating
+              )(userState);
             }
           )
         }

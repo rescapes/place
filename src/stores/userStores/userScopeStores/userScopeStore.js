@@ -7,7 +7,7 @@ import {
 import {setPathOnResolvedUserScopeInstance, userStateScopeObjsMutationContainer} from "./userStateHelpers";
 import * as R from 'ramda'
 import {composeWithChain, reqStrPathThrowing, strPathOr} from "@rescapes/ramda";
-import {mapTaskOrComponentToNamedResponseAndInputs} from "@rescapes/apollo";
+import {composeWithComponentMaybeOrTaskChain, mapTaskOrComponentToNamedResponseAndInputs} from "@rescapes/apollo";
 import {containerForApolloType} from "@rescapes/apollo/src/helpers/containerHelpers";
 import {getRenderPropFunction} from "@rescapes/apollo/src/helpers/componentHelpersMonadic";
 
@@ -44,7 +44,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
   setPath,
   setPropPath
 }, propSets) => {
-  return composeWithChain([
+  return composeWithComponentMaybeOrTaskChain([
     ({userStateResponse, ...props}) => {
       if (!strPathOr(null, 'data', userStateResponse)) {
         // Loading

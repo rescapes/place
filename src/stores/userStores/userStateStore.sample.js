@@ -43,6 +43,7 @@ import {createSampleSearchLocationContainer} from "../search/searchLocation/sear
  * that are applied to userRegion and userProject outputParams
  * @param {Object} props
  * @param {Object} props.user A real user object
+ * @param {Object} props.userState Alternative to props.user, when the userState already exists
  * @param {[String]} props.regionKeys Region keys to use to make sample regions
  * @param {[String]} props.projectKeys Project keys to use to make sample projects
  * @param {Function} props.locationsContainer Optional function to create locations
@@ -63,7 +64,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     searchLocationOutputParamsMinimized = defaultSearchLocationOutputParamsMinimized,
     additionalUserScopeOutputParams = {}
   },
-  {user, regionKeys, projectKeys, locationsContainer, searchLocationNames, additionalUserScopeData, render}
+  {user, userState, regionKeys, projectKeys, locationsContainer, searchLocationNames, additionalUserScopeData, render}
 ) => {
   return composeWithComponentMaybeOrTaskChain([
     // This creates one userState and puts it in userStates
@@ -86,7 +87,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
           },
           {
             userState: createSampleUserStateProps(
-              {user, regions, projects, searchLocations, additionalUserScopeData}
+              {user, userState, regions, projects, searchLocations, additionalUserScopeData}
             ),
             render
           }
@@ -234,7 +235,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         )(locationsContainer);
       }
     )
-  ])({user, regionKeys, projectKeys, locationsContainer, searchLocationNames, render});
+  ])({user, userState, regionKeys, projectKeys, locationsContainer, searchLocationNames, render});
 };
 
 const sampleUserSearchLocations = searchLocations => {
@@ -316,7 +317,8 @@ export const createUserProjectWithDefaults = (project, searchLocations = null, a
 
 /**
  * Helper to create sample props for a UserState
- * @param {Object} user The user
+ * @param {Object} user The user. Use if userState is not available or not created yet
+ * @param {Object} userState The userState if updating. Use instead of user for updates
  * @param {[Object]} regions Sample regions
  * @param {[Object]} projects Sample projects
  * @param {[Objecdt]} searchLocations Sample searchLocations. These are assigned to all userRegions and userProjects
@@ -334,29 +336,33 @@ export const createUserProjectWithDefaults = (project, searchLocations = null, a
  * user: {id: number}
  * }
  */
-const createSampleUserStateProps = ({user, regions, projects, searchLocations, additionalUserScopeData}) => {
-  return {
-    user: {id: parseInt(reqStrPathThrowing('id', user))},
-    data: {
-      // Make the first instance of each active
-      userRegions: R.addIndex(R.map)(
-        (region, i) => {
-          return R.merge(
-            createUserRegionWithDefaults(region, searchLocations, additionalUserScopeData),
-            {activity: {isActive: !i}}
-          );
-        },
-        regions
-      ),
-      userProjects: R.addIndex(R.map)(
-        (project, i) => {
-          return R.merge(
-            createUserProjectWithDefaults(project, searchLocations, additionalUserScopeData),
-            {activity: {isActive: !i}}
-          );
-        },
-        projects
-      )
+const createSampleUserStateProps = ({user, userState, regions, projects, searchLocations, additionalUserScopeData}) => {
+  return R.merge(
+    userState ?
+      {id: reqStrPathThrowing('id', userState)} :
+      {user: {id: (reqStrPathThrowing('id', user))}},
+    {
+      data: {
+        // Make the first instance of each active
+        userRegions: R.addIndex(R.map)(
+          (region, i) => {
+            return R.merge(
+              createUserRegionWithDefaults(region, searchLocations, additionalUserScopeData),
+              {activity: {isActive: !i}}
+            );
+          },
+          regions
+        ),
+        userProjects: R.addIndex(R.map)(
+          (project, i) => {
+            return R.merge(
+              createUserProjectWithDefaults(project, searchLocations, additionalUserScopeData),
+              {activity: {isActive: !i}}
+            );
+          },
+          projects
+        )
+      }
     }
-  };
+  );
 };
