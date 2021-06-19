@@ -22,7 +22,11 @@ import {
   mapTaskOrComponentToNamedResponseAndInputs,
   mutateOnceAndWaitContainer
 } from '@rescapes/apollo';
-import {regionOutputParamsMinimized, regionsQueryContainer} from '../scopeStores/region/regionStore';
+import {
+  regionOutputParams,
+  regionOutputParamsMinimized,
+  regionsQueryContainer
+} from '../scopeStores/region/regionStore';
 import {
   projectMutationContainer,
   projectOutputParams,
@@ -165,7 +169,8 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
               return existing
             },
             queryForExistingContainer: regionsQueryContainer,
-            outputParams: regionOutputParamsMinimized,
+            // Need the full to get region.data.mapbox for sample data userRegion data
+            outputParams: regionOutputParams,
             queryResponsePath: 'data.regions',
             mutationContainer: createSampleRegionContainer,
             responsePath: 'result.data.mutate.region',
@@ -282,7 +287,7 @@ export const createUserRegionWithDefaults = (region, searchLocations = null, add
     },
     mapbox: {
       viewport: {
-        // Use the defaults from the region
+        // Use the defaults from the region. This viewport is what the user has saved for the current region
         latitude: reqStrPathThrowing('data.mapbox.viewport.latitude', region),
         longitude: reqStrPathThrowing('data.mapbox.viewport.longitude', region),
         // Zoom in one from he region's zoom
