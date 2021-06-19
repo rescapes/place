@@ -229,16 +229,28 @@ describe('userStateHelpers', () => {
     };
     const region = {id: 2};
     const fooData = {foo: true}
+
+    // Using scopeInstancePropPath
     const found = setPathOnResolvedUserScopeInstance({
       scopeName: 'region',
       userStatePropPath: 'userState',
-      userScopeInstancePropPath: 'userRegion',
       scopeInstancePropPath: 'region',
       setPath: 'foo',
       setPropPath: 'fooData'
     }, {userState, region, fooData});
     expect(found).toEqual(R.set(R.lensProp('foo'), fooData, userState.data.userRegions[1]))
 
+    // Using userScopeInstancePropPath
+    const foundAgain = setPathOnResolvedUserScopeInstance({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      setPath: 'foo',
+      setPropPath: 'fooData'
+    }, {userState, userRegion: {region}, fooData});
+    expect(foundAgain).toEqual(R.set(R.lensProp('foo'), fooData, userState.data.userRegions[1]))
+
+    // If we are missing the given region
     const notFound = setPathOnResolvedUserScopeInstance({
       scopeName: 'region',
       userStatePropPath: 'userState',
@@ -246,6 +258,16 @@ describe('userStateHelpers', () => {
       scopeInstancePropPath: 'region'
     }, {userState, region: {id: 'fred'}});
     expect(notFound).toEqual(undefined);
+
+
+    // If we are missing something in propSets
+    const notReady = setPathOnResolvedUserScopeInstance({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region'
+    }, {userState})
+    expect(notReady).toEqual(null);
   })
 
 });
