@@ -151,7 +151,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
 
             // These help us find existing regions from the API and either reuse them or destroy and recreate them
             forceDelete,
-            existingMatchingProps: {keyIn: regionKeys},
+            existingMatchingProps: {nameIn: R.map(capitalize, regionKeys)},
             existingItemMatch: (item, existingItemsResponses) => {
               const existing = R.find(
                 existingItem => {
