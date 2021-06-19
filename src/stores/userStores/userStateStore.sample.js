@@ -10,7 +10,7 @@
  */
 
 import {loggers} from '@rescapes/log';
-import {capitalize, reqStrPathThrowing} from '@rescapes/ramda';
+import {capitalize, reqStrPathThrowing, strPath, strPathOr} from '@rescapes/ramda';
 import {userStateMutationContainer, userStateOutputParamsMetaAndScopeIds} from './userStateStore.js';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample.js';
 import * as R from 'ramda';
@@ -108,13 +108,16 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
         return callMutationNTimesAndConcatResponses(
           apolloConfig, {
             items: projectKeys,
-
             // These help us find existing regions from the API and either reuse them or destroy and recreate them
             forceDelete,
             existingMatchingProps: {user: R.pick(['id'], user), nameIn: R.map(capitalize, projectKeys)},
             existingItemMatch: (item, existingItemsResponses) => {
               const existing = R.find(
-                existingItem => R.propEq('name', capitalize(item), existingItem),
+                existingItem => {
+                  // TODO it's possible to get a deleted item here because the item can be found in the cache
+                  // after it's been deleted. We should make sure deleted items are removed from the cache
+                  return !strPathOr(false, 'deleted', existingItem) && R.propEq('name', capitalize(item), existingItem)
+                },
                 existingItemsResponses
               )
               if (existing) {
@@ -152,14 +155,15 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
           apolloConfig,
           {
             items: regionKeys,
-
             // These help us find existing regions from the API and either reuse them or destroy and recreate them
             forceDelete,
             existingMatchingProps: {nameIn: R.map(capitalize, regionKeys)},
             existingItemMatch: (item, existingItemsResponses) => {
               const existing = R.find(
                 existingItem => {
-                  return R.propEq('name', capitalize(item), existingItem)
+                  // TODO it's possible to get a deleted item here because the item can be found in the cache
+                  // after it's been deleted. We should make sure deleted items are removed from the cache
+                  return !strPathOr(false, 'deleted', existingItem) && R.propEq('name', capitalize(item), existingItem)
                 },
                 existingItemsResponses
               )
@@ -203,7 +207,9 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                 existingItemMatch: (item, existingItemsResponses) => {
                   const existing = R.find(
                     existingItem => {
-                      return R.propEq('name', capitalize(item), existingItem)
+                      // TODO it's possible to get a deleted item here because the item can be found in the cache
+                      // after it's been deleted. We should make sure deleted items are removed from the cache
+                      return !strPathOr(false, 'deleted', existingItem) && R.propEq('name', capitalize(item), existingItem)
                     },
                     existingItemsResponses
                   )
@@ -244,7 +250,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
       ({locationsContainer, render}) => {
         return R.ifElse(
           R.identity,
-          f => f(apolloConfig, {}, {render}),
+          f => f(apolloConfig, {forceDelete}, {render}),
           () => {
             return containerForApolloType(
               apolloConfig,

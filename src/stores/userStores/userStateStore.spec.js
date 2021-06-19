@@ -34,6 +34,8 @@ import {
 import {testAuthTask} from '../../helpers/testHelpers.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample';
+import {regionOutputParamsMinimized, regionsQueryContainer} from "../scopeStores/region/regionStore";
+import {projectsQueryContainer} from "../scopeStores/project/projectStore";
 
 
 describe('userStateStore', () => {
@@ -146,6 +148,50 @@ describe('userStateStore', () => {
     ];
 
     composeWithChain([
+      mapMonadByConfig({name: 'userStateThird', strPath: 'data.userStates.0'},
+        ({apolloConfig, mutatedUserStateThird}) => {
+          return adminUserStateQueryContainer(
+            apolloConfig,
+            {outputParams: userStateLocalOutputParamsFull()},
+            {id: reqStrPathThrowing('id', mutatedUserStateThird)}
+          );
+        }
+      ),
+      // Set it once more without force delete. Nothing should change from the second
+      mapMonadByConfig({name: 'mutatedUserStateThird', strPath: 'userState'},
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig,
+            {forceDelete: false},
+            {
+              user,
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila'],
+              locationsContainer: createSampleLocationsContainer,
+              searchLocationNames: ['search me', 'i am innocent'],
+            });
+        }
+      ),
+      mapToNamedPathAndInputs('firstProjects', 'data.projects',
+        ({apolloConfig, userStateFirst}) => {
+          // This should return empty, because we deleted the previous sample projects
+          return projectsQueryContainer(
+            apolloConfig,
+            {outputParams: regionOutputParamsMinimized},
+            {idIn: R.map(reqStrPathThrowing('project.id'), reqStrPathThrowing('data.userProjects', userStateFirst))}
+          )
+        }
+      ),
+      mapToNamedPathAndInputs('firstRegions', 'data.regions',
+        ({apolloConfig, userStateFirst}) => {
+          // This should return empty, because we deleted the previous sample regions
+          return regionsQueryContainer(
+            apolloConfig,
+            {outputParams: regionOutputParamsMinimized},
+            {idIn: R.map(reqStrPathThrowing('region.id'), reqStrPathThrowing('data.userRegions', userStateFirst))}
+          )
+        }
+      ),
       mapMonadByConfig({name: 'userStateSecond', strPath: 'data.userStates.0'},
         ({apolloConfig, mutatedUserStateSecond}) => {
           return adminUserStateQueryContainer(
@@ -155,16 +201,16 @@ describe('userStateStore', () => {
           );
         }
       ),
-      // Set it again. This will wipe out the previous region and project and location ids
+      // Set it again with forceDelete. This will wipe out the previous region and project and location ids
       mapMonadByConfig({name: 'mutatedUserStateSecond', strPath: 'userState'},
         ({apolloConfig, user}) => {
           return mutateSampleUserStateWithProjectsAndRegionsContainer(
             apolloConfig,
-            { },
+            {forceDelete: true},
             {
               user,
-              regionKeys: ['mars'],
-              projectKeys: ['tharsisVolcanoes'],
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila'],
               locationsContainer: createSampleLocationsContainer,
               searchLocationNames: ['search me', 'i am innocent'],
             });
@@ -183,7 +229,7 @@ describe('userStateStore', () => {
       mapMonadByConfig({name: 'mutatedUserStateFirst', strPath: 'userState'},
         ({apolloConfig, user}) => {
           return mutateSampleUserStateWithProjectsAndRegionsContainer(apolloConfig,
-            { },
+            {},
             {
               user,
               regionKeys: ['earth'],
@@ -204,9 +250,21 @@ describe('userStateStore', () => {
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
-        ({userStateFirst, userStateSecond}) => {
+        ({userStateFirst, userStateSecond, userStateThird, firstRegions, firstProjects}) => {
           expectKeys(someUserStateKeysWithCacheKeys, userStateFirst);
           expectKeys(someUserStateKeysWithCacheKeys, userStateSecond);
+          expect(R.length(firstRegions)).toBe(0)
+          expect(R.length(firstProjects)).toBe(0)
+          const _firstRegions = R.map(reqStrPathThrowing('region.id'), reqStrPathThrowing('data.userRegions', userStateFirst))
+          const _secondRegions = R.map(reqStrPathThrowing('region.id'), reqStrPathThrowing('data.userRegions', userStateSecond))
+          const _thirdRegions = R.map(reqStrPathThrowing('region.id'), reqStrPathThrowing('data.userRegions', userStateThird))
+          expect(_firstRegions).not.toEqual(_secondRegions)
+          expect(_thirdRegions).toEqual(_secondRegions)
+          const _firstProjects = R.map(reqStrPathThrowing('project.id'), reqStrPathThrowing('data.userProjects', userStateFirst))
+          const _secondProjects = R.map(reqStrPathThrowing('project.id'), reqStrPathThrowing('data.userProjects', userStateSecond))
+          const _thirdProjects = R.map(reqStrPathThrowing('project.id'), reqStrPathThrowing('data.userProjects', userStateThird))
+          expect(_firstProjects).not.toEqual(_secondProjects)
+          expect(_thirdProjects).toEqual(_secondProjects)
         }
     }, errors, done));
   }, 10000000);
