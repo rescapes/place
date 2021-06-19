@@ -255,8 +255,9 @@ describe('userStateHelpers', () => {
       scopeName: 'region',
       userStatePropPath: 'userState',
       userScopeInstancePropPath: 'userRegion',
-      scopeInstancePropPath: 'region'
-    }, {userState, region: {id: 'fred'}});
+      scopeInstancePropPath: 'region',
+      setPropPath: 'fooData'
+    }, {userState, region: {id: 'fred'}, fooData: 'moo'});
     expect(notFound).toEqual(undefined);
 
 
@@ -265,7 +266,8 @@ describe('userStateHelpers', () => {
       scopeName: 'region',
       userStatePropPath: 'userState',
       userScopeInstancePropPath: 'userRegion',
-      scopeInstancePropPath: 'region'
+      scopeInstancePropPath: 'region',
+      setPropPath: 'fooData'
     }, {userState})
     expect(notReady).toEqual(null);
   })

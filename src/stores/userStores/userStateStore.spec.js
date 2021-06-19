@@ -49,7 +49,6 @@ describe('userStateStore', () => {
       onResolved:
         response => {
           expectKeysAtPath(someUserKeys, 'data.currentUser', response);
-          done();
         }
     }, errors, done));
   });

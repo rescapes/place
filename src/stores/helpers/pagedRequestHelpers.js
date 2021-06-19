@@ -22,7 +22,6 @@ import {capitalize, mergeDeep, reqPathThrowing, strPathOr, toArrayIfNot} from '@
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
 import {loggers} from '@rescapes/log';
-
 const log = loggers.get('rescapeDefault');
 
 

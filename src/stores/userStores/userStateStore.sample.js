@@ -9,6 +9,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import {loggers} from '@rescapes/log';
 import {capitalize, reqStrPathThrowing} from '@rescapes/ramda';
 import {userStateMutationContainer, userStateOutputParamsMetaAndScopeIds} from './userStateStore.js';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample.js';
@@ -31,6 +32,7 @@ import {projectSample} from '../scopeStores/project/projectStore.sample';
 import {defaultSearchLocationOutputParamsMinimized} from "../search/searchLocation/defaultSearchLocationOutputParams";
 import {querySearchLocationsContainer} from "../search/searchLocation/searchLocationStore";
 import {createSampleSearchLocationContainer} from "../search/searchLocation/searchLocationStore.sample";
+const log = loggers.get('rescapeDefault');
 
 /***
  * Helper to create scope objects and set the user state to them
@@ -106,10 +108,16 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
             // These help us find existing regions from the API and either reuse them or destroy and recreate them
             forceDelete,
             existingMatchingProps: {user: R.pick(['id'], user), nameIn: R.map(capitalize, projectKeys)},
-            existingItemMatch: (item, existingItemsResponses) => R.find(
-              existingItem => R.propEq('name', capitalize(item), existingItem),
-              existingItemsResponses
-            ),
+            existingItemMatch: (item, existingItemsResponses) => {
+              const existing = R.find(
+                existingItem => R.propEq('name', capitalize(item), existingItem),
+                existingItemsResponses
+              )
+              if (existing) {
+                log.debug(`Found existing sample project with id ${existing.id} for name ${existing.name}`)
+              }
+              return existing
+            },
             queryForExistingContainer: projectsQueryContainer,
             queryResponsePath: 'data.projects',
 
@@ -145,12 +153,16 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
             forceDelete,
             existingMatchingProps: {keyIn: regionKeys},
             existingItemMatch: (item, existingItemsResponses) => {
-              return R.find(
+              const existing = R.find(
                 existingItem => {
                   return R.propEq('name', capitalize(item), existingItem)
                 },
                 existingItemsResponses
               )
+              if (existing) {
+                log.debug(`Found existing sample region with id ${existing.id} for name ${existing.name}`)
+              }
+              return existing
             },
             queryForExistingContainer: regionsQueryContainer,
             outputParams: regionOutputParamsMinimized,
@@ -184,12 +196,16 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                 forceDelete,
                 existingMatchingProps: {nameIn: searchLocationNames},
                 existingItemMatch: (item, existingItemsResponses) => {
-                  return R.find(
+                  const existing = R.find(
                     existingItem => {
                       return R.propEq('name', capitalize(item), existingItem)
                     },
                     existingItemsResponses
                   )
+                  if (existing) {
+                    log.debug(`Found existing sample search location with id ${existing.id} for name ${existing.name}`)
+                  }
+                  return existing
                 },
                 queryForExistingContainer: querySearchLocationsContainer,
                 queryResponsePath: 'data.searchLocations',

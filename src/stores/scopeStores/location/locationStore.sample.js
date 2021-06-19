@@ -1,4 +1,5 @@
 import {makeLocationMutationContainer, queryLocationsContainer} from './locationStore.js';
+import {loggers} from '@rescapes/log';
 import {reqStrPathThrowing} from '@rescapes/ramda';
 import * as R from 'ramda';
 import T from 'folktale/concurrency/task/index.js';
@@ -6,6 +7,7 @@ import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {locationOutputParamsMinimized} from './locationOutputParams.js';
 import {callMutationNTimesAndConcatResponses} from '@rescapes/apollo';
+const log = loggers.get('rescapeDefault');
 
 const {fromPromised, of} = T;
 
@@ -64,10 +66,16 @@ export const createSampleLocationsContainer = v((apolloConfig, {forceDelete = tr
       forceDelete,
 
       existingMatchingProps: {nameContains: 'CrazyHillsborough'},
-      existingItemMatch: (item, existingItemsResponses) => R.find(
-        existingItem => R.propEq('name', item, existingItem),
-        existingItemsResponses
-      ),
+      existingItemMatch: (item, existingItemsResponses) => {
+        const existing = R.find(
+          existingItem => R.propEq('name', item, existingItem),
+          existingItemsResponses
+        )
+        if (existing) {
+          log.debug(`Found existing sample location with id ${existing.id} and name ${existing.name}`)
+        }
+        return existing
+      },
       queryForExistingContainer: queryLocationsContainer,
       queryResponsePath: 'data.locations',
 
