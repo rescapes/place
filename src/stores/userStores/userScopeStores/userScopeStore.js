@@ -82,6 +82,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
         },
         R.merge(_props, {
           // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
+          // The mutation will be set to skip if this resolves as null because of missing props
           userScope: setPathOnResolvedUserScopeInstance({
             scopeName,
             userStatePropPath,

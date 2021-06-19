@@ -793,9 +793,13 @@ export const setPathOnResolvedUserScopeInstance = (
     setPropPath
   },
   propSets) => {
-  // If either propPathSet doesn't have a corresponding value in propSets, return null.
+  // If any propPathSet doesn't have a corresponding value in propSets, return null.
   // This indicates a loading state or lack of selection by the user
-  if (!isResolvePropPathForAllSets(propSets,  [[userStatePropPath], [userScopeInstancePropPath, scopeInstancePropPath]])) {
+  if (!isResolvePropPathForAllSets(propSets,  [
+    [userStatePropPath],
+    [setPropPath],
+    [userScopeInstancePropPath, scopeInstancePropPath]]
+  )) {
     return null;
   }
   return R.compose(

@@ -147,6 +147,8 @@ export const userStateRegionSetPropertyThenMutationContainer = v((apolloConfig, 
         scopeQueryContainer: regionsQueryContainer,
         normalizeUserStatePropsForMutating,
         userStatePropPath: 'userState',
+        // propSets needs to either contain a userRegion at 'userRegion' or a region at 'region'
+        // We don't have a valid mutation container until then
         userScopeInstancePropPath: 'userRegion',
         scopeInstancePropPath: 'region',
         setPath,
