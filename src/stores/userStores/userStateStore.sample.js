@@ -10,7 +10,7 @@
  */
 
 import {loggers} from '@rescapes/log';
-import {capitalize, reqStrPathThrowing, strPath, strPathOr} from '@rescapes/ramda';
+import {capitalize, reqStrPathThrowing, strPathOr} from '@rescapes/ramda';
 import {userStateMutationContainer, userStateOutputParamsMetaAndScopeIds} from './userStateStore.js';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample.js';
 import * as R from 'ramda';
@@ -288,16 +288,14 @@ const sampleUserSearchLocations = searchLocations => {
  */
 export const createUserRegionWithDefaults = (region, searchLocations = null, additionalUserScopeData = {}) => {
   return {
-    region: {
-      id: parseInt(reqStrPathThrowing('id', region))
-    },
+    region: R.pick(['id'], region),
     mapbox: {
       viewport: {
         // Use the defaults from the region. This viewport is what the user has saved for the current region
-        latitude: reqStrPathThrowing('data.mapbox.viewport.latitude', region),
-        longitude: reqStrPathThrowing('data.mapbox.viewport.longitude', region),
+        latitude: strPathOr(null, 'data.mapbox.viewport.latitude', region),
+        longitude: strPathOr(null, 'data.mapbox.viewport.longitude', region),
         // Zoom in one from he region's zoom
-        zoom: reqStrPathThrowing('data.mapbox.viewport.zoom', region) + 1
+        zoom: strPathOr(null, 'data.mapbox.viewport.zoom', region) + 1
       }
     },
     selection: {
@@ -323,12 +321,10 @@ export const createUserRegionWithDefaults = (region, searchLocations = null, add
  */
 export const createUserProjectWithDefaults = (project, searchLocations = null, additionalUserScopeData = {}) => {
   return {
-    project: {
-      id: parseInt(reqStrPathThrowing('id', project))
-    },
+    project: R.pick(['id'], project),
     mapbox: {
       // Use the defaults from the project
-      viewport: R.pick(['latitude', 'longitude', 'zoom'], reqStrPathThrowing('data.mapbox.viewport', project))
+      viewport: R.pick(['latitude', 'longitude', 'zoom'], strPathOr({}, 'data.mapbox.viewport', project))
     },
     selection: {
       isSelected: false
@@ -367,8 +363,8 @@ export const createUserProjectWithDefaults = (project, searchLocations = null, a
 const createSampleUserStateProps = ({user, userState, regions, projects, searchLocations, additionalUserScopeData}) => {
   return R.merge(
     userState ?
-      {id: reqStrPathThrowing('id', userState)} :
-      {user: {id: (reqStrPathThrowing('id', user))}},
+      R.pick(['id'], userState) :
+      {user: R.pick(['id'], user)},
     {
       data: {
         // Make the first instance of each active
