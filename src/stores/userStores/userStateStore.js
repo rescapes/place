@@ -69,8 +69,9 @@ import {logicalOrValueAtPathIntoApolloConfig} from "@rescapes/apollo/src/helpers
 const RELATED_PROPS = ['user'];
 export const USER_STATE_RELATED_DATA_PROPS = [
   'data.userRegions.region', 'data.userProjects.project',
-  'data.userRegions.userSearch.userSearchLocations.searchLocation',
-  'data.userProjects.userSearch.userSearchLocations.searchLocation',
+  // Although related, leave these out since we can create searchLocations when we save a user state
+  //'data.userRegions.userSearch.userSearchLocations.searchLocation',
+  //'data.userProjects.userSearch.userSearchLocations.searchLocation',
 ];
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
@@ -438,7 +439,7 @@ export const adminUserStateQueryContainer = v(R.curry(
 export const normalizeUserStatePropsForMutating = userState => {
   return R.compose(
     // Make sure related objects only have an id
-    userState => relatedObjectsToIdForm(R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS), userState),
+    userState => relatedObjectsToIdForm({relatedPropPaths: R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS)}, userState),
     userState => filterOutReadOnlyVersionProps(userState),
     userState => filterOutNullDeleteProps(userState),
     userState => filterOutCacheOnlyObjs(userState)

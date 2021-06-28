@@ -133,7 +133,7 @@ export const projectsQueryContainer = v(R.curry((apolloConfig, {outputParams}, p
 export const normalizeProjectPropsForMutating = projectOrObj => {
     return R.compose(
         // Make sure related objects only have an id
-        project => relatedObjectsToIdForm(RELATED_PROPS, project),
+        project => relatedObjectsToIdForm({relatedPropPaths: RELATED_PROPS}, project),
         project => filterOutNullDeleteProps(project),
         project => filterOutReadOnlyVersionProps(project)
     )(R.when(R.has('project'), R.prop('project'))(projectOrObj));
