@@ -73,6 +73,12 @@ export const USER_STATE_RELATED_DATA_PROPS = [
   'data.userRegions.userSearch.userSearchLocations.searchLocation',
   'data.userProjects.userSearch.userSearchLocations.searchLocation',
 ];
+// User search locations can be saved with the following props when we mutate a userState
+const USER_SEARCH_LOCATION_ALLOWED_PROPS = ['name', 'identification', 'street', 'jurisdictions', 'geojson', 'data']
+const USER_STATE_RELATED_DATA_PROPS_ALLOWED = {
+  'data.userRegions.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
+  'data.userProjects.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
+}
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -445,7 +451,8 @@ export const normalizeDefaultUserStatePropsForMutating = userState => {
  * @param {Object} config
  * @param {[String]} [config.relatedPropPaths] Default R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS)
  * Override this if an implementor has additional relatedPropPaths
- * @param {Object} [config.relatedPropPathsToAllowedFields] Default {} Allows relatedPropPaths to optional
+ * @param {Object} [config.relatedPropPathsToAllowedFields] Default USER_STATE_SOP_RELATED_DATA_PROPS_ALLOWED
+ * Allows relatedPropPaths to optional
  * be reduced to something more than just the id for cases when the object at the path is allowed to be mutated
  * during the userState mutation. This applies to things like searchLocations that don't need to be created
  * before mutating a userState that references them.
@@ -455,7 +462,7 @@ export const normalizeDefaultUserStatePropsForMutating = userState => {
 export const normalizeUserStatePropsForMutating = (
   {
     relatedPropPaths = R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS),
-    relatedPropPathsToAllowedFields = {}
+    relatedPropPathsToAllowedFields = USER_STATE_RELATED_DATA_PROPS_ALLOWED
   },
   userState
 ) => {

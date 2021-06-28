@@ -39,7 +39,7 @@ export const RELATED_PROPS = [];
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
 // Following this searchLocation.data is represented as follows:
 export const searchLocationReadInputTypeMapper = createReadInputTypeMapper(
-  'searchLocation', ['street', 'jurisdiction', 'intersection', 'design', 'geojson']
+  'searchLocation', ['street', 'jurisdiction', 'geojson']
 );
 
 /**
