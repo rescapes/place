@@ -74,7 +74,7 @@ export const USER_STATE_RELATED_DATA_PROPS = [
   'data.userProjects.userSearch.userSearchLocations.searchLocation',
 ];
 // User search locations can be saved with the following props when we mutate a userState
-const USER_SEARCH_LOCATION_ALLOWED_PROPS = ['name', 'identification', 'street', 'jurisdictions', 'geojson', 'data']
+export const USER_SEARCH_LOCATION_ALLOWED_PROPS = ['name', 'identification', 'street', 'jurisdictions', 'geojson', 'data']
 const USER_STATE_RELATED_DATA_PROPS_ALLOWED = {
   'data.userRegions.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
   'data.userProjects.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
@@ -554,7 +554,7 @@ export const userStateMutationContainer = v(R.curry((
               return R.ifElse(
                 R.isNil,
                 () => ({}),
-                normalizeDefaultUserStatePropsForMutating
+                normalizeUserStatePropsForMutating
               )(userState);
             }
           )

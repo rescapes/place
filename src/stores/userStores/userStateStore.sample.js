@@ -11,7 +11,11 @@
 
 import {loggers} from '@rescapes/log';
 import {capitalize, reqStrPathThrowing, strPathOr} from '@rescapes/ramda';
-import {userStateMutationContainer, userStateOutputParamsMetaAndScopeIds} from './userStateStore.js';
+import {
+  normalizeDefaultUserStatePropsForMutating,
+  userStateMutationContainer,
+  userStateOutputParamsMetaAndScopeIds
+} from './userStateStore.js';
 import {createSampleRegionContainer} from '../scopeStores/region/regionStore.sample.js';
 import * as R from 'ramda';
 import {
@@ -47,6 +51,8 @@ const log = loggers.get('rescapeDefault');
  * search location outputParams based on the application's location search params
  * @param {Object} [options.additionalUserScopeOutputParams] Defaults to {} Specify additional outputParmams
  * that are applied to userRegion and userProject outputParams
+ * @param {Function} [options.normalizeUserStatePropsForMutating] Defaults to normalizeDefaultUserStatePropsForMutating.
+ * Implementing libraries with custom related attributes should override
  * @param {Object} props
  * @param {Object} props.user A real user object
  * @param {Object} props.userState Alternative to props.user, when the userState already exists
@@ -68,7 +74,8 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
   {
     forceDelete,
     searchLocationOutputParamsMinimized = defaultSearchLocationOutputParamsMinimized,
-    additionalUserScopeOutputParams = {}
+    additionalUserScopeOutputParams = {},
+    normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating
   },
   {user, userState, regionKeys, projectKeys, locationsContainer, searchLocationNames, additionalUserScopeData, render}
 ) => {
@@ -90,7 +97,8 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                 searchLocationOutputParams: searchLocationOutputParamsMinimized,
                 additionalUserScopeOutputParams,
               }
-            )
+            ),
+            normalizeUserStatePropsForMutating
           },
           {
             userState: createSampleUserStateProps(

@@ -372,7 +372,8 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
             {
               outputParams: userStateOutputParamsCreator(
                 userScopeOutputParams
-              )
+              ),
+              normalizeUserStatePropsForMutating
             },
             {userState: userStateWithCreatedOrUpdatedScopeObj, render}
           );
