@@ -19,6 +19,7 @@ import {
   userStateScopeObjsQueryContainer
 } from './userStateHelpers.js';
 import {
+  normalizeDefaultUserStatePropsForMutating,
   userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
@@ -86,7 +87,9 @@ export const userStateRegionsQueryContainer = v(R.curry(
  *  Mutates the given userState.data.userRegions with the given region
  * If a matching region is in userState.data.userRegions it is updated, otherwise it is added
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
- * @param [Object] outputParams outputParams Region output params for UserRegion
+ * @param {Object} options
+ * @param {Object} options.outputParams outputParams Region output params for UserRegion
+ * @param {Function} [options.normalizeUserStatePropsForMutating] Default normalizeDefaultUserStatePropsForMutating
  * @param {Object} propSets Object matching the shape of a userState and region for the create or update
  * @param {Object} [propSets.userState] Props for the UserStates queries {user: {id: }} is to limit
  * the query to one user. If omitted then the current user is queried
@@ -97,7 +100,7 @@ export const userStateRegionsQueryContainer = v(R.curry(
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRegionOutputParams}, propSets) => {
+export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRegionOutputParams, normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating}, propSets) => {
     const scopeName = 'region';
     return userStateScopeObjsMutationContainer(
       apolloConfig,

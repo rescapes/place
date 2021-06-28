@@ -14,7 +14,7 @@ import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputPar
 import {testAuthTask} from '../../../helpers/testHelpers.js';
 import {
   currentUserStateQueryContainer,
-  normalizeUserStatePropsForMutating, userScopeOutputParamsOnlyIds,
+  normalizeDefaultUserStatePropsForMutating, userScopeOutputParamsOnlyIds,
   userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateMutationContainer,
   userStateOutputParamsOnlyIds
@@ -38,7 +38,7 @@ describe('userStateHelpers', () => {
               scopeName: 'region',
               userScopeOutputParams: userRegionOutputParams,
               scopeQueryContainer: regionsQueryContainer,
-              normalizeUserStatePropsForMutating: normalizeUserStatePropsForMutating,
+              normalizeUserStatePropsForMutating: normalizeDefaultUserStatePropsForMutating,
               userStatePropPath: 'userState',
               userScopeInstancePropPath: 'userRegion',
               scopeInstancePropPath: 'region',

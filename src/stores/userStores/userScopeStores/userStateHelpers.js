@@ -36,9 +36,12 @@ import {
 } from '@rescapes/apollo';
 import PropTypes from 'prop-types';
 import {
-  currentUserStateQueryContainer, userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
+  currentUserStateQueryContainer,
+  normalizeDefaultUserStatePropsForMutating,
+  userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateMutationContainer,
-  userStateOutputParamsCreator, userStateReadInputTypeMapper
+  userStateOutputParamsCreator,
+  userStateReadInputTypeMapper
 } from '../../userStores/userStateStore.js';
 import {inspect} from "util";
 import {isResolvePropPathForAllSets} from "@rescapes/ramda/src/monadHelpers";
@@ -255,8 +258,10 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
 /**
  * Mutates the given scope object (UserRegion, UserProject, etc) that are in the scope of the given user.
  * @param {Object} apolloClient The Apollo Client
- * @param {Function} scopeQueryContainer Task querying the scope class, such as regionsQueryContainer
- * @param {String} scopeName The name of the scope, such as 'region' or 'project'
+ * @param {Object} options
+ * @param {Function} [options.normalizeUserStatePropsForMutating] Default normalizeDefaultUserStatePropsForMutating. UserState normalization function
+ * @param {Function} options.scopeQueryContainer Task querying the scope class, such as regionsQueryContainer
+ * @param {String} options.scopeName The name of the scope, such as 'region' or 'project'
  * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
  * and returning output parameters for each the scope class query. If don't have to query scope seperately
  * then scopeOutputParams is passed to this. Otherwise we just was ['id'] since that's all the initial query needs
@@ -277,7 +282,7 @@ const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
  */
 export const userStateScopeObjsMutationContainer = v(R.curry(
   (apolloConfig,
-   {scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
+   {normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating, scopeQueryContainer, scopeName, readInputTypeMapper, userStateOutputParamsCreator, userScopeOutputParams},
    {userState, userScope, render, ...props}) => {
 
     if (!userScope) {
@@ -287,7 +292,8 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
         {
           outputParams: userStateOutputParamsCreator(
             userScopeOutputParams
-          )
+          ),
+          normalizeUserStatePropsForMutating
         },
         {userState: null, render, ...props}
       );

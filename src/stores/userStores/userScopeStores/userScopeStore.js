@@ -1,5 +1,5 @@
 import {
-  currentUserStateQueryContainer,
+  currentUserStateQueryContainer, normalizeDefaultUserStatePropsForMutating,
   userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
@@ -25,7 +25,8 @@ import {getRenderPropFunction} from "@rescapes/apollo/src/helpers/componentHelpe
  * @param {String} config.userScopeInstancePropPath Required propSets path the the scope instance, e.g' 'userRegion' or 'userProject'
  * @param {String | [String]} config.setPath Array or string path used to make a lens to set the value at propSets[setPropPath]
  * @param {String} config.setPropPath String path of value in propSets to use for setting
- * @param {Function} config.normalizeUserStatePropsForMutating apolloConfig.options.variables function to normalized the
+ * @param {Function} [config.normalizeUserStatePropsForMutating] Default normalizeDefaultUserStatePropsForMutating.
+ * apolloConfig.options.variables function to normalized the
  * userState, including the targeted user scope instance. This function must remove values in userState.data
  * instances not expected by the server, such as userState.data.userRegions[*].region.name (region should only
  * provide id)
@@ -37,7 +38,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
   userScopeOutputParams,
   scopeQueryContainer,
   readInputTypeMapper,
-  normalizeUserStatePropsForMutating,
+  normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating,
   userStatePropPath,
   userScopeInstancePropPath,
   scopeInstancePropPath,
@@ -70,6 +71,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
           }
         ),
         {
+          normalizeUserStatePropsForMutating,
           scopeQueryContainer,
           scopeName,
           readInputTypeMapper: userStateReadInputTypeMapper,

@@ -19,6 +19,7 @@ import {
   userStateScopeObjsQueryContainer
 } from './userStateHelpers.js';
 import {
+  normalizeDefaultUserStatePropsForMutating,
   userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
@@ -98,7 +99,9 @@ export const userStateProjectsQueryContainer = v(R.curry((
  *  Mutates the given userState.data.userProjects with the given project
  * If a matching project is in userState.data.userProjects it is updated, otherwise it is added
  * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
- * @param [Object] userScopeOutputParams Project output params that will be returned for the mutated project
+ * @param {Object} options
+ * @param {Function} [options.normalizeUserStatePropsForMutating] Default normalizeDefaultUserStatePropsForMutating
+ * @param {Object} options.userScopeOutputParams Project output params that will be returned for the mutated project
  * within the user state
  * @param {Object} propSets Object matching the shape of a userState and project for the create or update
  * @param {Object} [props.userState] props for the UserState. If omitted defaults to the current userState query
@@ -110,11 +113,12 @@ export const userStateProjectsQueryContainer = v(R.curry((
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {userProjectOutputParams}, propSets) => {
+export const userStateProjectMutationContainer = v(R.curry((apolloConfig, {normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating, userProjectOutputParams}, propSets) => {
     const scopeName = 'project';
     return userStateScopeObjsMutationContainer(
       apolloConfig,
       {
+        normalizeUserStatePropsForMutating,
         scopeName,
         scopeQueryContainer: projectsQueryContainer,
         readInputTypeMapper,

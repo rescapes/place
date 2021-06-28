@@ -70,8 +70,8 @@ const RELATED_PROPS = ['user'];
 export const USER_STATE_RELATED_DATA_PROPS = [
   'data.userRegions.region', 'data.userProjects.project',
   // Although related, leave these out since we can create searchLocations when we save a user state
-  //'data.userRegions.userSearch.userSearchLocations.searchLocation',
-  //'data.userProjects.userSearch.userSearchLocations.searchLocation',
+  'data.userRegions.userSearch.userSearchLocations.searchLocation',
+  'data.userProjects.userSearch.userSearchLocations.searchLocation',
 ];
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
@@ -436,7 +436,7 @@ export const adminUserStateQueryContainer = v(R.curry(
  * @param {Object} project
  * @return {Object} the props modified
  */
-export const normalizeUserStatePropsForMutating = userState => {
+export const normalizeDefaultUserStatePropsForMutating = userState => {
   return R.compose(
     // Make sure related objects only have an id
     userState => relatedObjectsToIdForm({relatedPropPaths: R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS)}, userState),
@@ -454,7 +454,9 @@ export const normalizeUserStatePropsForMutating = userState => {
  * @param {Boolean} apolloConfig.options.skip Set true to skip the mutation or disable the ability
  * to call mutation (for component) when the props aren't ready
  * @param {Object} mutationConfig
- * @param [Object] mutationConfig.outputParams OutputParams for the query of the mutation
+ * @param {Object} mutationConfig.outputParams OutputParams for the query of the mutation
+ * @param {Function} [mutationConfig.normalizeUserStatePropsForMutating] Defaults to normalizeDefaultUserStatePropsForMutating
+ * Normalization function for userStateProps. If overriding make sure to include the logic in the default
  * @param {Object} props Object matching the shape of a userState for the create or update
  * @param {Object} [props.userState] Object matching the shape of a userState for the create or update.
  * If omitted then the other props will be assumed to be the props of the userState, minus the render prop
@@ -462,7 +464,11 @@ export const normalizeUserStatePropsForMutating = userState => {
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams}, props) => {
+export const userStateMutationContainer = v(R.curry((
+  apolloConfig,
+  {outputParams, normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating},
+  props
+  ) => {
     return makeMutationRequestContainer(
       R.compose(
         // Merge in the update function
@@ -515,7 +521,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
               return R.ifElse(
                 R.isNil,
                 () => ({}),
-                normalizeUserStatePropsForMutating
+                normalizeDefaultUserStatePropsForMutating
               )(userState);
             }
           )
@@ -548,6 +554,8 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
  * @param {Object} apolloConfig The Apollo config
  * @param {Object} scopeConfig
  * @param {Object} scopeConfig.outputParams
+ * @param {Object} [scopeConfig.normalizeUserStatePropsForMutating] Defaults to normalizeDefaultUserStatePropsForMutating,
+ * the normalization function
  * @param {Object} scopeConfig.readInputTypeMapper
  * @param {Object} scopeConfig.scopeName e.g. 'project' or 'region'
  * @param {Object} scopeConfig.scopeProps The scope props to match test the scope, such as {keyContains: 'test'}
@@ -559,7 +567,7 @@ export const userStateMutationContainer = v(R.curry((apolloConfig, {outputParams
  */
 export const deleteScopeObjectsContainer = (
   apolloConfig,
-  {outputParams, readInputTypeMapper, scopeName, scopeProps},
+  {outputParams, normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating, readInputTypeMapper, scopeName, scopeProps},
   {userState, render}
 ) => {
   const capitalized = capitalize(scopeName);
@@ -610,7 +618,10 @@ export const deleteScopeObjectsContainer = (
             return userStateMutationContainer(
               apolloConfig,
               // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
-              {outputParams: omitClientFields(userStateLocalOutputParamsFull())},
+              {
+                outputParams: omitClientFields(userStateLocalOutputParamsFull()),
+                normalizeUserStatePropsForMutating
+              },
               {userState: modifiedUserState, render}
             );
           },
@@ -640,11 +651,12 @@ export const deleteScopeObjectsContainer = (
  * @param props
  * @return {Object} {deleteRegions: deleted region, clearedScopeObjsUserState: The user state post clearing}
  */
-export const deleteRegionsContainer = (apolloConfig, {}, {userState = null, scopeProps, render}) => {
+export const deleteRegionsContainer = (apolloConfig, {normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating}, {userState = null, scopeProps, render}) => {
   return deleteScopeObjectsContainer(
     apolloConfig,
     {
       outputParams: regionOutputParamsMinimized,
+      normalizeUserStatePropsForMutating,
       readInputTypeMapper: regionReadInputTypeMapper,
       scopeName: 'region',
       scopeProps
@@ -661,11 +673,12 @@ export const deleteRegionsContainer = (apolloConfig, {}, {userState = null, scop
  * @param props
  * @return {Object}  {deletedProjects: deleted project, clearedScopeObjsUserState: The user state post clearing}
  */
-export const deleteProjectsContainer = (apolloConfig, {userState = null}, props) => {
+export const deleteProjectsContainer = (apolloConfig, {userState = null, normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating}, props) => {
   return deleteScopeObjectsContainer(
     apolloConfig,
     {
       outputParams: projectOutputParamsMinimized,
+      normalizeUserStatePropsForMutating,
       readInputTypeMapper: projectReadInputTypeMapper,
       scopeName: 'project',
       scopeProps: props
