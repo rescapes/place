@@ -56,6 +56,7 @@ export {
   userStateReadInputTypeMapper,
   USER_STATE_RELATED_DATA_PROPS,
   userScopeOutputParamsOnlyIds,
+  normalizeUserStatePropsForMutating,
 } from './stores/userStores/userStateStore.js';
 export {
   userStateRegionsQueryContainer,
