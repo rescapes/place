@@ -432,19 +432,45 @@ export const adminUserStateQueryContainer = v(R.curry(
   ], 'adminUserStateQueryContainer');
 
 /**
- * Normalized project props for for mutation
- * @param {Object} project
- * @return {Object} the props modified
+ * Default version of normalizeUserStatePropsForMutating used for UserState mutations
+ * @param userState
+ * @returns {Object} The normalized userState
  */
 export const normalizeDefaultUserStatePropsForMutating = userState => {
+  return normalizeUserStatePropsForMutating({}, userState)
+}
+
+/**
+ * Normalized project props for for mutation
+ * @param {Object} config
+ * @param {[String]} [config.relatedPropPaths] Default R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS)
+ * Override this if an implementor has additional relatedPropPaths
+ * @param {Object} [config.relatedPropPathsToAllowedFields] Default {} Allows relatedPropPaths to optional
+ * be reduced to something more than just the id for cases when the object at the path is allowed to be mutated
+ * during the userState mutation. This applies to things like searchLocations that don't need to be created
+ * before mutating a userState that references them.
+ * @param {Object} userState
+ * @return {Object} The normalized userState
+ */
+export const normalizeUserStatePropsForMutating = (
+  {
+    relatedPropPaths = R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS),
+    relatedPropPathsToAllowedFields = {}
+  },
+  userState
+) => {
   return R.compose(
     // Make sure related objects only have an id
-    userState => relatedObjectsToIdForm({relatedPropPaths: R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS)}, userState),
+    userState => relatedObjectsToIdForm(
+      {relatedPropPaths, relatedPropPathsToAllowedFields},
+      userState
+    ),
     userState => filterOutReadOnlyVersionProps(userState),
     userState => filterOutNullDeleteProps(userState),
     userState => filterOutCacheOnlyObjs(userState)
   )(userState);
 };
+
 /**
  * Soft delete scope instances and the references to them in the user state
  * TODO: There is currently no way to prevent deleting regions that do not belong to the user
@@ -567,7 +593,13 @@ export const userStateMutationContainer = v(R.curry((
  */
 export const deleteScopeObjectsContainer = (
   apolloConfig,
-  {outputParams, normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating, readInputTypeMapper, scopeName, scopeProps},
+  {
+    outputParams,
+    normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating,
+    readInputTypeMapper,
+    scopeName,
+    scopeProps
+  },
   {userState, render}
 ) => {
   const capitalized = capitalize(scopeName);
@@ -651,7 +683,11 @@ export const deleteScopeObjectsContainer = (
  * @param props
  * @return {Object} {deleteRegions: deleted region, clearedScopeObjsUserState: The user state post clearing}
  */
-export const deleteRegionsContainer = (apolloConfig, {normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating}, {userState = null, scopeProps, render}) => {
+export const deleteRegionsContainer = (apolloConfig, {normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating}, {
+  userState = null,
+  scopeProps,
+  render
+}) => {
   return deleteScopeObjectsContainer(
     apolloConfig,
     {
@@ -673,7 +709,10 @@ export const deleteRegionsContainer = (apolloConfig, {normalizeUserStatePropsFor
  * @param props
  * @return {Object}  {deletedProjects: deleted project, clearedScopeObjsUserState: The user state post clearing}
  */
-export const deleteProjectsContainer = (apolloConfig, {userState = null, normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating}, props) => {
+export const deleteProjectsContainer = (apolloConfig, {
+  userState = null,
+  normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating
+}, props) => {
   return deleteScopeObjectsContainer(
     apolloConfig,
     {
