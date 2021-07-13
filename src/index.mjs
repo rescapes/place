@@ -104,7 +104,7 @@ export {
 export {
   createSampleProjectContainer,
   createSampleProjectsContainer
-} from './stores/scopeStores/project/projectStore.sample';
+} from './stores/scopeStores/project/projectStore.sample.js';
 
 export {
   createSampleRegionContainer,

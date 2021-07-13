@@ -28,18 +28,17 @@ import {
 } from '@rescapes/apollo';
 import {
   regionOutputParams,
-  regionOutputParamsMinimized,
   regionsQueryContainer
-} from '../scopeStores/region/regionStore';
+} from '../scopeStores/region/regionStore.js';
 import {
   projectMutationContainer,
   projectOutputParams,
   projectsQueryContainer
-} from '../scopeStores/project/projectStore';
-import {projectSample} from '../scopeStores/project/projectStore.sample';
-import {defaultSearchLocationOutputParamsMinimized} from "../search/searchLocation/defaultSearchLocationOutputParams";
-import {querySearchLocationsContainer} from "../search/searchLocation/searchLocationStore";
-import {createSampleSearchLocationContainer} from "../search/searchLocation/searchLocationStore.sample";
+} from '../scopeStores/project/projectStore.js';
+import {projectSample} from '../scopeStores/project/projectStore.sample.js';
+import {defaultSearchLocationOutputParamsMinimized} from "../search/searchLocation/defaultSearchLocationOutputParams.js";
+import {querySearchLocationsContainer} from "../search/searchLocation/searchLocationStore.js";
+import {createSampleSearchLocationContainer} from "../search/searchLocation/searchLocationStore.sample.js";
 const log = loggers.get('rescapeDefault');
 
 /***

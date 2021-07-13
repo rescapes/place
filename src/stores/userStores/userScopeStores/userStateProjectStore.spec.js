@@ -30,7 +30,7 @@ import {
   mutateSampleUserStateWithProjectsAndRegionsContainer
 } from '../userStateStore.sample.js';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
-import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample';
+import {createSampleProjectContainer} from '../../scopeStores/project/projectStore.sample.js';
 import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsMixin} from '../activityStore.js';
 import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
