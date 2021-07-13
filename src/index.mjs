@@ -10,7 +10,6 @@
  */
 
 
-
 import {userStateRegionSetPropertyThenMutationContainer} from "./stores/userStores/userScopeStores/userStateRegionStore.js";
 
 export {
@@ -132,3 +131,7 @@ export {
 export {
   createPropertiesFilter
 } from './helpers/filterHelpers.js'
+
+export {
+  defaultSearchLocationOutputParamsMinimized, defaultSearchLocationOutputParams
+} from './stores/search/searchLocation/defaultSearchLocationOutputParams.js'
