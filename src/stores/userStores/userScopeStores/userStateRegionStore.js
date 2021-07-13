@@ -25,7 +25,7 @@ import {
   userStateReadInputTypeMapper
 } from '../userStateStore.js';
 import {renameKey} from '@rescapes/ramda';
-import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeStore";
+import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeStore.js";
 
 
 /**
