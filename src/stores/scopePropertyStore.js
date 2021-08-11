@@ -39,7 +39,7 @@ import {
   userStateScopePropPathOutputParamsCreator
 } from './userStores/userStateStore.js';
 import {projectsQueryContainer} from './scopeStores/project/projectStore.js';
-import {isActive} from './userStores/activityStore';
+import {isActive} from './userStores/activityStore.js';
 import {loggers} from '@rescapes/log';
 
 const log = loggers.get('rescapeDefault');

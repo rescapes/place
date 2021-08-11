@@ -13,8 +13,8 @@ import * as R from 'ramda';
 import {regionOutputParams} from '../../scopeStores/region/regionStore.js';
 import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsMixin} from '../activityStore.js';
-import {createUserSearchOutputParams} from "./userSearchStore";
-import {defaultSearchLocationOutputParams} from "../../search/searchLocation/defaultSearchLocationOutputParams";
+import {createUserSearchOutputParams} from "./userSearchStore.js";
+import {defaultSearchLocationOutputParams} from "../../search/searchLocation/defaultSearchLocationOutputParams.js";
 
 /***
  * Creates userStateRegion output params.

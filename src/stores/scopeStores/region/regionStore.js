@@ -23,10 +23,7 @@ import {
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
-import {makeQueryFromCacheContainer} from "@rescapes/apollo/src/helpers/queryCacheHelpers";
-import {containerForApolloType} from "@rescapes/apollo/src/helpers/containerHelpers";
-import {getRenderPropFunction} from "@rescapes/apollo/src/helpers/componentHelpersMonadic";
-import {readInputTypeMapper} from "@rescapes/apollo/src/helpers/settingsStore";
+import {makeQueryFromCacheContainer, containerForApolloType, getRenderPropFunction, readInputTypeMapper} from "@rescapes/apollo";
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [];
@@ -119,7 +116,7 @@ export const regionsQueryContainer = v(R.curry((apolloConfig, {outputParams}, pr
 export const normalizeRegionPropsForMutating = region => {
   return R.compose(
     // Make sure related objects only have an id
-    region => relatedObjectsToIdForm(RELATED_PROPS, region),
+    region => relatedObjectsToIdForm({relatedPropPaths: RELATED_PROPS}, region),
     region => filterOutNullDeleteProps(region),
     region => filterOutReadOnlyVersionProps(region)
   )(region);

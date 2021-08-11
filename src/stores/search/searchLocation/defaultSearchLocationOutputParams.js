@@ -1,4 +1,3 @@
-import {locationOutputParams, locationOutputParamsMinimized} from "../../scopeStores/location/locationOutputParams";
 import {versionOutputParamsMixin} from "@rescapes/apollo";
 import {pickDeepPaths} from "@rescapes/ramda";
 

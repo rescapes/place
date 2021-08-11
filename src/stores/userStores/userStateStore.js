@@ -55,14 +55,13 @@ import {
 import {selectionOutputParamsFragment} from './selectionStore.js';
 import {activityOutputParamsMixin} from './activityStore.js';
 import moment from 'moment';
-import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore";
+import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore.js";
 import {
   defaultSearchLocationOutputParams,
   defaultSearchLocationOutputParamsMinimized
-} from "../search/searchLocation/defaultSearchLocationOutputParams";
-import {userStateRegionOutputParams} from "./userScopeStores/userStateRegionStoreHelpers";
-import {userStateProjectOutputParams} from "./userScopeStores/userStateProjectStoreHelpers";
-import {logicalOrValueAtPathIntoApolloConfig} from "@rescapes/apollo/src/helpers/queryHelpers";
+} from "../search/searchLocation/defaultSearchLocationOutputParams.js";
+import {userStateRegionOutputParams} from "./userScopeStores/userStateRegionStoreHelpers.js";
+import {userStateProjectOutputParams} from "./userScopeStores/userStateProjectStoreHelpers.js";
 
 
 // TODO should be derived from the remote schema

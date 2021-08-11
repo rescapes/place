@@ -25,8 +25,7 @@ import {
   defaultSearchLocationOutputParamsMinimized
 } from './defaultSearchLocationOutputParams.js';
 import T from 'folktale/concurrency/task/index.js';
-import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
-import {composeFuncAtPathIntoApolloConfig} from "@rescapes/apollo/src/helpers/queryHelpers";
+import {composeFuncAtPathIntoApolloConfig} from "@rescapes/apollo"
 
 const {of} = T;
 

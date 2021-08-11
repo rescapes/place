@@ -1,4 +1,4 @@
-import {activityOutputParamsMixin} from "../activityStore";
+import {activityOutputParamsMixin} from "../activityStore.js";
 
 export const createUserSearchLocationOutputParams = searchLocationsOutputParams => {
     return {

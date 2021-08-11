@@ -13,7 +13,7 @@ import * as R from 'ramda';
 import {projectOutputParams} from '../../scopeStores/project/projectStore.js';
 import {selectionOutputParamsFragment} from '../selectionStore.js';
 import {activityOutputParamsMixin} from '../activityStore.js';
-import {createUserSearchOutputParams} from "./userSearchStore";
+import {createUserSearchOutputParams} from "./userSearchStore.js";
 
 /***
  * Creates userStateProject output params.

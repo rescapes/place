@@ -3,13 +3,11 @@ import {
   userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
-} from "../userStateStore";
-import {setPathOnResolvedUserScopeInstance, userStateScopeObjsMutationContainer} from "./userStateHelpers";
+} from "../userStateStore.js";
+import {setPathOnResolvedUserScopeInstance, userStateScopeObjsMutationContainer} from "./userStateHelpers.js";
 import * as R from 'ramda'
 import {composeWithChain, reqStrPathThrowing, strPathOr} from "@rescapes/ramda";
-import {composeWithComponentMaybeOrTaskChain, mapTaskOrComponentToNamedResponseAndInputs} from "@rescapes/apollo";
-import {containerForApolloType} from "@rescapes/apollo/src/helpers/containerHelpers";
-import {getRenderPropFunction} from "@rescapes/apollo/src/helpers/componentHelpersMonadic";
+import {composeWithComponentMaybeOrTaskChain, mapTaskOrComponentToNamedResponseAndInputs, getRenderPropFunction, containerForApolloType} from "@rescapes/apollo";
 
 /***
  * Convenience method for mutating the userState after setting a property on a target userScope instance

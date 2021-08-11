@@ -1,4 +1,4 @@
-import {createUserSearchLocationOutputParams} from "./userSearchLocation";
+import {createUserSearchLocationOutputParams} from "./userSearchLocation.js";
 
 export const createUserSearchOutputParams = searchLocationOutputParams => {
   return {

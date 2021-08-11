@@ -13,7 +13,7 @@ import * as R from 'ramda';
 import {v} from '@rescapes/validate';
 import {
   capitalize,
-  compact, eqStrPath, flattenObj, mapMDeep,
+  compact, eqStrPath, flattenObj,
   mergeDeep,
   mergeDeepAll, omitDeep,
   onlyOneThrowing,
@@ -21,7 +21,7 @@ import {
   pickDeepPaths,
   renameKey,
   reqPathThrowing,
-  reqStrPathThrowing, strPathEq,
+  reqStrPathThrowing,
   strPathOr,
   toNamedResponseAndInputs
 } from '@rescapes/ramda';
@@ -38,13 +38,10 @@ import PropTypes from 'prop-types';
 import {
   currentUserStateQueryContainer,
   normalizeDefaultUserStatePropsForMutating,
-  userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateMutationContainer,
-  userStateOutputParamsCreator,
-  userStateReadInputTypeMapper
 } from '../../userStores/userStateStore.js';
 import {inspect} from "util";
-import {isResolvePropPathForAllSets} from "@rescapes/ramda/src/monadHelpers";
+import {isResolvePropPathForAllSets} from "@rescapes/ramda"
 
 /**
  * returns userState.data.user[Project|Region]` based on scopeName = 'project' \ 'region'

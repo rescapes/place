@@ -10,7 +10,7 @@
  */
 import {typePolicies as typePoliciesRescapeApollo, typePoliciesConfig} from '@rescapes/apollo';
 import {userStateStorePoliciesConfig} from './stores/userStores/userStateStore.js';
-import {regionTypePolicy} from './stores/scopeStores/region/regionStore';
+import {regionTypePolicy} from './stores/scopeStores/region/regionStore.js';
 import * as R from 'ramda';
 
 export const typePolicies = R.merge(

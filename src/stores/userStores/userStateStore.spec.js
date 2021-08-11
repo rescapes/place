@@ -33,9 +33,9 @@ import {
 } from './userStateStore.sample.js';
 import {testAuthTask} from '../../helpers/testHelpers.js';
 import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
-import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample';
-import {regionOutputParamsMinimized, regionsQueryContainer} from "../scopeStores/region/regionStore";
-import {projectsQueryContainer} from "../scopeStores/project/projectStore";
+import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
+import {regionOutputParamsMinimized, regionsQueryContainer} from "../scopeStores/region/regionStore.js";
+import {projectsQueryContainer} from "../scopeStores/project/projectStore.js";
 
 
 describe('userStateStore', () => {

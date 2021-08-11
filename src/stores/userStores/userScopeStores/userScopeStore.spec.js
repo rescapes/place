@@ -15,12 +15,10 @@ import {testAuthTask} from '../../../helpers/testHelpers.js';
 import {
   currentUserStateQueryContainer,
   normalizeDefaultUserStatePropsForMutating, userScopeOutputParamsOnlyIds,
-  userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
   userStateMutationContainer,
   userStateOutputParamsOnlyIds
 } from '../userStateStore.js';
-import {regionsQueryContainer} from "../../scopeStores/region/regionStore";
-import {defaultSearchLocationOutputParams} from "../../search/searchLocation/defaultSearchLocationOutputParams";
+import {regionsQueryContainer} from "../../scopeStores/region/regionStore.js";
 
 describe('userStateHelpers', () => {
   test('userStateScopeObjsSetPropertyThenMutationContainer', done => {
