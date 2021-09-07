@@ -366,8 +366,9 @@ export const createCacheOnlyPropsForUserState = props => {
 export const currentUserStateQueryContainer = v(R.curry(
     (apolloConfig, {outputParams}, props) => {
       return composeWithComponentMaybeOrTaskChain([
-        response => {
-          if (!strPathOr(null, 'data.currentUser', response)) {
+        ({currentUserResponse, ...props}) => {
+          const user = strPathOr(null, 'data.currentUser', currentUserResponse)
+          if (!user) {
             // Loading, error or skipped because not authenticated
             return containerForApolloType(
               apolloConfig,
@@ -377,7 +378,6 @@ export const currentUserStateQueryContainer = v(R.curry(
               }
             );
           }
-          const user = strPathOr(null, 'data.currentUser', response);
           // Get the current user state
           return makeQueryContainer(
             composeFuncAtPathIntoApolloConfig(
@@ -387,12 +387,8 @@ export const currentUserStateQueryContainer = v(R.curry(
                 // Merge any other props (usually null) with current user
                 return R.merge(
                   props,
-                  // Limit to the number version of the id
                   {
-                    user: R.pick(
-                      ['id'],
-                      user
-                    )
+                    user: R.pick(['id'], user)
                   }
                 );
               }
@@ -402,14 +398,23 @@ export const currentUserStateQueryContainer = v(R.curry(
           );
         },
         // Get the current user
-        (currentUserResponse, ...props) => {
-          return R.unless(
-            R.isNil,
-            () => {
-              return currentUserQueryContainer(apolloConfig, {id: 1}, props)
-            }
-          )(currentUserResponse);
-        }
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'currentUserResponse',
+          ({currentUserResponse, ...props}) => {
+            return R.ifElse(
+              R.isNil,
+              () => {
+                return currentUserQueryContainer(apolloConfig, {id: 1}, props)
+              },
+              currentUserResponse => containerForApolloType(
+                apolloConfig,
+                {
+                  render: getRenderPropFunction(props),
+                  // Override the data with the consolidated mapbox
+                  response: currentUserResponse
+                }
+              )
+            )(currentUserResponse);
+          })
       ])(props);
     }),
   [

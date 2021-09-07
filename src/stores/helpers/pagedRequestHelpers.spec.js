@@ -141,7 +141,7 @@ describe('pagedRequestHelpers', () => {
           );
         }),
       mapToNamedResponseAndInputs('projects',
-        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
+        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {count:4}, {user})
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
@@ -158,7 +158,7 @@ describe('pagedRequestHelpers', () => {
     task.run().listen(defaultRunConfig({
       onResolved: ({projectsPaged1, projectsPaged10, projectsPagedSkipped, projectsPagedSkipped2}) => {
         expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged1))).toEqual(1);
-        expect(reqStrPathThrowing('data.projectsPaginated.pages', projectsPaged1)).toEqual(10);
+        expect(reqStrPathThrowing('data.projectsPaginated.pages', projectsPaged1)).toEqual(4);
         expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged10))).toEqual(1);
         expect(reqStrPathThrowing('data.projectsPaginated.hasNext', projectsPaged10)).toEqual(false);
         expect(projectsPagedSkipped.skip).toBeTruthy();

@@ -55,13 +55,13 @@ describe('userStateHelpers', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       mapToMergedResponseAndInputs(
-        ({apolloConfig, user, settingsResponse}) => {
+        ({apolloConfig, currentUserResponse, settingsResponse}) => {
           return mutateSampleUserStateWithProjectsAndRegionsContainer(
             apolloConfig,
             {
             },
             {
-              user: R.pick(['id'], user),
+              user: R.pick(['id'], reqStrPathThrowing('data.currentUser', currentUserResponse)),
               regionKeys: ['earth'],
               projectKeys: ['shrangrila'],
               searchLocationNames: ['search me', 'i am innocent'],
@@ -87,11 +87,11 @@ describe('userStateHelpers', () => {
 
       // Resolve the user state
       mapToNamedResponseAndInputs('userStateResponses',
-        ({apolloConfig}) => {
-          return currentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
+        ({apolloConfig, currentUserResponse}) => {
+          return currentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {currentUserResponse});
         }
       ),
-      mapToNamedPathAndInputs('user', 'data.currentUser',
+      mapToNamedResponseAndInputs('currentUserResponse',
         ({apolloConfig}) => {
           return currentUserQueryContainer(apolloConfig, userOutputParams, {});
         }

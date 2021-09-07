@@ -82,7 +82,6 @@ describe('userProjectStore', () => {
       onResolved:
         response => {
           expectKeysAtPath(someProjectKeys, 'data.userStates.0.data.userProjects.0.project', response);
-          done();
         }
     }, errors, done));
   }, 10000);
@@ -177,7 +176,6 @@ describe('userProjectStore', () => {
       onResolved:
         response => {
           expectKeysAtPath(someProjectKeys, 'data.userStates.0.data.userProjects.0.project', response);
-          done();
         }
     }, errors, done));
   });
@@ -329,7 +327,6 @@ describe('userProjectStore', () => {
         ({project, userState, undefinedUserProject}) => {
           expect(strPathOr(null, 'data.userProjects.1.project.id', userState)).toEqual(project.id);
           expect(R.propOr(false, 'skip', undefinedUserProject)).toBeTruthy();
-          done();
         }
     }, errors, done));
   }, 100000);

@@ -290,7 +290,6 @@ describe('userRegionStore', () => {
         ({region, userState, undefinedUserRegion}) => {
           expect(strPathOr(null, 'result.data.updateUserState.userState.data.userRegions.0.region.id', userState)).toEqual(region.id);
           expect(R.propOr(false, 'skip', undefinedUserRegion)).toBeTruthy();
-          done();
         }
     }, errors, done));
   }, 100000);
