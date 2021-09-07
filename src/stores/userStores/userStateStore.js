@@ -357,54 +357,61 @@ export const createCacheOnlyPropsForUserState = props => {
  * @param {Object} apolloClient The Apollo Client
  * @param {Object} options
  * @param [Object] options.outputParams OutputParams for the query
- * @param {Object} props Arguments for the UserState query. Likely null unless testing whether the current
- * user state has passes a certain predicate
+ * @param {Object} props Arguments for the UserState query. This can be null but it's better to pass the user
+ * to avoid a query to the current userResponse
+ * @param {Object} props.currentUserResponse. The response of querying for the current user to avoid having to query for the
+ * user again.
  * @returns {Task|Object} A Task or apollo container resolving to the single item user state response {data: {usersStates: []}}
  */
 export const currentUserStateQueryContainer = v(R.curry(
-  (apolloConfig, {outputParams}, props) => {
-    return composeWithComponentMaybeOrTaskChain([
-      response => {
-        if (!strPathOr(null, 'data.currentUser', response)) {
-          // Loading, error or skipped because not authenticated
-          return containerForApolloType(
-            apolloConfig,
-            {
-              render: getRenderPropFunction(props),
-              response
-            }
+    (apolloConfig, {outputParams}, props) => {
+      return composeWithComponentMaybeOrTaskChain([
+        response => {
+          if (!strPathOr(null, 'data.currentUser', response)) {
+            // Loading, error or skipped because not authenticated
+            return containerForApolloType(
+              apolloConfig,
+              {
+                render: getRenderPropFunction(props),
+                response
+              }
+            );
+          }
+          const user = strPathOr(null, 'data.currentUser', response);
+          // Get the current user state
+          return makeQueryContainer(
+            composeFuncAtPathIntoApolloConfig(
+              apolloConfig,
+              'options.variables',
+              props => {
+                // Merge any other props (usually null) with current user
+                return R.merge(
+                  props,
+                  // Limit to the number version of the id
+                  {
+                    user: R.pick(
+                      ['id'],
+                      user
+                    )
+                  }
+                );
+              }
+            ),
+            {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
+            props
           );
-        }
-        const user = strPathOr(null, 'data.currentUser', response);
-        // Get the current user state
-        return makeQueryContainer(
-          composeFuncAtPathIntoApolloConfig(
-            apolloConfig,
-            'options.variables',
-            props => {
-              // Merge any other props (usually null) with current user
-              return R.merge(
-                props,
-                // Limit to the number version of the id
-                {
-                  user: R.pick(
-                    ['id'],
-                    user
-                  )
-                }
-              );
+        },
+        // Get the current user
+        (currentUserResponse, ...props) => {
+          return R.unless(
+            R.isNil,
+            () => {
+              return currentUserQueryContainer(apolloConfig, {id: 1}, props)
             }
-          ),
-          {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
-          props
-        );
-      },
-      // Get the current user
-      props => {
-        return currentUserQueryContainer(apolloConfig, {id: 1}, props);
-      }
-    ])(props);
-  }),
+          )(currentUserResponse);
+        }
+      ])(props);
+    }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryStructure', PropTypes.shape({
@@ -421,13 +428,13 @@ export const currentUserStateQueryContainer = v(R.curry(
  * @returns {Task|Object} A Task or Apollo container resolving the user states an object with obj.data.userStates or errors in obj.errors
  */
 export const adminUserStateQueryContainer = v(R.curry(
-  (apolloConfig, {outputParams}, props) => {
-    return makeQueryContainer(
-      apolloConfig,
-      {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
-      props
-    );
-  }),
+    (apolloConfig, {outputParams}, props) => {
+      return makeQueryContainer(
+        apolloConfig,
+        {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
+        props
+      );
+    }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryStructure', PropTypes.shape({
@@ -497,9 +504,9 @@ export const normalizeUserStatePropsForMutating = (
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
 export const userStateMutationContainer = v(R.curry((
-  apolloConfig,
-  {outputParams, normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating},
-  props
+    apolloConfig,
+    {outputParams, normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating},
+    props
   ) => {
     return makeMutationRequestContainer(
       R.compose(

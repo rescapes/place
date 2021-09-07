@@ -12,10 +12,10 @@
 import * as R from 'ramda';
 import moment from 'moment';
 import T from 'folktale/concurrency/task/index.js';
-import {e} from '@rescapes/helpers-component'
+import {e} from '@rescapes/apollo'
 
 const {of} = T;
-import {composeWithChain, reqPathThrowing ,pathOr} from '@rescapes/ramda';
+import {composeWithChain, reqPathThrowing, pathOr} from '@rescapes/ramda';
 import {
   callMutationNTimesAndConcatResponses,
   composeWithComponentMaybeOrTaskChain,

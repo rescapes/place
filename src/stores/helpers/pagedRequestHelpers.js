@@ -37,6 +37,8 @@ const log = loggers.get('rescapeDefault');
  * @param {String} queryConfig.paginatedObjectsName The name for the query
  * @param {Function} queryConfig.paginatedQueryContainer The query container function. This is passed most of the parameters
  * @param {Object} queryConfig.outputParams
+ * @param {Object} [queryConfig.orderBy': Order by for the paged query. Default 'id'. Can be a django-query-compliant
+ * string like "-data__dimensions__foo"
  * @param {Object} [queryConfig.regionReadInputTypeMapper] This should not be needed, it specifies the graphql input type.
  * By default it is assumed to by {objects: `${capitalize(typeName)}TypeofPaginatedTypeMixinFor(capitalize(typeName))TypeRelatedReadInputType`}
  * Where objects are the paginated objects returned by the query and thus
@@ -50,6 +52,7 @@ export const queryUsingPaginationContainer = v(R.curry((
   apolloConfig,
   {
     pageSize,
+    orderBy='id',
     typeName,
     name,
     outputParams,
@@ -97,7 +100,7 @@ export const queryUsingPaginationContainer = v(R.curry((
                 // Pass the combined previous results
                 {previousPages},
                 // Skip the first page + 1-based index
-                R.merge(props, {pageSize: pageSizeOrDefault, page: page + 2})
+                R.merge(props, {orderBy, pageSize: pageSizeOrDefault, page: page + 2})
               );
             });
           },
@@ -121,7 +124,7 @@ export const queryUsingPaginationContainer = v(R.curry((
         props
       );
     }
-  ])(R.merge({page: 1}, props));
+  ])(R.merge({page: 1, orderBy}, props));
 }), [
   ['apolloConfig', PropTypes.shape()],
   ['queryConfig', PropTypes.shape({
@@ -223,15 +226,18 @@ export const queryPageContainer = v(R.curry((
  * @param {Object} queryConfig.outputParams Location outputParams (not the page)
  * @param {Object} queryConfig.pageSize
  * @param {Object} queryConfig.page
+ * @param {String} [queryConfig.orderBy] Default 'id' Optional path to order by
+ * matching Django syntax. e.g. "-data__dimensions__fooDimension"
  * @param {Object} queryConfig.readInputTypeMapper Maps complex input types
  * @param {Object|[Object]} props Props to resolve the instance. This can also be a list of prop sets
+ * Setting pageSize, page, and orderBy overrides that in options
  * @param {Boolean} skip Skip the query if dependent props aren't ready (Only relevent for component queries)
- * @return {Task | Maybe} resolving to the page of location results
+ * @return {Task | Object} Task resolving to query results or query component
  * @private
  */
 export const _paginatedQueryContainer = (
   apolloConfig,
-  {name, outputParams, readInputTypeMapper, pageSize, page},
+  {name, outputParams, readInputTypeMapper, pageSize, page, orderBy='id'},
   props
 ) => {
   return nameComponent(name, makeQueryContainer(
@@ -249,21 +255,21 @@ export const _paginatedQueryContainer = (
       },
       readInputTypeMapper
     },
-    R.merge({page, pageSize}, props)
+    R.merge({page, pageSize, orderBy}, props)
   ));
 };
 
 /**
  * Queries for a single page of a paginated query
  * @param apolloConfig
- * @param name
- * @param paginatedQueryContainer
- * @param outputParams
- * @param propsStructure
- * @param pageSize
- * @param {Number} page The page number. If 1 then no query happens. previousPages is returned
+ * @param {Object} options
+ * @param {String} options.name
+ * @param {Object} options.outputParams
+ * @param {Object} props
+ * @param {Number} props.pageSize
+ * @param {Number} props.page The page number. If 1 then no query happens. previousPages is returned
  * since we already had to query it to get the total number of pages
- * @param props
+ * @param {String} props.orderBy Defaults to 'id'. Can be a django-query-compliant string "-data__dimensions__foo"
  * @param {Object} previousPages Accumulated previous pages in the form {
  *   data: {
  *     [name]: {
@@ -350,19 +356,20 @@ export const accumulatedSinglePageQueryContainer = (
  * @param {Object} apolloConfig The apollo Config
  */
 export const _modifyApolloConfigOptionsVariablesForPagination = apolloConfig => {
+  const specialProps = ['render', 'page', 'pageSize', 'orderBy']
   return R.over(
     R.lensPath(['options', 'variables']),
     variables => {
       return props => {
         return R.merge(
           // Page props and render are combined with the objects prop
-          R.pick(['render', 'page', 'pageSize', 'orderBy'], props),
+            R.pick(specialProps, props),
           {
             // objects are always an array of propSets, but for now assume only one set
             // the variables function can return an array of sets here if it wants
             objects: R.compose(
               toArrayIfNot,
-              R.omit(['render', 'page', 'pageSize']),
+              R.omit(specialProps),
               p => (variables || R.identity)(p)
             )(props)
           }

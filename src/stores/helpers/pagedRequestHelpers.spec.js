@@ -44,7 +44,7 @@ describe('pagedRequestHelpers', () => {
         );
       },
       mapToNamedResponseAndInputs('projects',
-        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
+        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {count:3}, {user})
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
@@ -60,7 +60,7 @@ describe('pagedRequestHelpers', () => {
     const errors = [];
     task.run().listen(defaultRunConfig({
       onResolved: projects => {
-        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projects))).toEqual(10);
+        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projects))).toEqual(3);
       }
     }, errors, done));
   }, 100000);

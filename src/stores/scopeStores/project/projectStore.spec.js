@@ -52,7 +52,7 @@ describe('projectStore', () => {
           expectKeysAtPath(someProjectKeys, 'project', response);
         }
     }, errors, done));
-  }, 10000);
+  }, 4000);
 
   test('queryProjectVariationsContainers', done => {
     expect.assertions(4);
@@ -61,7 +61,7 @@ describe('projectStore', () => {
       mapToNamedResponseAndInputs('projectsPagedAll',
         ({projectResponses, variations, user}) => {
           const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
-          // Returns all 10 with 2 queries of pageSize 5
+          // Returns all 4 with 2 queries of pageSize 5
           return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {
             projectQueryKey: 'queryProjectsPaginatedAll',
             pageSize: 5
@@ -71,10 +71,10 @@ describe('projectStore', () => {
       mapToNamedResponseAndInputs('projectsPaged',
         ({projectResponses, variations,user}) => {
           const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
-          // Returns 3 of the 10 projects on page 3
+          // Returns 3 of the 4 projects on page 3
           return reqStrPathThrowing('queryProjectsPaginated', variations)(R.merge(props, {
             projectQueryKey: 'queryProjectsPaginated',
-            pageSize: 3,
+            pageSize: 2,
             page: 2
           }));
         }
@@ -109,12 +109,12 @@ describe('projectStore', () => {
                 errorPolicy: 'all',
                 partialRefetch: true
               }
-            })
+            }), {}
           ));
         }
       ),
       mapToNamedResponseAndInputs('projectResponses',
-        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {user})
+        ({apolloConfig, user}) => createSampleProjectsContainer(apolloConfig, {count: 4}, {user})
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
@@ -129,11 +129,11 @@ describe('projectStore', () => {
     ])({});
     task.run().listen(defaultRunConfig({
       onResolved: ({projectsFull, projectsMinimized, projectsPaged, projectsPagedAll}) => {
-        expect(R.length(reqStrPathThrowing('data.projects', projectsFull))).toEqual(10);
-        expect(R.length(reqStrPathThrowing('data.projects', projectsMinimized))).toEqual(10);
-        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged))).toEqual(3);
-        expect(R.length((reqStrPathThrowing('data.projectsPaginated.objects', projectsPagedAll)))).toEqual(10);
+        expect(R.length(reqStrPathThrowing('data.projects', projectsFull))).toEqual(4);
+        expect(R.length(reqStrPathThrowing('data.projects', projectsMinimized))).toEqual(4);
+        expect(R.length(reqStrPathThrowing('data.projectsPaginated.objects', projectsPaged))).toEqual(2);
+        expect(R.length((reqStrPathThrowing('data.projectsPaginated.objects', projectsPagedAll)))).toEqual(4);
       }
     }, errors, done));
-  }, 100000);
+  }, 40000);
 });

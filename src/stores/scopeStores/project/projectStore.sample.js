@@ -10,7 +10,7 @@ import {
   callMutationNTimesAndConcatResponses,
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
-  getRenderPropFunction
+  getRenderPropFunction, mapTaskOrComponentToNamedResponseAndInputs
 } from '@rescapes/apollo';
 
 /**
@@ -29,6 +29,7 @@ import {
  * @params {Object} config
  * @params {Object} config.apolloConfig
  * @params {Object} options
+ * @params {Boolean} [options.deleteExisting] Default false. If true delete existing projects of the user first
  * @params {Function} options.locationsContainer Optional function to create locations for the project
  * @params {Object} options.outputParams Optional
  * @params {Object} props Overrides the defaults. {user: {id}} is required
@@ -36,7 +37,11 @@ import {
  * @params {Number} props.user.id Required
  * @return {Object} {data: project: {...}}
  */
-export const createSampleProjectContainer = (apolloConfig, {outputParams, locationsContainer}, props) => {
+export const createSampleProjectContainer = (apolloConfig, {
+  outputParams,
+  locationsContainer,
+  deleteExisting = false
+}, props) => {
 
   return composeWithComponentMaybeOrTaskChain([
     locations => {
@@ -52,7 +57,7 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
     },
 
     // Create sample locations (optional)
-    props => {
+    ({deletedResponse, ...props}) => {
       return R.ifElse(
         R.identity,
         f => f(apolloConfig, {}, R.pick(['render'], props)),
@@ -67,28 +72,41 @@ export const createSampleProjectContainer = (apolloConfig, {outputParams, locati
         }
       )(locationsContainer);
     },
-    // Delete all projects of this user
+    // Delete all projects of this user if desired.
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedResponse',
     props => {
-      return queryAndDeleteIfFoundContainer(
-        apolloConfig,
-        {
-          queryName: 'projects',
-          queryContainer: projectsQueryContainer(
-            apolloConfig,
-            {outputParams: projectOutputParams}
-          ),
-          mutateContainer: projectMutationContainer,
-          responsePath: 'result.data.mutate.project'
-        },
-        R.merge({
-            user: {
-              id: reqStrPathThrowing('user.id', props)
-            }
+      return R.ifElse(
+        () => deleteExisting,
+        () => queryAndDeleteIfFoundContainer(
+          apolloConfig,
+          {
+            queryName: 'projects',
+            queryContainer: projectsQueryContainer(
+              apolloConfig,
+              {outputParams: projectOutputParams}
+            ),
+            mutateContainer: projectMutationContainer,
+            responsePath: 'result.data.mutate.project'
           },
-          compact({render: R.prop('render', props)})
-        )
-      );
-    }
+          R.merge({
+              user: {
+                id: reqStrPathThrowing('user.id', props)
+              }
+            },
+            compact({render: R.prop('render', props)})
+          )
+        ),
+        () => {
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: null
+            }
+          );
+        }
+      )(props);
+    })
   ])(props);
 };
 
@@ -133,18 +151,20 @@ export const projectSample = props => {
 /**
  * Creates 10 projects for the given user
  * @param {Object} apolloConfig
+ * @param {Object} options
+ * @param {Object} [options.count] Default 10 samples
  * @param {Object} props
  * @param {Object} props.user
  * @param {Number} props.user.id
  * @return Task resolving to a list of 10 projects
  */
-export const createSampleProjectsContainer = v((apolloConfig, props) => {
+export const createSampleProjectsContainer = v((apolloConfig, {count=10}, props) => {
   return composeWithComponentMaybeOrTaskChain([
       response => {
         return callMutationNTimesAndConcatResponses(
           apolloConfig,
           {
-            count: 10,
+            count,
             mutationContainer: (apolloConfig, options, props) => {
               return createSampleProjectContainer(
                 apolloConfig,
@@ -193,6 +213,9 @@ export const createSampleProjectsContainer = v((apolloConfig, props) => {
   )(props);
 }, [
   ['apolloConfig', PropTypes.shape({}).isRequired],
+  ['options', PropTypes.shape({
+    count: PropTypes.number
+  }).isRequired],
   ['props', PropTypes.shape({
     user: PropTypes.shape({
       id: PropTypes.number.isRequired
