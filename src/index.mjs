@@ -135,3 +135,7 @@ export {
 export {
   defaultSearchLocationOutputParamsMinimized, defaultSearchLocationOutputParams
 } from './stores/search/searchLocation/defaultSearchLocationOutputParams.js'
+
+export {
+  createSampleSearchLocationContainer
+} from './stores/search/searchLocation/searchLocationStore.sample.js'

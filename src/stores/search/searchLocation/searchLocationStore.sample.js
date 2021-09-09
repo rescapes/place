@@ -4,10 +4,7 @@ import * as R from 'ramda';
 import T from 'folktale/concurrency/task/index.js';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
-import {
-  defaultSearchLocationOutputParams,
-  defaultSearchLocationOutputParamsMinimized
-} from './defaultSearchLocationOutputParams.js';
+import {defaultSearchLocationOutputParams} from './defaultSearchLocationOutputParams.js';
 import {callMutationNTimesAndConcatResponses} from '@rescapes/apollo';
 
 const {fromPromised, of} = T;
