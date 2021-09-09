@@ -133,9 +133,8 @@ export {
 } from './helpers/filterHelpers.js'
 
 export {
-  defaultSearchLocationOutputParamsMinimized, defaultSearchLocationOutputParams
-} from './stores/search/searchLocation/defaultSearchLocationOutputParams.js'
-
-export {
   createSampleSearchLocationContainer
 } from './stores/search/searchLocation/searchLocationStore.sample.js'
+
+export {deleteSearchLocationsContainer, querySearchLocationsContainer, makeSearchLocationMutationContainer, RELATED_PROPS, searchLocationReadInputTypeMapper} from './stores/search/searchLocation/searchLocationStore.js'
+export {defaultSearchLocationOutputParams, defaultSearchLocationOutputParamsMinimized} from './stores/search/searchLocation/defaultSearchLocationOutputParams.js'
