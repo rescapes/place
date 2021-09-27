@@ -1,5 +1,5 @@
 import {
-  findUserScopeInstance,
+  findUserScopeInstance, getPathOnResolvedUserScopeInstance,
   matchingUserStateScopeInstance,
   matchingUserStateScopeInstances,
   setPathOnResolvedUserScopeInstance,
@@ -272,4 +272,58 @@ describe('userStateHelpers', () => {
     expect(notReady).toEqual(null);
   })
 
+
+  test('getPathOnResolvedUserScopeInstance', () => {
+    const userState = {
+      data: {
+        userRegions: [
+          {region: {id: 1, foo: {id: 1, turnip: 'radish'}, smileys: [{id: 1, carrot: 'sauce'}, {id: 2, carrot: 'stick'}]}},
+          {region: {id: 2, foo: {id: 2}}, smileys: [{id: 5, carrot: 'eyes'}, {id: 8, carrot: 'nose'}]}
+        ]
+      }
+    };
+    const region = {id: 2};
+    const fooData = {foo: true}
+
+    // Using scopeInstancePropPath
+    const found = getPathOnResolvedUserScopeInstance({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      scopeInstancePropPath: 'region',
+      getPath: 'foo',
+      getProps: ['turnip']
+    }, {userState, region, fooData});
+    expect(found).toEqual(R.view(R.lensPath(['region', 'foo']), userState.data.userRegions[1]))
+
+    // Using userScopeInstancePropPath
+    const foundAgain = getPathOnResolvedUserScopeInstance({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      getPath: 'smileys',
+      getProps: ['carrot']
+    }, {userState, userRegion: {region}, fooData});
+    expect(foundAgain).toEqual(R.view(R.lensProp('smileys'), fooData, userState.data.userRegions[1]))
+
+    // If we are missing the given region
+    const notFound = setPathOnResolvedUserScopeInstance({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region',
+      getPath: 'smileys',
+    }, {userState, region: {id: 'fred'}, fooData: 'moo'});
+    expect(notFound).toEqual(undefined);
+
+
+    // If we are missing something in propSets
+    const notReady = setPathOnResolvedUserScopeInstance({
+      scopeName: 'region',
+      userStatePropPath: 'userState',
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region',
+      getPath: 'smileys',
+    }, {userState})
+    expect(notReady).toEqual(null);
+  })
 });

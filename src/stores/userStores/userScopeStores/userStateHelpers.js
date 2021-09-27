@@ -10,6 +10,7 @@
  */
 
 import * as R from 'ramda';
+import ramdaLens from 'ramda-lens';
 import {v} from '@rescapes/validate';
 import {
   capitalize,
@@ -42,6 +43,8 @@ import {
 } from '../../userStores/userStateStore.js';
 import {inspect} from "util";
 import {isResolvePropPathForAllSets} from "@rescapes/ramda"
+import {relatedObjectsToIdForm} from "@rescapes/apollo/src/helpers/requestHelpers.js";
+const {mapped, over} = 'ramdaLens';
 
 /**
  * returns userState.data.user[Project|Region]` based on scopeName = 'project' \ 'region'
@@ -765,7 +768,74 @@ export const userScopeFromProps = (
   ])(propSets)
 }
 
-
+/**
+ * Calls userScopeFromProps to resolve the user scope instance (userRegion or userProject)
+ * and additionally gets the value from userScope[...getPath...].
+ * This method is used to create convenient API methods that get a given property of
+ * user.data.userRegions|userProjects[x].[...getPath...] and query for the full values of that properties.
+ * For instance, if get path pointed at userSearchLocations that each had {
+ *  activity: {isActive: true|false},
+ *  searchLocation: {id: }
+ * }
+ * then getPath 'userSearchLocations.searchLocation.id' would result in
+ * all of the searchLocations [{id: }, {id: }, ...]
+ * @param {Object} config
+ * @param {String} config.scopeName Required scope name 'region' for userRegions or 'project' for userProjects
+ * @param {String} config.userStatePropPath Required propSets path to the userState, e.g. 'userState'
+ * @param {String} [config.scopeInstancePropPath] Required if userScopeInstancePropPath not given. propSets path to the scope instance, e.g' 'region' or 'project'
+ * @param {String} [config.userScopeInstancePropPath] Required if scopeInstancePropPath not given. propSets path to the scope instance, e.g' 'userRegion' or 'userProject'
+ * @param {String | [String]} config.getPath Array or string path used to make a lens to set the value at propSets[setPropPath]
+ * @param {Object} propSets Must contain a userState at userStatePropPath. Must contain either a scope instance
+ * at scopeInstancePropPath or a user scope instance
+ * @param {[String]} [getProps] Default [], Normally we just desire the id of the instances that match getPath, but we can
+ * request other props here
+ * @returns {Object} The resolved and user scope instance with setPath set to propSets[...setPropPath...]
+ * If anything isn't available then null is returned
+ */
+export const getPathOnResolvedUserScopeInstance = (
+  {
+    scopeName,
+    userStatePropPath,
+    userScopeInstancePropPath,
+    scopeInstancePropPath,
+    getPath,
+    getProps=[]
+  },
+  propSets) => {
+  // If any propPathSet doesn't have a corresponding value in propSets, return null.
+  // This indicates a loading state or lack of selection by the user
+  if (!isResolvePropPathForAllSets(propSets,  [
+    [userStatePropPath],
+    [userScopeInstancePropPath, scopeInstancePropPath]]
+  )) {
+    return null;
+  }
+  return R.compose(
+    // Set setPath to the object at setPropPath if userScope was resolved
+    userScope => {
+      return R.when(
+        R.identity,
+        userScope => {
+          return relatedObjectsToIdForm(
+            {
+              relatedPropPaths: [getPath],
+              relatedPropPathsToAllowedFields: {[getPath]: getProps}
+            },
+            userScope)
+        }
+      )(userScope)
+    },
+    // Extract the userScope instance, either a userRegion or userProject
+    propSets => userScopeFromProps({
+        scopeName,
+        userStatePropPath,
+        userScopeInstancePropPath,
+        scopeInstancePropPath,
+      },
+      propSets
+    )
+  )(propSets)
+}
 
 /***
  * Calls userScopeFromProps to resolve the user scope instance (userRegion or userProject)
