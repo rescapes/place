@@ -14,6 +14,7 @@ import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
 import {projectsQueryContainer} from '../../scopeStores/project/projectStore.js';
 import {
+  getPathOnResolvedUserScopeInstanceAndQuery,
   userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
   userStateScopeObjsQueryContainer
@@ -27,6 +28,7 @@ import {
 import {renameKey} from '@rescapes/ramda';
 import {userStateProjectOutputParams} from './userStateProjectStoreHelpers.js'
 import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeStore.js";
+import {regionsQueryContainer} from "../../scopeStores/region/regionStore.js";
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
@@ -213,4 +215,37 @@ export const userStateProjectsActiveQueryContainer = (
 ) => {
   const userProject = {activity: {isActive: true}}
   return userStateProjectsQueryContainer(apolloConfig, {userStateProjectOutputParams}, R.merge(propSets, {userProject}))
+}
+
+
+/**
+ * Convenience wrapper around getPathOnResolvedUserScopeInstanceAndQuery for projects
+ * @param apolloConfig
+ * @param {Object} config
+ * @param config.getPath
+ * @param config.queryContainer
+ * @param config.queryOptions
+ * @param props
+ * @returns {Task|Object}
+ */
+export const getPathOnResolvedUserProjectAndQuery = (
+  apolloConfig, {
+    getPath, queryContainer, queryOptions
+  }, props
+) => {
+  return getPathOnResolvedUserScopeInstanceAndQuery(
+    apolloConfig, {
+      scopeName: 'project',
+      // Assume the userState is at propPath
+      userStatePropPath:  'userState',
+      // propSets needs to either contain a userRegion at 'userRegion' or a project at 'project'
+      // We don't have a valid mutation container until then
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'project',
+      getPath,
+      queryContainer,
+      queryOptions
+    },
+    props
+  )
 }

@@ -62,7 +62,8 @@ export {
   userStateRegionsQueryContainer,
   userStateRegionMutationContainer,
   userStateRegionSetPropertyThenMutationContainer,
-  userStateRegionsActiveQueryContainer
+  userStateRegionsActiveQueryContainer,
+  getPathOnResolvedUserRegionAndQuery
 } from './stores/userStores/userScopeStores/userStateRegionStore.js';
 
 export {
@@ -73,7 +74,8 @@ export {
   userStateProjectsQueryContainer,
   userStateProjectMutationContainer,
   userStateProjectSetPropertyThenMutationContainer,
-  userStateProjectsActiveQueryContainer
+  userStateProjectsActiveQueryContainer,
+  getPathOnResolvedUserProjectAndQuery
 } from './stores/userStores/userScopeStores/userStateProjectStore.js';
 export {
   userStateProjectOutputParams

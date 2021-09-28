@@ -10,6 +10,7 @@
  */
 
 import {
+  getPathOnResolvedUserRegionAndQuery,
   userStateRegionMutationContainer, userStateRegionsActiveQueryContainer,
   userStateRegionsQueryContainer
 } from './userStateRegionStore.js';
@@ -21,7 +22,7 @@ import {
   expectKeysAtPath,
   mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
-  mapToNamedResponseAndInputs,
+  mapToNamedResponseAndInputs, reqStrPathThrowing,
   strPathOr
 } from '@rescapes/ramda';
 import {testAuthTask} from '../../../helpers/testHelpers.js';
@@ -30,7 +31,7 @@ import {
   currentUserStateQueryContainer,
   userStateMutationContainer,
   userStateMutateOutputParams,
-  userStateOutputParamsOnlyIds
+  userStateOutputParamsOnlyIds, userScopeOutputParamsOnlyIds
 } from '../userStateStore.js';
 import {
   createUserRegionWithDefaults, mutateSampleUserStateWithProjectsAndRegionsContainer
@@ -39,6 +40,8 @@ import moment from 'moment';
 import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample.js';
 import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
 import {regionOutputParamsMinimized} from '../../scopeStores/region/regionStore.js';
+import {getPathOnResolvedUserScopeInstanceAndQuery} from "./userStateHelpers.js";
+import {querySearchLocationsContainer} from "../../search/searchLocation/searchLocationStore.js";
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
@@ -293,4 +296,49 @@ describe('userRegionStore', () => {
         }
     }, errors, done));
   }, 100000);
+
+  test('getPathOnResolvedUserRegionQuery', done => {
+    const errors = [];
+    composeWithChain([
+      // Filter for projects where the geojson.type is 'FeatureCollection'
+      // This forces a separate query on Projects so we can filter by Project
+      ({apolloConfig, userState, regions}) => {
+        return getPathOnResolvedUserRegionAndQuery(
+          apolloConfig, {
+            getPath: 'userSearch.userSearchLocations.searchLocation',
+            queryContainer: querySearchLocationsContainer
+          },
+          {userState, region: regions[0]}
+        )
+      },
+      // Set the UserState, returns previous values and {userState, projects, regions}
+      // where project and region are scope instances of userState
+      mapToMergedResponseAndInputs(
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig, {forceDleete: true}, {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila', 'pangea'],
+              searchLocationNames: ['search me', 'i am innocent'],
+            });
+        }
+      ),
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => {
+          return testAuthTask()
+        }
+      )
+    ])({}).run().listen(defaultRunConfig({
+      onResolved:
+        response => {
+          expect(R.length(reqStrPathThrowing('data.searchLocations', response))).toEqual(2);
+        }
+    }, errors, done));
+  }, 10000);
 });

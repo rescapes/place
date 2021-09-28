@@ -891,7 +891,11 @@ export const getPathOnResolvedUserScopeInstanceAndQuery = (
   )
   return queryContainer(
     composeFuncAtPathIntoApolloConfig(
-      apolloConfig,
+      R.merge(
+        apolloConfig,
+        // Skip if we didn't get idObjects
+        {options: {skip: !idObjects}},
+      ),
       'options.variables',
       props => {
         // TODO it might be desirable to merge props in here so that the caller could pass

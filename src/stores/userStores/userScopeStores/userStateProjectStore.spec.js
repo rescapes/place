@@ -9,7 +9,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {userStateProjectMutationContainer, userStateProjectsQueryContainer} from './userStateProjectStore.js';
+import {
+  getPathOnResolvedUserProjectAndQuery,
+  userStateProjectMutationContainer,
+  userStateProjectsQueryContainer
+} from './userStateProjectStore.js';
 import {userStateProjectOutputParams} from './userStateProjectStoreHelpers.js'
 import {
   composeWithChain,
@@ -40,6 +44,8 @@ import {
   projectsQueryContainer
 } from '../../scopeStores/project/projectStore.js';
 import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample.js';
+import {getPathOnResolvedUserRegionAndQuery} from "./userStateRegionStore.js";
+import {querySearchLocationsContainer} from "../../search/searchLocation/searchLocationStore.js";
 
 describe('userProjectStore', () => {
   test('userProjectsQueryContainer', done => {
@@ -330,4 +336,49 @@ describe('userProjectStore', () => {
         }
     }, errors, done));
   }, 100000);
+
+  test('getPathOnResolvedUserProjectQuery', done => {
+    const errors = [];
+    composeWithChain([
+      // Filter for projects where the geojson.type is 'FeatureCollection'
+      // This forces a separate query on Projects so we can filter by Project
+      ({apolloConfig, userState, projects}) => {
+        return getPathOnResolvedUserProjectAndQuery(
+          apolloConfig, {
+            getPath: 'userSearch.userSearchLocations.searchLocation',
+            queryContainer: querySearchLocationsContainer
+          },
+          {userState, project: projects[0]}
+        )
+      },
+      // Set the UserState, returns previous values and {userState, projects, projects}
+      // where project and project are scope instances of userState
+      mapToMergedResponseAndInputs(
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig, {forceDleete: true}, {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila', 'pangea'],
+              searchLocationNames: ['search me', 'i am innocent'],
+            });
+        }
+      ),
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => {
+          return testAuthTask()
+        }
+      )
+    ])({}).run().listen(defaultRunConfig({
+      onResolved:
+        response => {
+          expect(R.length(reqStrPathThrowing('data.searchLocations', response))).toEqual(2);
+        }
+    }, errors, done));
+  }, 10000);
 });

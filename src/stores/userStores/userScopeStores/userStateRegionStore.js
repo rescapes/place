@@ -14,6 +14,7 @@ import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
 import {regionsQueryContainer} from '../../scopeStores/region/regionStore.js';
 import {
+  getPathOnResolvedUserScopeInstanceAndQuery,
   userScopeOrNullAndProps,
   userStateScopeObjsMutationContainer,
   userStateScopeObjsQueryContainer
@@ -43,26 +44,26 @@ import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeSto
  * @returns {Object} The resulting User Regions in a Task in {data: usersRegions: [...]}}
  */
 export const userStateRegionsQueryContainer = v(R.curry(
-  (apolloConfig, {userStateRegionOutputParams}, propSets) => {
-    const scopeName = 'region';
-    return userStateScopeObjsQueryContainer(
-      apolloConfig,
-      {
-        scopeQueryContainer: regionsQueryContainer,
-        scopeName,
-        readInputTypeMapper: userStateReadInputTypeMapper,
-        userStateOutputParamsCreator: userScopeOutputParams => {
-          return userStateOutputParamsCreator(
-            userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
-          );
+    (apolloConfig, {userStateRegionOutputParams}, propSets) => {
+      const scopeName = 'region';
+      return userStateScopeObjsQueryContainer(
+        apolloConfig,
+        {
+          scopeQueryContainer: regionsQueryContainer,
+          scopeName,
+          readInputTypeMapper: userStateReadInputTypeMapper,
+          userStateOutputParamsCreator: userScopeOutputParams => {
+            return userStateOutputParamsCreator(
+              userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+            );
+          },
+          // Default to the user state params with only ids for the regions. This prevents an extra query to
+          // load the region data
+          userScopeOutputParams: userStateRegionOutputParams,
         },
-        // Default to the user state params with only ids for the regions. This prevents an extra query to
-        // load the region data
-        userScopeOutputParams: userStateRegionOutputParams,
-      },
-      renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
-    );
-  }),
+        renameKey(R.lensPath([]), 'userRegion', 'userScope', propSets)
+      );
+    }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['outputParamSets', PropTypes.shape({
@@ -100,7 +101,10 @@ export const userStateRegionsQueryContainer = v(R.curry(
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
  */
-export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {userRegionOutputParams, normalizeUserStatePropsForMutating=normalizeDefaultUserStatePropsForMutating}, propSets) => {
+export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {
+    userRegionOutputParams,
+    normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating
+  }, propSets) => {
     const scopeName = 'region';
     return userStateScopeObjsMutationContainer(
       apolloConfig,
@@ -197,4 +201,36 @@ export const userStateRegionsActiveQueryContainer = (
 ) => {
   const userRegion = {activity: {isActive: true}}
   return userStateRegionsQueryContainer(apolloConfig, {userStateRegionOutputParams}, R.merge(propSets, {userRegion}))
+}
+
+/**
+ * Convenience wrapper around getPathOnResolvedUserScopeInstanceAndQuery for regions
+ * @param apolloConfig
+ * @param userRegionOutputParams
+ * @param getPath
+ * @param queryContainer
+ * @param queryOptions
+ * @param props
+ * @returns {Task|Object}
+ */
+export const getPathOnResolvedUserRegionAndQuery = (
+  apolloConfig, {
+    getPath, queryContainer, queryOptions
+  }, props
+) => {
+  return getPathOnResolvedUserScopeInstanceAndQuery(
+    apolloConfig, {
+      scopeName: 'region',
+      // Assume the userState is at propPath
+      userStatePropPath:  'userState',
+      // propSets needs to either contain a userRegion at 'userRegion' or a region at 'region'
+      // We don't have a valid mutation container until then
+      userScopeInstancePropPath: 'userRegion',
+      scopeInstancePropPath: 'region',
+      getPath,
+      queryContainer,
+      queryOptions
+    },
+    props
+  )
 }
