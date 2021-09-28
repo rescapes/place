@@ -846,6 +846,7 @@ export const getPathOnResolvedUserScopeInstance = (
 
 /***
  * Gets related instance ids th
+ * @param {Object} apolloConfig
  * @param {Object} config
  * @param {String} config.scopeName Required scope name 'region' for userRegions or 'project' for userProjects
  * @param {String} config.userStatePropPath Required propSets path to the userState, e.g. 'userState'
@@ -872,7 +873,6 @@ export const getPathOnResolvedUserScopeInstanceAndQuery = (
     getPath,
     queryContainer,
     queryOptions = {},
-    outputParams
   },
   props
 ) => {
