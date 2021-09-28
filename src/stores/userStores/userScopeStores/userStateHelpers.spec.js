@@ -278,7 +278,7 @@ describe('userStateHelpers', () => {
       data: {
         userRegions: [
           {region: {id: 1, foo: {id: 1, turnip: 'radish'}, smileys: [{id: 1, carrot: 'sauce'}, {id: 2, carrot: 'stick'}]}},
-          {region: {id: 2, foo: {id: 2}}, smileys: [{id: 5, carrot: 'eyes'}, {id: 8, carrot: 'nose'}]}
+          {region: {id: 2, foo: {id: 2, turnip: 'parsnip'}}, smileys: [{id: 5, carrot: 'eyes'}, {id: 8, carrot: 'nose'}]}
         ]
       }
     };
@@ -287,13 +287,18 @@ describe('userStateHelpers', () => {
 
     // Using scopeInstancePropPath
     const found = getPathOnResolvedUserScopeInstance({
+      // Means search userState.data.userRegions
       scopeName: 'region',
+      // Means get userState from props.userState
       userStatePropPath: 'userState',
+      // Means match userState.data.userRegions.region.id with props.region.id
       scopeInstancePropPath: 'region',
-      getPath: 'foo',
+      // Means fetch region.foo from the single matched userStater.data.userRegions
+      getPath: 'region.foo',
+      // Means get turnip in addition to id from foo
       getProps: ['turnip']
     }, {userState, region, fooData});
-    expect(found).toEqual(R.view(R.lensPath(['region', 'foo']), userState.data.userRegions[1]))
+    expect(found).toEqual([R.view(R.lensPath(['region', 'foo']), userState.data.userRegions[1])])
 
     // Using userScopeInstancePropPath
     const foundAgain = getPathOnResolvedUserScopeInstance({
@@ -303,10 +308,10 @@ describe('userStateHelpers', () => {
       getPath: 'smileys',
       getProps: ['carrot']
     }, {userState, userRegion: {region}, fooData});
-    expect(foundAgain).toEqual(R.view(R.lensProp('smileys'), fooData, userState.data.userRegions[1]))
+    expect(foundAgain).toEqual(R.view(R.lensProp('smileys'), userState.data.userRegions[1]))
 
     // If we are missing the given region
-    const notFound = setPathOnResolvedUserScopeInstance({
+    const notFound = getPathOnResolvedUserScopeInstance({
       scopeName: 'region',
       userStatePropPath: 'userState',
       userScopeInstancePropPath: 'userRegion',
@@ -317,7 +322,7 @@ describe('userStateHelpers', () => {
 
 
     // If we are missing something in propSets
-    const notReady = setPathOnResolvedUserScopeInstance({
+    const notReady = getPathOnResolvedUserScopeInstance({
       scopeName: 'region',
       userStatePropPath: 'userState',
       userScopeInstancePropPath: 'userRegion',

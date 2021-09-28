@@ -28,7 +28,7 @@ import {
   mapTaskOrComponentToNamedResponseAndInputs,
   mergeCacheable,
   omitClientFields,
-  relatedObjectsToIdForm,
+  updateRelatedObjectsToIdForm,
   versionOutputParamsMixin
 } from '@rescapes/apollo';
 import {v} from '@rescapes/validate';
@@ -479,7 +479,7 @@ export const normalizeUserStatePropsForMutating = (
 ) => {
   return R.compose(
     // Make sure related objects only have an id
-    userState => relatedObjectsToIdForm(
+    userState => updateRelatedObjectsToIdForm(
       {relatedPropPaths, relatedPropPathsToAllowedFields},
       userState
     ),

@@ -43,8 +43,7 @@ import {
 } from '../../userStores/userStateStore.js';
 import {inspect} from "util";
 import {isResolvePropPathForAllSets} from "@rescapes/ramda"
-import {relatedObjectsToIdForm} from "@rescapes/apollo/src/helpers/requestHelpers.js";
-const {mapped, over} = 'ramdaLens';
+import {getPathObjects} from "@rescapes/apollo/src/helpers/requestHelpers.js";
 
 /**
  * returns userState.data.user[Project|Region]` based on scopeName = 'project' \ 'region'
@@ -816,12 +815,13 @@ export const getPathOnResolvedUserScopeInstance = (
       return R.when(
         R.identity,
         userScope => {
-          return relatedObjectsToIdForm(
+          return getPathObjects(
             {
-              relatedPropPaths: [getPath],
-              relatedPropPathsToAllowedFields: {[getPath]: getProps}
+              propPath: getPath,
+              allowedFields: getProps
             },
-            userScope)
+            userScope
+          )
         }
       )(userScope)
     },

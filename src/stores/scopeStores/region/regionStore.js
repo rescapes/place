@@ -17,7 +17,7 @@ import {
   filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
   makeQueryContainer,
-  relatedObjectsToIdForm,
+  updateRelatedObjectsToIdForm,
   versionOutputParamsMixin
 } from '@rescapes/apollo';
 import {v} from '@rescapes/validate';
@@ -116,7 +116,7 @@ export const regionsQueryContainer = v(R.curry((apolloConfig, {outputParams}, pr
 export const normalizeRegionPropsForMutating = region => {
   return R.compose(
     // Make sure related objects only have an id
-    region => relatedObjectsToIdForm({relatedPropPaths: RELATED_PROPS}, region),
+    region => updateRelatedObjectsToIdForm({relatedPropPaths: RELATED_PROPS}, region),
     region => filterOutNullDeleteProps(region),
     region => filterOutReadOnlyVersionProps(region)
   )(region);

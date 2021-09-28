@@ -32,7 +32,7 @@
     "publish-minor": "yarn version --minor && yarn publish --non-interactive"
   },
   "dependencies": {
-    "@apollo/client": "^3.4.13",
+    "@apollo/client": "^3.4.15",
     "@mapbox/geo-viewport": "^0.5.0",
     "@turf/bbox": "^6.5.0",
     "@turf/bbox-polygon": "^6.5.0",
@@ -56,7 +56,7 @@
     "request": "^2.88.2"
   },
   "devDependencies": {
-    "@rescapes/apollo": "^0.1.573",
+    "@rescapes/apollo": "^0.1.582",
     "@rescapes/geospatial-sankey": "^0.7.62",
     "@rescapes/helpers": "^1.1.127",
     "@rescapes/log": "^0.1.30",
@@ -77,8 +77,8 @@
     "file-loader": "6.2.0",
     "fs-extra": "10.0.0",
     "graphql": "^15.6.0",
-    "jest": "27.2.2",
-    "jest-cli": "^27.2.1",
+    "jest": "27.2.3",
+    "jest-cli": "^27.2.3",
     "jsdoc-babel": "^0.5.0",
     "jsdom": "^17.0.0",
     "localstorage-polyfill": "^1.0.1",
