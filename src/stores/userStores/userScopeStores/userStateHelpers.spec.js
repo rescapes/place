@@ -1,5 +1,5 @@
 import {
-  findUserScopeInstance, getPathOnResolvedUserScopeInstance,
+  findUserScopeInstance, getPathOnResolvedUserScopeInstance, getPathOnResolvedUserScopeInstanceAndQuery,
   matchingUserStateScopeInstance,
   matchingUserStateScopeInstances,
   setPathOnResolvedUserScopeInstance,
@@ -27,6 +27,7 @@ import {
   userStateOutputParamsCreator,
   userStateReadInputTypeMapper
 } from '../userStateStore.js';
+import {querySearchLocationsContainer} from "../../search/searchLocation/searchLocationStore.js";
 
 describe('userStateHelpers', () => {
   const userState = {
@@ -277,8 +278,17 @@ describe('userStateHelpers', () => {
     const userState = {
       data: {
         userRegions: [
-          {region: {id: 1, foo: {id: 1, turnip: 'radish'}, smileys: [{id: 1, carrot: 'sauce'}, {id: 2, carrot: 'stick'}]}},
-          {region: {id: 2, foo: {id: 2, turnip: 'parsnip'}}, smileys: [{id: 5, carrot: 'eyes'}, {id: 8, carrot: 'nose'}]}
+          {
+            region: {
+              id: 1,
+              foo: {id: 1, turnip: 'radish'},
+              smileys: [{id: 1, carrot: 'sauce'}, {id: 2, carrot: 'stick'}]
+            }
+          },
+          {
+            region: {id: 2, foo: {id: 2, turnip: 'parsnip'}},
+            smileys: [{id: 5, carrot: 'eyes'}, {id: 8, carrot: 'nose'}]
+          }
         ]
       }
     };
@@ -331,4 +341,53 @@ describe('userStateHelpers', () => {
     }, {userState})
     expect(notReady).toEqual(null);
   })
+
+  test('getPathOnResolvedUserScopeInstanceAndQuery', done => {
+    const errors = [];
+    const someProjectKeys = ['id', 'key', 'name'];
+    composeWithChain([
+      // Filter for projects where the geojson.type is 'FeatureCollection'
+      // This forces a separate query on Projects so we can filter by Project
+      ({apolloConfig, userState, projects}) => {
+        return getPathOnResolvedUserScopeInstanceAndQuery(
+          apolloConfig, {
+            scopeName: 'project',
+            userStatePropPath: 'userState',
+            scopeInstancePropPath: 'projects.0',
+            getPath: 'userSearch.userSearchLocations.searchLocation',
+            queryContainer: querySearchLocationsContainer
+          },
+          {userState, projects}
+        )
+      },
+      // Set the UserState, returns previous values and {userState, projects, regions}
+      // where project and region are scope instances of userState
+      mapToMergedResponseAndInputs(
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig, {forceDleete: true}, {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila', 'pangea'],
+              searchLocationNames: ['search me', 'i am innocent'],
+            });
+        }
+      ),
+      mapToNamedPathAndInputs('user', 'data.currentUser',
+        ({apolloConfig}) => {
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
+        }
+      ),
+      mapToNamedResponseAndInputs('apolloConfig',
+        () => {
+          return testAuthTask()
+        }
+      )
+    ])({}).run().listen(defaultRunConfig({
+      onResolved:
+        response => {
+          expect(R.length(reqStrPathThrowing('data.searchLocations', response))).toEqual(2);
+        }
+    }, errors, done));
+  }, 10000);
 });

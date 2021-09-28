@@ -119,7 +119,8 @@ export {
   userStateScopeObjsQueryContainer,
   userScopeFromProps,
   setPathOnResolvedUserScopeInstance,
-  getPathOnResolvedUserScopeInstance
+  getPathOnResolvedUserScopeInstance,
+  getPathOnResolvedUserScopeInstanceAndQuery
 } from './stores/userStores/userScopeStores/userStateHelpers.js';
 
 export {activityOutputParamsMixin, isActive} from './stores/userStores/activityStore.js';
