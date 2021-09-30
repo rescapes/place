@@ -63,7 +63,7 @@ export {
   userStateRegionMutationContainer,
   userStateRegionSetPropertyThenMutationContainer,
   userStateRegionsActiveQueryContainer,
-  getPathOnResolvedUserRegionAndQuery
+  queryAndMergeUserRegionRelatedInstancesContainer
 } from './stores/userStores/userScopeStores/userStateRegionStore.js';
 
 export {
@@ -75,7 +75,7 @@ export {
   userStateProjectMutationContainer,
   userStateProjectSetPropertyThenMutationContainer,
   userStateProjectsActiveQueryContainer,
-  getPathOnResolvedUserProjectAndQuery
+  queryAndMergeInUserProjectRelatedInstancesContainer
 } from './stores/userStores/userScopeStores/userStateProjectStore.js';
 export {
   userStateProjectOutputParams
@@ -117,13 +117,8 @@ export {
   matchingUserStateScopeInstance,
   findUserScopeInstance,
   userScopeOrNullAndProps,
-  userStateScopeObjsMutationContainer,
-  userStateScopeObjsQueryContainer,
-  userScopeFromProps,
-  setPathOnResolvedUserScopeInstance,
-  getPathOnResolvedUserScopeInstance,
-  getPathOnResolvedUserScopeInstanceAndQuery
-} from './stores/userStores/userScopeStores/userStateHelpers.js';
+  userScopeFromProps
+} from './stores/userStores/userScopeStores/userScopeHelpers.js';
 
 export {activityOutputParamsMixin, isActive} from './stores/userStores/activityStore.js';
 export {selectionOutputParamsFragment, isSelected} from './stores/userStores/selectionStore.js';
@@ -142,3 +137,9 @@ export {
 
 export {deleteSearchLocationsContainer, querySearchLocationsContainer, makeSearchLocationMutationContainer, RELATED_PROPS, searchLocationReadInputTypeMapper} from './stores/search/searchLocation/searchLocationStore.js'
 export {defaultSearchLocationOutputParams, defaultSearchLocationOutputParamsMinimized} from './stores/search/searchLocation/defaultSearchLocationOutputParams.js'
+export {queryUserScopeRelatedInstancesContainer, queryAndMergeInUserScopeRelatedInstancesContainer
+} from "./stores/userStores/userScopeStores/userScopeStore.js";
+export {userStateScopeObjsQueryContainer} from "./stores/userStores/userScopeStores/userScopeStore.js";
+export {userStateScopeObjsMutationContainer} from "./stores/userStores/userScopeStores/userScopeStore.js";
+export {setPathOnResolvedUserScopeInstance} from "./stores/userStores/userScopeStores/userScopeHelpers.js";
+export {getPathOnResolvedUserScopeInstances} from "./stores/userStores/userScopeStores/userScopeHelpers.js";

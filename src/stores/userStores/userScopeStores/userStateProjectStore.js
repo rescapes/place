@@ -14,11 +14,8 @@ import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
 import {projectsQueryContainer} from '../../scopeStores/project/projectStore.js';
 import {
-  getPathOnResolvedUserScopeInstanceAndQuery,
-  userScopeOrNullAndProps,
-  userStateScopeObjsMutationContainer,
-  userStateScopeObjsQueryContainer
-} from './userStateHelpers.js';
+  userScopeOrNullAndProps
+} from './userScopeHelpers.js';
 import {
   normalizeDefaultUserStatePropsForMutating,
   userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
@@ -27,7 +24,11 @@ import {
 } from '../userStateStore.js';
 import {renameKey} from '@rescapes/ramda';
 import {userStateProjectOutputParams} from './userStateProjectStoreHelpers.js'
-import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeStore.js";
+import {
+  queryAndMergeInUserScopeRelatedInstancesContainer,
+  queryUserScopeRelatedInstancesContainer, userStateScopeObjsMutationContainer, userStateScopeObjsQueryContainer,
+  userStateScopeObjsSetPropertyThenMutationContainer
+} from "./userScopeStore.js";
 import {regionsQueryContainer} from "../../scopeStores/region/regionStore.js";
 
 // Variables of complex input type needs a type specified in graphql. Our type names are
@@ -222,18 +223,19 @@ export const userStateProjectsActiveQueryContainer = (
  * Convenience wrapper around getPathOnResolvedUserScopeInstanceAndQuery for projects
  * @param apolloConfig
  * @param {Object} config
- * @param config.getPath
+ * @param {String} config.userScopePath Path to the userScope object from userProject, such as 'userSearch.userSearchLocations'
+ * @param {String} config.instancePath Path to the instance in the userScope object, e.g. 'searchLocation'
  * @param config.queryContainer
  * @param config.queryOptions
  * @param props
  * @returns {Task|Object}
  */
-export const getPathOnResolvedUserProjectAndQuery = (
+export const queryAndMergeInUserProjectRelatedInstancesContainer = (
   apolloConfig, {
-    getPath, queryContainer, queryOptions
+    userScopePath, instancePath, queryContainer, queryOptions
   }, props
 ) => {
-  return getPathOnResolvedUserScopeInstanceAndQuery(
+  return queryAndMergeInUserScopeRelatedInstancesContainer(
     apolloConfig, {
       scopeName: 'project',
       // Assume the userState is at propPath
@@ -242,7 +244,8 @@ export const getPathOnResolvedUserProjectAndQuery = (
       // We don't have a valid mutation container until then
       userScopeInstancePropPath: 'userRegion',
       scopeInstancePropPath: 'project',
-      getPath,
+      userScopePath,
+      instancePath,
       queryContainer,
       queryOptions
     },

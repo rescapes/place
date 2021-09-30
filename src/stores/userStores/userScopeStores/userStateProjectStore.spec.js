@@ -10,7 +10,7 @@
  */
 
 import {
-  getPathOnResolvedUserProjectAndQuery,
+  queryAndMergeInUserProjectRelatedInstancesContainer,
   userStateProjectMutationContainer,
   userStateProjectsQueryContainer
 } from './userStateProjectStore.js';
@@ -44,7 +44,6 @@ import {
   projectsQueryContainer
 } from '../../scopeStores/project/projectStore.js';
 import {createSampleLocationsContainer} from '../../scopeStores/location/locationStore.sample.js';
-import {getPathOnResolvedUserRegionAndQuery} from "./userStateRegionStore.js";
 import {querySearchLocationsContainer} from "../../search/searchLocation/searchLocationStore.js";
 
 describe('userProjectStore', () => {
@@ -343,9 +342,9 @@ describe('userProjectStore', () => {
       // Filter for projects where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Projects so we can filter by Project
       ({apolloConfig, userState, projects}) => {
-        return getPathOnResolvedUserProjectAndQuery(
+        return queryAndMergeInUserProjectRelatedInstancesContainer(
           apolloConfig, {
-            getPath: 'userSearch.userSearchLocations.searchLocation',
+            userScopeInstancesPath: 'userSearch.userSearchLocations.searchLocation',
             queryContainer: querySearchLocationsContainer
           },
           {userState, project: projects[0]}

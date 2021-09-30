@@ -14,11 +14,8 @@ import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
 import {regionsQueryContainer} from '../../scopeStores/region/regionStore.js';
 import {
-  getPathOnResolvedUserScopeInstanceAndQuery,
-  userScopeOrNullAndProps,
-  userStateScopeObjsMutationContainer,
-  userStateScopeObjsQueryContainer
-} from './userStateHelpers.js';
+  userScopeOrNullAndProps
+} from './userScopeHelpers.js';
 import {
   normalizeDefaultUserStatePropsForMutating,
   userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
@@ -26,7 +23,11 @@ import {
   userStateReadInputTypeMapper
 } from '../userStateStore.js';
 import {renameKey} from '@rescapes/ramda';
-import {userStateScopeObjsSetPropertyThenMutationContainer} from "./userScopeStore.js";
+import {
+  queryAndMergeInUserScopeRelatedInstancesContainer,
+  queryUserScopeRelatedInstancesContainer, userStateScopeObjsMutationContainer, userStateScopeObjsQueryContainer,
+  userStateScopeObjsSetPropertyThenMutationContainer
+} from "./userScopeStore.js";
 
 
 /**
@@ -207,18 +208,19 @@ export const userStateRegionsActiveQueryContainer = (
  * Convenience wrapper around getPathOnResolvedUserScopeInstanceAndQuery for regions
  * @param apolloConfig
  * @param userRegionOutputParams
- * @param getPath
+ * @param {String} userScopePath Path to the userScope object from userRegion, such as 'userSearch.userSearchLocations'
+ * @param {String} instancePath Path to the instance in the userScope object, e.g. 'searchLocation'
  * @param queryContainer
  * @param queryOptions
  * @param props
  * @returns {Task|Object}
  */
-export const getPathOnResolvedUserRegionAndQuery = (
+export const queryAndMergeUserRegionRelatedInstancesContainer = (
   apolloConfig, {
-    getPath, queryContainer, queryOptions
+    userScopePath, instancePath, queryContainer, queryOptions
   }, props
 ) => {
-  return getPathOnResolvedUserScopeInstanceAndQuery(
+  return queryAndMergeInUserScopeRelatedInstancesContainer(
     apolloConfig, {
       scopeName: 'region',
       // Assume the userState is at propPath
@@ -227,7 +229,8 @@ export const getPathOnResolvedUserRegionAndQuery = (
       // We don't have a valid mutation container until then
       userScopeInstancePropPath: 'userRegion',
       scopeInstancePropPath: 'region',
-      getPath,
+      userScopePath,
+      instancePath,
       queryContainer,
       queryOptions
     },

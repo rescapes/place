@@ -10,7 +10,7 @@
  */
 
 import {
-  getPathOnResolvedUserRegionAndQuery,
+  queryAndMergeUserRegionRelatedInstancesContainer,
   userStateRegionMutationContainer, userStateRegionsActiveQueryContainer,
   userStateRegionsQueryContainer
 } from './userStateRegionStore.js';
@@ -19,7 +19,7 @@ import {
   composeWithChain,
   composeWithChainMDeep,
   defaultRunConfig,
-  expectKeysAtPath,
+  expectKeysAtPath, hasStrPath,
   mapToMergedResponseAndInputs,
   mapToNamedPathAndInputs,
   mapToNamedResponseAndInputs, reqStrPathThrowing,
@@ -40,8 +40,8 @@ import moment from 'moment';
 import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.sample.js';
 import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
 import {regionOutputParamsMinimized} from '../../scopeStores/region/regionStore.js';
-import {getPathOnResolvedUserScopeInstanceAndQuery} from "./userStateHelpers.js";
 import {querySearchLocationsContainer} from "../../search/searchLocation/searchLocationStore.js";
+import {queryUserScopeRelatedInstancesContainer} from "./userScopeStore.js";
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
@@ -297,15 +297,16 @@ describe('userRegionStore', () => {
     }, errors, done));
   }, 100000);
 
-  test('getPathOnResolvedUserRegionQuery', done => {
+  test('queryAndMergeUserRegionInstancesContainer', done => {
     const errors = [];
     composeWithChain([
       // Filter for projects where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Projects so we can filter by Project
       ({apolloConfig, userState, regions}) => {
-        return getPathOnResolvedUserRegionAndQuery(
+        return queryAndMergeUserRegionRelatedInstancesContainer(
           apolloConfig, {
-            getPath: 'userSearch.userSearchLocations.searchLocation',
+            userScopePath: 'userSearch.userSearchLocations',
+            instancePath: 'searchLocation',
             queryContainer: querySearchLocationsContainer
           },
           {userState, region: regions[0]}
@@ -338,6 +339,8 @@ describe('userRegionStore', () => {
       onResolved:
         response => {
           expect(R.length(reqStrPathThrowing('data.searchLocations', response))).toEqual(2);
+          // Make search the searchLocations got merged data from the instance queries
+          expect(hasStrPath('data.searchLocations.0.searchLocation.geojson', response)).toBeTruthy()
         }
     }, errors, done));
   }, 10000);
