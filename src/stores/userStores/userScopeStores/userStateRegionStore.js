@@ -215,7 +215,7 @@ export const userStateRegionsActiveQueryContainer = (
  * @param props
  * @returns {Task|Object}
  */
-export const queryAndMergeUserRegionRelatedInstancesContainer = (
+export const queryAndMergeInUserRegionRelatedInstancesContainer = (
   apolloConfig, {
     userScopePath, instancePath, queryContainer, queryOptions
   }, props

@@ -10,7 +10,7 @@
  */
 
 import {
-  queryAndMergeUserRegionRelatedInstancesContainer,
+  queryAndMergeInUserRegionRelatedInstancesContainer,
   userStateRegionMutationContainer, userStateRegionsActiveQueryContainer,
   userStateRegionsQueryContainer
 } from './userStateRegionStore.js';
@@ -303,7 +303,7 @@ describe('userRegionStore', () => {
       // Filter for projects where the geojson.type is 'FeatureCollection'
       // This forces a separate query on Projects so we can filter by Project
       ({apolloConfig, userState, regions}) => {
-        return queryAndMergeUserRegionRelatedInstancesContainer(
+        return queryAndMergeInUserRegionRelatedInstancesContainer(
           apolloConfig, {
             userScopePath: 'userSearch.userSearchLocations',
             instancePath: 'searchLocation',

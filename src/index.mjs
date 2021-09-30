@@ -63,7 +63,7 @@ export {
   userStateRegionMutationContainer,
   userStateRegionSetPropertyThenMutationContainer,
   userStateRegionsActiveQueryContainer,
-  queryAndMergeUserRegionRelatedInstancesContainer
+  queryAndMergeInUserRegionRelatedInstancesContainer
 } from './stores/userStores/userScopeStores/userStateRegionStore.js';
 
 export {
