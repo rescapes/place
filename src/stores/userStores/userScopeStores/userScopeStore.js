@@ -824,7 +824,7 @@ export const queryAndMergeInUserScopeRelatedInstancesContainer = (
         return containerForApolloType(apolloConfig,
           {
             render: getRenderPropFunction(props),
-            instancesResponse
+            response: instancesResponse
           }
         )
       }
