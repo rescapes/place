@@ -815,7 +815,7 @@ export const queryAndMergeInUserScopeRelatedInstancesContainer = (
     },
     props
   );
-  const idInstances = R.map(reqStrPathThrowing(instancePath), userScopeObjects)
+  const idInstances = userScopeObjects ? R.map(reqStrPathThrowing(instancePath), userScopeObjects) : null;
 
   return composeWithComponentMaybeOrTaskChain([
     ({instancesResponse, ...props}) => {

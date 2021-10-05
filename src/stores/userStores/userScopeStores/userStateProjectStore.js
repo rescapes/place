@@ -226,24 +226,31 @@ export const userStateProjectsActiveQueryContainer = (
  * @param {String} config.userScopePath Path to the userScope object from userProject, such as 'userSearch.userSearchLocations'
  * @param {String} config.instancePath Path to the instance in the userScope object, e.g. 'searchLocation'
  * @param config.queryContainer
- * @param config.queryOptions
+ * @param {Function} config.queryContainer
+ * @param {Object} config.queryOptions
+ * @param {String} config.userStatePropPath
+ * @param {String} config.userScopeInstancePropPath
+ * @param {String} config.scopeInstancePropPath
  * @param props
  * @returns {Task|Object}
  */
 export const queryAndMergeInUserProjectRelatedInstancesContainer = (
   apolloConfig, {
-    userScopePath, instancePath, queryContainer, queryOptions
+    userScopePath, instancePath, queryContainer, queryOptions,
+    userStatePropPath='userState',
+    userScopeInstancePropPath='userProject',
+    scopeInstancePropPath='project',
   }, props
 ) => {
   return queryAndMergeInUserScopeRelatedInstancesContainer(
     apolloConfig, {
       scopeName: 'project',
       // Assume the userState is at propPath
-      userStatePropPath:  'userState',
+      userStatePropPath,
       // propSets needs to either contain a userRegion at 'userRegion' or a project at 'project'
       // We don't have a valid mutation container until then
-      userScopeInstancePropPath: 'userRegion',
-      scopeInstancePropPath: 'project',
+      userScopeInstancePropPath,
+      scopeInstancePropPath,
       userScopePath,
       instancePath,
       queryContainer,

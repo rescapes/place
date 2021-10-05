@@ -207,28 +207,34 @@ export const userStateRegionsActiveQueryContainer = (
 /**
  * Convenience wrapper around getPathOnResolvedUserScopeInstanceAndQuery for regions
  * @param apolloConfig
- * @param userRegionOutputParams
- * @param {String} userScopePath Path to the userScope object from userRegion, such as 'userSearch.userSearchLocations'
- * @param {String} instancePath Path to the instance in the userScope object, e.g. 'searchLocation'
- * @param queryContainer
- * @param queryOptions
- * @param props
+ * @param {Object} config
+ * @param {String} config.userScopePath Path to the userScope object from userRegion, such as 'userSearch.userSearchLocations'
+ * @param {String} config.instancePath Path to the instance in the userScope object, e.g. 'searchLocation'
+ * @param {Function} config.queryContainer
+ * @param {Object} config.queryOptions
+ * @param {String} config.userStatePropPath
+ * @param {String} config.userScopeInstancePropPath
+ * @param {String} config.scopeInstancePropPath
+ * @param {Object} props
  * @returns {Task|Object}
  */
 export const queryAndMergeInUserRegionRelatedInstancesContainer = (
   apolloConfig, {
-    userScopePath, instancePath, queryContainer, queryOptions
+    userScopePath, instancePath, queryContainer, queryOptions,
+    userStatePropPath='userState',
+    userScopeInstancePropPath='userRegion',
+    scopeInstancePropPath='region',
   }, props
 ) => {
   return queryAndMergeInUserScopeRelatedInstancesContainer(
     apolloConfig, {
       scopeName: 'region',
       // Assume the userState is at propPath
-      userStatePropPath:  'userState',
+      userStatePropPath,
       // propSets needs to either contain a userRegion at 'userRegion' or a region at 'region'
       // We don't have a valid mutation container until then
-      userScopeInstancePropPath: 'userRegion',
-      scopeInstancePropPath: 'region',
+      userScopeInstancePropPath,
+      scopeInstancePropPath,
       userScopePath,
       instancePath,
       queryContainer,
