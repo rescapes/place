@@ -671,13 +671,13 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
       // Fetch the current userState if not passed in
       propSets => {
         return R.ifElse(
-          propSets => strPathOr(false, 'userState', propSets),
+          propSets => strPathOr(false, userStatePropPath, propSets),
           propSets => {
             return containerForApolloType(
               apolloConfig,
               {
                 render: getRenderPropFunction(propSets),
-                response: {data: {userStates: [reqStrPathThrowing('userState', propSets)]}}
+                response: {data: {userStates: [reqStrPathThrowing(userStatePropPath, propSets)]}}
               }
             );
           },
