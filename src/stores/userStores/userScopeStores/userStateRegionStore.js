@@ -146,7 +146,10 @@ export const userStateRegionSetPropertyThenMutationContainer = v((apolloConfig, 
     normalizeUserStatePropsForMutating,
     userRegionOutputParams,
     setPath,
-    setPropPath
+    setPropPath,
+    userStatePropPath,
+    userScopeInstancePropPath,
+    scopeInstancePropPath,
   }, propSets) => {
     return userStateScopeObjsSetPropertyThenMutationContainer(
       apolloConfig, {
@@ -154,11 +157,11 @@ export const userStateRegionSetPropertyThenMutationContainer = v((apolloConfig, 
         userScopeOutputParams: userRegionOutputParams,
         scopeQueryContainer: regionsQueryContainer,
         normalizeUserStatePropsForMutating,
-        userStatePropPath: 'userState',
+        userStatePropPath: userStatePropPath || 'userState',
         // propSets needs to either contain a userRegion at 'userRegion' or a region at 'region'
         // We don't have a valid mutation container until then
-        userScopeInstancePropPath: 'userRegion',
-        scopeInstancePropPath: 'region',
+        userScopeInstancePropPath: userScopeInstancePropPath || 'userRegion',
+        scopeInstancePropPath: scopeInstancePropPath || 'region',
         setPath,
         setPropPath,
       },
