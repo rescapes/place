@@ -223,7 +223,7 @@ export const queryAndMergeInUserRegionRelatedInstancesContainer = (
     userScopePath, instancePath, queryContainer, queryOptions,
     userStatePropPath='userState',
     userScopeInstancePropPath='userRegion',
-    scopeInstancePropPath='region',
+    scopeInstancePropPath,
   }, props
 ) => {
   return queryAndMergeInUserScopeRelatedInstancesContainer(
