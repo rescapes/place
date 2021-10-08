@@ -815,12 +815,12 @@ export const queryAndMergeInUserScopeRelatedInstancesContainer = (
     },
     props
   );
-  const idInstances = userScopeObjects ? R.map(reqStrPathThrowing(instancePath), userScopeObjects) : null;
+  const idInstances = userScopeObjects ? R.map(reqStrPathThrowing(instancePath), userScopeObjects) : [];
 
   return composeWithComponentMaybeOrTaskChain([
     ({instancesResponse, ...props}) => {
       // Return the response unless data is loaded
-      if (R.any(prop => R.prop(prop, instancesResponse), ['loading', 'error'])) {
+      if (R.any(prop => R.prop(prop, instancesResponse), ['loading', 'error', 'skip'])) {
         return containerForApolloType(apolloConfig,
           {
             render: getRenderPropFunction(props),
