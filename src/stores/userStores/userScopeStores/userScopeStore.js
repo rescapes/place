@@ -815,7 +815,9 @@ export const queryAndMergeInUserScopeRelatedInstancesContainer = (
     },
     props
   );
-  const idInstances = userScopeObjects ? R.map(reqStrPathThrowing(instancePath), userScopeObjects) : [];
+  const idInstances = userScopeObjects ?
+    R.map(reqStrPathThrowing(instancePath), userScopeObjects) :
+    [];
 
   return composeWithComponentMaybeOrTaskChain([
     ({instancesResponse, ...props}) => {
@@ -863,7 +865,7 @@ export const queryAndMergeInUserScopeRelatedInstancesContainer = (
             R.merge(
               apolloConfig,
               // Skip if we didn't get idObjects
-              {options: {skip: !idInstances}},
+              {options: {skip: !R.length(idInstances)}},
             ),
             'options.variables',
             props => {
