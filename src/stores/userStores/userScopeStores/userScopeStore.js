@@ -404,6 +404,8 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
  * @param {Function} [options.normalizeUserStatePropsForMutating] Default normalizeDefaultUserStatePropsForMutating. UserState normalization function
  * @param {Function} options.scopeQueryContainer Task querying the scope class, such as regionsQueryContainer
  * @param {String} options.scopeName The name of the scope, such as 'region' or 'project'
+ * @[aram {String} [options.userStatePropPath] Default 'userState', path in the props to the userState, e.g.
+ * 'queryCurrentUserState.data.userStates.0'
  * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
  * and returning output parameters for each the scope class query. If don't have to query scope seperately
  * then scopeOutputParams is passed to this. Otherwise we just was ['id'] since that's all the initial query needs
@@ -430,10 +432,12 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
        scopeName,
        readInputTypeMapper,
        userStateOutputParamsCreator,
-       userScopeOutputParams
+       userScopeOutputParams,
+       userStatePropPath='userState'
      },
-     {userState, userScope, render, ...props}) => {
+     {userScope, render, ...props}) => {
 
+      const userState = strPathOr(null, userStatePropPath, props)
       if (!userScope) {
         return userStateMutationContainer(
           // Skip if we don't have the variable ready
@@ -442,9 +446,10 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
             outputParams: userStateOutputParamsCreator(
               userScopeOutputParams
             ),
-            normalizeUserStatePropsForMutating
+            normalizeUserStatePropsForMutating,
+            userStatePropPath
           },
-          {userState: null, render, ...props}
+          {render, ...props}
         );
       }
 
@@ -568,14 +573,6 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
     }).isRequired
     ],
     ['props', PropTypes.shape({
-      userState: PropTypes.shape({
-        user: PropTypes.shape({
-          id: PropTypes.oneOfType([
-            PropTypes.string,
-            PropTypes.number
-          ])
-        })
-      }),
       // Not required when setting up mutation
       userScope: PropTypes.shape({})
     })]
@@ -651,6 +648,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
             );
           },
           userScopeOutputParams,
+          userStatePropPath
         },
         R.merge(_props, {
           // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
@@ -663,7 +661,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
             // These mean set the value of the user scopeInstance[...setPath...]. from propSets[..setPropPath...]
             setPath,
             setPropPath
-          }, _props)
+          }, _props),
         })
       )
     },

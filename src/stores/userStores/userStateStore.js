@@ -44,7 +44,7 @@ import {
   projectReadInputTypeMapper
 } from '../scopeStores/project/projectStore.js';
 import {
-  capitalize,
+  capitalize, hasStrPath,
   mergeDeep,
   pathOr,
   pickDeepPaths,
@@ -504,6 +504,7 @@ export const normalizeUserStatePropsForMutating = (
  * @param {Object} mutationConfig
  * @param {Object} mutationConfig.outputParams OutputParams for the query of the mutation
  * @param {Function} [mutationConfig.normalizeUserStatePropsForMutating] Defaults to normalizeDefaultUserStatePropsForMutating
+ * @param {String} [mutationConfig.userStatePropPath] Default 'userState', The prop path to the userState
  * Normalization function for userStateProps. If overriding make sure to include the logic in the default
  * @param {Object} props Object matching the shape of a userState for the create or update
  * @param {Object} [props.userState] Object matching the shape of a userState for the create or update.
@@ -514,7 +515,11 @@ export const normalizeUserStatePropsForMutating = (
  */
 export const userStateMutationContainer = v(R.curry((
     apolloConfig,
-    {outputParams, normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating},
+    {
+      outputParams,
+      normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating,
+      userStatePropPath='userState'
+    },
     props
   ) => {
     return makeMutationRequestContainer(
@@ -560,17 +565,7 @@ export const userStateMutationContainer = v(R.curry((
           return composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables',
             props => {
               // If the userState is specified use it, otherwise assume the userState props are at the top-level
-              const userState = R.ifElse(
-                R.has('userState'),
-                R.prop('userState'),
-                R.omit(['render', 'children'])
-              )(props);
-              // If it's null, we'll skip the request, but set to {} so other filtering works.
-              return R.ifElse(
-                R.isNil,
-                () => ({}),
-                normalizeUserStatePropsForMutating
-              )(userState);
+              return strPathOr(null, userStatePropPath, props)
             }
           )
         }
