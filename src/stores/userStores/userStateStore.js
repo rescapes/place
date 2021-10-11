@@ -477,6 +477,10 @@ export const normalizeUserStatePropsForMutating = (
   },
   userState
 ) => {
+  // If we don't have a userState and are skipping the mutation, return without doing anything
+  if (!userState) {
+    return userState
+  }
   return R.compose(
     // Make sure related objects only have an id
     userState => updateRelatedObjectsToIdForm(
