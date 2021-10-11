@@ -632,6 +632,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
           {
             options: {
               variables: props => {
+                const userState = strPathOr(null, userStatePropPath, props);
                 return normalizeUserStatePropsForMutating(props)
               }
             }
