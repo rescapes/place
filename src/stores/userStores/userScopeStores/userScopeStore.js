@@ -457,7 +457,6 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
       return composeWithComponentMaybeOrTaskChain([
         // If there is a match with what the caller is submitting, update it, else add it
         nameComponent('userStateMutation', userScopeObjsResponse => {
-
             // If we are in a loading or error state, return the response without proceeding
             if (R.any(prop => R.prop(prop, userScopeObjsResponse), ['loading', 'error'])) {
               return containerForApolloType(
@@ -627,17 +626,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
       // Update/Set userState to the response or what was passed in
       const _props = R.merge(props, {userState: reqStrPathThrowing('data.userStates.0', userStateResponse)})
       return userStateScopeObjsMutationContainer(
-        R.merge(
-          apolloConfig,
-          {
-            options: {
-              variables: props => {
-                const userState = strPathOr(null, userStatePropPath, props);
-                return normalizeUserStatePropsForMutating(userState)
-              }
-            }
-          }
-        ),
+        apolloConfig,
         {
           normalizeUserStatePropsForMutating,
           scopeQueryContainer,
