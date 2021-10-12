@@ -565,7 +565,8 @@ export const userStateMutationContainer = v(R.curry((
           return composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables',
             props => {
               // If the userState is specified use it, otherwise assume the userState props are at the top-level
-              return strPathOr(null, userStatePropPath, props)
+              const userState = strPathOr(null, userStatePropPath, props)
+              return normalizeUserStatePropsForMutating(userState)
             }
           )
         }
