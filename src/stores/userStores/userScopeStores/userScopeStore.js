@@ -14,13 +14,14 @@ import {
 } from "./userScopeHelpers.js";
 import * as R from 'ramda'
 import {
+  capitalize,
   compact,
   eqStrPath,
   flattenObj,
   mergeDeep,
   mergeDeepAll,
   pathOr,
-  pickDeepPaths,
+  pickDeepPaths, renameKey,
   reqPathThrowing,
   reqStrPathThrowing,
   strPathOr
@@ -433,7 +434,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
        readInputTypeMapper,
        userStateOutputParamsCreator,
        userScopeOutputParams,
-       userStatePropPath='userState'
+       userStatePropPath = 'userState'
      },
      {userScope, render, ...props}) => {
 
@@ -822,24 +823,37 @@ export const queryAndMergeInUserScopeRelatedInstancesContainer = (
       const idToUserScopeObj = R.indexBy(reqPathThrowing([instancePath, 'id']), userScopeObjects)
       // Assume the response.data has just one key it with the responses
       const responseCollectionKey = R.head(R.keys(R.prop('data', instancesResponse)))
-      const modifidResponse =  R.over(
-        R.lensPath(['data', responseCollectionKey]),
-        instances => {
-          return R.map(
-            instance => {
-              return mergeDeep(
-                // userScopeObject
-                R.prop(R.prop('id', instance), idToUserScopeObj),
-                // place the full instance at userScopeObject[instancePath], preserving cache only data
-                // that might be at userScopeObject[instancePath]
-                {[instancePath]: instance}
-              )
-            },
-            instances
+      const modifidResponse = R.compose(
+        instancesResponse => {
+          // Rename the key from responseCollectionKey to userResponseCollectionKey
+          return renameKey(
+            R.lensProp('data'),
+            responseCollectionKey,
+            `user${capitalize(responseCollectionKey)}`,
+            instancesResponse
           )
         },
-        instancesResponse
-      )
+        instancesResponse => {
+          return R.over(
+            R.lensPath(['data', responseCollectionKey]),
+            instances => {
+              return R.map(
+                instance => {
+                  return mergeDeep(
+                    // userScopeObject
+                    R.prop(R.prop('id', instance), idToUserScopeObj),
+                    // Place the full instance at userScopeObject[instancePath], preserving cache only data
+                    // that might be at userScopeObject[instancePath]
+                    {[instancePath]: instance}
+                  )
+                },
+                instances
+              )
+            },
+            instancesResponse
+          )
+        }
+      )(instancesResponse)
       return containerForApolloType(apolloConfig, {
         render: getRenderPropFunction(props),
         response: modifidResponse
