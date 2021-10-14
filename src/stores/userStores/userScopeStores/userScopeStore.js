@@ -618,8 +618,8 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
         !strPathOr(null, 'data', userStateResponse) ||
         !strPathOr(null, setPropPath, props) ||
         !strPathOr(null, userStatePropPath, props) ||
-        !(strPathOr(null, userScopeInstancePropPath, props) &&
-          strPathOr(null, scopeInstancePropPath, props)
+        (!strPathOr(null, userScopeInstancePropPath, props) &&
+          !strPathOr(null, scopeInstancePropPath, props)
         )
       ) {
         // Loading
