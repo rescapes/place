@@ -614,7 +614,14 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
 }, propSets) => {
   return composeWithComponentMaybeOrTaskChain([
     ({userStateResponse, ...props}) => {
-      if (!strPathOr(null, 'data', userStateResponse)) {
+      if (
+        !strPathOr(null, 'data', userStateResponse) ||
+        !strPathOr(null, setPropPath, props) ||
+        !strPathOr(null, userStatePropPath, props) ||
+        !(strPathOr(null, userScopeInstancePropPath, props) &&
+          strPathOr(null, scopeInstancePropPath, props)
+        )
+      ) {
         // Loading
         return containerForApolloType(
           apolloConfig,
