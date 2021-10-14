@@ -338,9 +338,9 @@ describe('userRegionStore', () => {
     ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expect(R.length(reqStrPathThrowing('data.searchLocations', response))).toEqual(2);
+          expect(R.length(reqStrPathThrowing('data.userSearchLocations', response))).toEqual(2);
           // Make search the searchLocations got merged data from the instance queries
-          expect(hasStrPath('data.searchLocations.0.searchLocation.geojson', response)).toBeTruthy()
+          expect(hasStrPath('data.userSearchLocations.0.searchLocation.geojson', response)).toBeTruthy()
         }
     }, errors, done));
   }, 10000);

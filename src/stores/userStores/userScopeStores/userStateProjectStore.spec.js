@@ -376,7 +376,7 @@ describe('userProjectStore', () => {
     ])({}).run().listen(defaultRunConfig({
       onResolved:
         response => {
-          expect(R.length(reqStrPathThrowing('data.searchLocations', response))).toEqual(2);
+          expect(R.length(reqStrPathThrowing('data.userSearchLocations', response))).toEqual(2);
         }
     }, errors, done));
   }, 10000);
