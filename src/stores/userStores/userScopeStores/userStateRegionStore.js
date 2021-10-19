@@ -142,15 +142,17 @@ export const userStateRegionMutationContainer = v(R.curry((apolloConfig, {
  * Convenience method for updating the property of a userRegion and then mutating
  * @type {(function(...[*]): *)|*}
  */
-export const userStateRegionSetPropertyThenMutationContainer = v((apolloConfig, {
-    normalizeUserStatePropsForMutating,
-    userRegionOutputParams,
-    setPath,
-    setPropPath,
-    userStatePropPath,
-    userScopeInstancePropPath,
-    scopeInstancePropPath,
-  }, propSets) => {
+export const userStateRegionSetPropertyThenMutationContainer = v((
+    apolloConfig, {
+      normalizeUserStatePropsForMutating,
+      userRegionOutputParams,
+      setPath,
+      setPropPath,
+      userStatePropPath,
+      userScopeInstancePropPath,
+      scopeInstancePropPath,
+    }, propSets
+  ) => {
     return userStateScopeObjsSetPropertyThenMutationContainer(
       apolloConfig, {
         scopeName: 'region',
@@ -224,8 +226,8 @@ export const userStateRegionsActiveQueryContainer = (
 export const queryAndMergeInUserRegionRelatedInstancesContainer = (
   apolloConfig, {
     userScopePath, instancePath, queryContainer, queryOptions,
-    userStatePropPath='userState',
-    userScopeInstancePropPath='userRegion',
+    userStatePropPath = 'userState',
+    userScopeInstancePropPath = 'userRegion',
     scopeInstancePropPath,
   }, props
 ) => {

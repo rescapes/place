@@ -398,6 +398,56 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
 ], 'queryScopeObjsOfUserStateContainer');
 
 
+// Operate on the userScope instances in useState
+const updateUserStateWithUserScope = ({userState, userScopeObjsResponse, userScope}) => {
+  const userScopeName = _userScopeName(scopeName);
+  // Find the userScopeObjs that we just queried for
+  // There might be none if nothing in our userState exists yet
+  const existingUserScopeObjs = strPathOr(null, `data.userStates.0.data.${userScopeName}`, userScopeObjsResponse);
+  return R.over(
+    R.lensPath(['data', userScopeName]),
+    (userScopeObjs = []) => {
+      // First merge userScope with what's in the given userState
+      const [existingUserScopeObjsById, userScopeObjsById, userScopeById] = R.map(
+        userScopeObjs => {
+          return R.compose(
+            userScopeObjs => R.indexBy(
+              userScopeObj => {
+                return reqPathThrowing(
+                  [scopeName, 'id'],
+                  userScopeObj
+                );
+              },
+              userScopeObjs
+            ),
+            userScopeObjs => R.map(
+              userScopeObj => {
+                // Modify the scope instance to only contain the id. We can't submit any changes to the scope instance
+                return R.over(
+                  R.lensProp(scopeName),
+                  scopeInstance => R.pick(['id'], scopeInstance),
+                  userScopeObj
+                );
+              },
+              userScopeObjs
+            )
+          )(userScopeObjs);
+        },
+        [existingUserScopeObjs || [], userScopeObjs || [], [userScope]]
+      );
+      // Merge deep all userScopeObjs. When matches exist prefer those in userState over existing,
+      // and prefer userScope over all.
+      const merged = mergeDeepAll([
+        existingUserScopeObjsById,
+        userScopeObjsById,
+        userScopeById
+      ]);
+      // Return the merged values
+      return R.values(merged);
+    }
+  )(userState)
+};
+
 /**
  * Mutates the given scope object (UserRegion, UserProject, etc) that are in the scope of the given user.
  * @param {Object} apolloClient The Apollo Client
@@ -454,90 +504,73 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
         );
       }
 
-      const userScopeName = _userScopeName(scopeName);
       return composeWithComponentMaybeOrTaskChain([
+        ({mutateUserState, userScopeObjsResponse, ...props}) => {
+          // Modify the mutation the update userState to the userScope if not done earlier
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction({render}),
+              response: R.over(
+                R.lensProp('mutation'),
+                mutation => {
+                  return ({userScope}) => {
+                    // If the user passes the userScope to the mutation, update the userState with it
+                    const userStateWithCreatedOrUpdatedScopeObj = R.when(() => userScope,
+                      updateUserStateWithUserScope({userState, userScopeObjsResponse, userScope})
+                    )(userState)
+                    // Call the mutation with the updated userState
+                    return mutation({userState: userStateWithCreatedOrUpdatedScopeObj})
+                  }
+                },
+                mutateUserState)
+            }
+          );
+        },
         // If there is a match with what the caller is submitting, update it, else add it
-        nameComponent('userStateMutation', userScopeObjsResponse => {
-            // If we are in a loading or error state, return the response without proceeding
-            if (R.any(prop => R.prop(prop, userScopeObjsResponse), ['loading', 'error'])) {
-              return containerForApolloType(
-                apolloConfig,
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'mutateUserState',
+          nameComponent('userStateMutation', userScopeObjsResponse => {
+              // If we are in a loading or error state, return the response without proceeding
+              if (R.any(prop => R.prop(prop, userScopeObjsResponse), ['loading', 'error'])) {
+                return containerForApolloType(
+                  apolloConfig,
+                  {
+                    render: getRenderPropFunction({render}),
+                    response: userScopeObjsResponse
+                  }
+                );
+              }
+
+              // Prop the userState with the new/updated userScope if already available. Otherwise this step is
+              // done in the mutation call then userScope is passed in
+              const userStateWithCreatedOrUpdatedScopeObj = R.when(() => userScope,
+                updateUserStateWithUserScope({userState, userScopeObjsResponse, userScope})
+              )(userState)
+
+              // Create a mutation container that saves changes to the userState
+              return userStateMutationContainer(
+                // Skip if we don't have the variable ready
+                R.over(
+                  R.lensPath(['options', 'skip']),
+                  skip => skip || R.complement(R.propOr)(false, 'data', userScopeObjsResponse),
+                  apolloConfig
+                ),
                 {
-                  render: getRenderPropFunction({render}),
-                  response: userScopeObjsResponse
+                  outputParams: userStateOutputParamsCreator(
+                    userScopeOutputParams
+                  ),
+                  normalizeUserStatePropsForMutating
+                },
+                {
+                  userState: userStateWithCreatedOrUpdatedScopeObj,
+                  render
                 }
               );
             }
-            // Find the userScopeObjs that we just queried for
-            // There might be none if nothing in our userState exists yet
-            const existingUserScopeObjs = strPathOr(null, `data.userStates.0.data.${userScopeName}`, userScopeObjsResponse);
-
-            // Operate on the userScope instances in useState
-            const userStateWithCreatedOrUpdatedScopeObj = R.over(
-              R.lensPath(['data', userScopeName]),
-              (userScopeObjs = []) => {
-                // First merge userScope with what's in the given userState
-                const [existingUserScopeObjsById, userScopeObjsById, userScopeById] = R.map(
-                  userScopeObjs => {
-                    return R.compose(
-                      userScopeObjs => R.indexBy(
-                        userScopeObj => {
-                          return reqPathThrowing(
-                            [scopeName, 'id'],
-                            userScopeObj
-                          );
-                        },
-                        userScopeObjs
-                      ),
-                      userScopeObjs => R.map(
-                        userScopeObj => {
-                          // Modify the scope instance to only contain the id. We can't submit any changes to the scope instance
-                          return R.over(
-                            R.lensProp(scopeName),
-                            scopeInstance => R.pick(['id'], scopeInstance),
-                            userScopeObj
-                          );
-                        },
-                        userScopeObjs
-                      )
-                    )(userScopeObjs);
-                  },
-                  [existingUserScopeObjs || [], userScopeObjs || [], [userScope]]
-                );
-                // Merge deep all userScopeObjs. When matches exist prefer those in userState over existing,
-                // and prefer userScope over all.
-                const merged = mergeDeepAll([
-                  existingUserScopeObjsById,
-                  userScopeObjsById,
-                  userScopeById
-                ]);
-                // Return the merged values
-                return R.values(merged);
-              }
-            )(userState);
-            // Save the changes to the userScope objs
-            return userStateMutationContainer(
-              // Skip if we don't have the variable ready
-              R.over(
-                R.lensPath(['options', 'skip']),
-                skip => skip || R.complement(R.propOr)(false, 'data', userScopeObjsResponse),
-                apolloConfig
-              ),
-              {
-                outputParams: userStateOutputParamsCreator(
-                  userScopeOutputParams
-                ),
-                normalizeUserStatePropsForMutating
-              },
-              {userState: userStateWithCreatedOrUpdatedScopeObj, render}
-            );
-          }
+          )
         ),
         // Query for userScopeObjs that match the userScope
-        nameComponent('queryUserScopeObjs',
-          ({
-             userState, userScope, render
-           }) => {
+        nameComponent('queryUserScopeObjs', ({userState, userScope, render}) => {
             // Query for the userScope instance by id to see if the userState already contains the userScope object
             // UserState defaults to the current user
             return userStateScopeObjsQueryContainer(
@@ -591,13 +624,16 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
  * @param {String} config.scopeInstancePropPath Required propSets path the the scope instance, e.g' 'region' or 'project'
  * @param {String} config.userScopeInstancePropPath Required propSets path the the scope instance, e.g' 'userRegion' or 'userProject'
  * @param {String | [String]} config.setPath Array or string path used to make a lens to set the value at propSets[setPropPath]
- * @param {String} config.setPropPath String path of value in propSets to use for setting
+ * @param {String} config.setPropPath String path of value in propSets to use for setting.
+ * The value props[...setPropPath...] doesn't need to exist until
+ * the mutation() function is called, at which point it must be passed in if
+ * it didn't previously exist in order to update the userScope to the desired values
  * @param {Function} [config.normalizeUserStatePropsForMutating] Default normalizeDefaultUserStatePropsForMutating.
  * apolloConfig.options.variables function to normalized the
  * userState, including the targeted user scope instance. This function must remove values in userState.data
  * instances not expected by the server, such as userState.data.userRegions[*].region.name (region should only
  * provide id)
- * @param propSets {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
+ * @param props {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
  * @returns {*}
  */
 export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig, {
@@ -611,44 +647,46 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
   scopeInstancePropPath,
   setPath,
   setPropPath
-}, propSets) => {
+}, props) => {
   return composeWithComponentMaybeOrTaskChain([
-    ({userStateResponse, ...props}) => {
-      if (
-        !strPathOr(null, 'data', userStateResponse) ||
-        !strPathOr(null, setPropPath, props) ||
-        !strPathOr(null, userStatePropPath, props) ||
-        (!strPathOr(null, userScopeInstancePropPath, props) &&
-          !strPathOr(null, scopeInstancePropPath, props)
-        )
-      ) {
-        // Loading
-        return containerForApolloType(
-          apolloConfig,
-          {
-            render: getRenderPropFunction(props),
-            response: userStateResponse
-          }
-        );
-      }
-      // Update/Set userState to the response or what was passed in
-      const _props = R.merge(props, {userState: reqStrPathThrowing('data.userStates.0', userStateResponse)})
-      return userStateScopeObjsMutationContainer(
+    ({userStateMutation, ...props}) => {
+      return containerForApolloType(
         apolloConfig,
         {
-          normalizeUserStatePropsForMutating,
-          scopeQueryContainer,
-          scopeName,
-          readInputTypeMapper: userStateReadInputTypeMapper,
-          userStateOutputParamsCreator: userScopeOutputParams => {
-            return userStateOutputParamsCreator(
-              userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
-            );
-          },
-          userScopeOutputParams,
-          userStatePropPath
-        },
-        R.merge(_props, {
+          render: getRenderPropFunction(props),
+          response: R.over(
+            R.lensProp('mutation'),
+            mutation => {
+              return props => {
+                return mutation(props)
+              }
+            },
+            userStateMutation
+          )
+        }
+      );
+    },
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateMutation',
+      ({userStateResponse, ...props}) => {
+        if (
+          !strPathOr(null, 'data', userStateResponse) ||
+          !strPathOr(null, userStatePropPath, props) ||
+          (!strPathOr(null, userScopeInstancePropPath, props) &&
+            !strPathOr(null, scopeInstancePropPath, props)
+          )
+        ) {
+          // Loading
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: userStateResponse
+            }
+          );
+        }
+        // Update/Set userState to the response or what was passed in
+        const propsWithUserState = R.merge(props, {userState: reqStrPathThrowing('data.userStates.0', userStateResponse)})
+        const propsWithUserStateAndUserScope = R.merge(propsWithUserState, {
           // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
           // The mutation will be set to skip if this resolves as null because of missing props
           userScope: setPathOnResolvedUserScopeInstance({
@@ -659,10 +697,28 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
             // These mean set the value of the user scopeInstance[...setPath...]. from propSets[..setPropPath...]
             setPath,
             setPropPath
-          }, _props),
+          }, propsWithUserState),
         })
-      )
-    },
+
+        return userStateScopeObjsMutationContainer(
+          apolloConfig,
+          {
+            normalizeUserStatePropsForMutating,
+            scopeQueryContainer,
+            scopeName,
+            readInputTypeMapper: userStateReadInputTypeMapper,
+            userStateOutputParamsCreator: userScopeOutputParams => {
+              return userStateOutputParamsCreator(
+                userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+              );
+            },
+            userScopeOutputParams,
+            userStatePropPath
+          },
+          propsWithUserStateAndUserScope
+        )
+      }
+    ),
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
       // Fetch the current userState if not passed in
       propSets => {
@@ -685,7 +741,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
         )(propSets)
       }
     )
-  ])(propSets);
+  ])(props);
 }
 
 /***

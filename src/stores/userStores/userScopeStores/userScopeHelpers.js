@@ -221,8 +221,11 @@ export const userScopeFromProps = (
  * @param {String} [config.scopeInstancePropPath] Required if userScopeInstancePropPath not given. propSets path to the scope instance, e.g' 'region' or 'project'
  * @param {String} [config.userScopeInstancePropPath] Required if scopeInstancePropPath not given. propSets path to the scope instance, e.g' 'userRegion' or 'userProject'
  * @param {String | [String]} config.setPath Array or string path used to make a lens to set the value at propSets[setPropPath]
- * @param {String} config.setPropPath String path of value in propSets to use for setting
- * @param propSets {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
+ * @param {String} config.setPropPath String path of value in propSets to use for setting.
+ * The corresponding prop value does not have to be available at this point, because
+ * it might be set by a user action that triggers the mutation. If the prop is defined
+ * we update the userScope to it.
+ * @param props {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
  * at scopeInstancePropPath or a user scope instance
  * @returns {Object} The resolved and user scope instance with setPath set to propSets[...setPropPath...]
  * If anything isn't available then null is returned
@@ -236,24 +239,25 @@ export const setPathOnResolvedUserScopeInstance = (
     setPath,
     setPropPath
   },
-  propSets) => {
+  props) => {
   // If any propPathSet doesn't have a corresponding value in propSets, return null.
   // This indicates a loading state or lack of selection by the user
-  if (!isResolvePropPathForAllSets(propSets, [
+  if (!isResolvePropPathForAllSets(props, [
     [userStatePropPath],
-    [setPropPath],
     [userScopeInstancePropPath, scopeInstancePropPath]]
   )) {
     return null;
   }
   return R.compose(
-    // Set setPath to the object at setPropPath if userScope was resolved
+    // Set setPath to the object at props[...setPropPath...] if userScope was resolved
+    // and the prop at setPropPath exists. It doesn't need to exist because it
+    // might be passed in directly to the mutation function
     userScope => {
       return R.when(
-        R.identity,
+        userScope => R.and(userScope, strPathOr(null, setPropPath, props)),
         userScope => R.set(
           R.lensPath(R.unless(Array.isArray, R.split('.'), setPath)),
-          reqStrPathThrowing(setPropPath, propSets),
+          reqStrPathThrowing(setPropPath, props),
           userScope
         )
       )(userScope)
@@ -267,7 +271,7 @@ export const setPathOnResolvedUserScopeInstance = (
       },
       propSets
     )
-  )(propSets)
+  )(props)
 }
 
 
