@@ -469,6 +469,8 @@ const updateUserStateWithUserScope = ({userState, userScopeObjsResponse, userSco
  * @param {Object} [props.userState.id] Either this or user.id can be used to identify the user
  * @param {Object} [props.userState.user.id]
  * @param {Object} props.userScope userRegion, userProject, etc. query to add/update in the userState.
+ * userScope will usually be passed directly to the mutation function, since userStateScopeObjsMutationContainer
+ * is called beforehand when the containers are called and the user edits a value in userScope in the components.
  * @param {Number} props.userScope.[region|project].id
  * Required id of the scope instance to add or update within userState.data[scope]
  * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {
@@ -505,12 +507,12 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
       }
 
       return composeWithComponentMaybeOrTaskChain([
-        ({mutateUserState, userScopeObjsResponse, ...props}) => {
-          // Modify the mutation the update userState to the userScope if not done earlier
+        ({mutateUserStateResponse, userScopeObjsResponse, ...props}) => {
+          // Modify the mutation to update userState to the userScope if not done earlier
           return containerForApolloType(
             apolloConfig,
             {
-              render: getRenderPropFunction({render}),
+              render: getRenderPropFunction(props),
               response: R.over(
                 R.lensProp('mutation'),
                 mutation => {
@@ -520,15 +522,15 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
                       updateUserStateWithUserScope({userState, userScopeObjsResponse, userScope})
                     )(userState)
                     // Call the mutation with the updated userState
-                    return mutation({userState: userStateWithCreatedOrUpdatedScopeObj})
+                    return mutation({userStateData: userStateWithCreatedOrUpdatedScopeObj})
                   }
                 },
-                mutateUserState)
+                mutateUserStateResponse)
             }
           );
         },
         // If there is a match with what the caller is submitting, update it, else add it
-        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'mutateUserState',
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'mutateUserStateResponse',
           nameComponent('userStateMutation', userScopeObjsResponse => {
               // If we are in a loading or error state, return the response without proceeding
               if (R.any(prop => R.prop(prop, userScopeObjsResponse), ['loading', 'error'])) {
