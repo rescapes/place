@@ -543,10 +543,10 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
         },
         // If there is a match with what the caller is submitting, update it, else add it
         mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'mutateUserStateResponse',
-          nameComponent('userStateMutation', ({userScopeObjsResponse, ...props}) => {
+          nameComponent('userStateMutation', ({userScopeObjsResponse, render, ...props}) => {
               // If we are in a loading or error state, return the response without proceeding
               if (R.any(prop => R.prop(prop, userScopeObjsResponse), ['loading', 'error'])) {
-                return skippedUserStateMutationContainer(props)
+                return skippedUserStateMutationContainer({render})
               }
 
               // Prep the userState with the new/updated userScope if already available. Otherwise this step is
