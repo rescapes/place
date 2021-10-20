@@ -543,10 +543,10 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
         },
         // If there is a match with what the caller is submitting, update it, else add it
         mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'mutateUserStateResponse',
-          nameComponent('userStateMutation', userScopeObjsResponse => {
+          nameComponent('userStateMutation', ({userScopeObjsResponse, ...props}) => {
               // If we are in a loading or error state, return the response without proceeding
               if (R.any(prop => R.prop(prop, userScopeObjsResponse), ['loading', 'error'])) {
-                return skippedUserStateMutationContainer({render, ...props})
+                return skippedUserStateMutationContainer(props)
               }
 
               // Prep the userState with the new/updated userScope if already available. Otherwise this step is
@@ -583,8 +583,9 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
             }
           )
         ),
-        // Query for userScopeObjs that match the userScope
-        nameComponent('queryUserScopeObjs', ({userState, userScope, render}) => {
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userScopeObjsResponse',
+          // Query for userScopeObjs that match the userScope
+          nameComponent('queryUserScopeObjs', ({userState, userScope, render}) => {
             // Query for the userScope instance by id to see if the userState already contains the userScope object
             // UserState defaults to the current user
             return userStateScopeObjsQueryContainer(
@@ -603,7 +604,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
                 render
               }
             );
-          }
+          })
         )
       ])(
         {userState: userState || {}, userScope, render, ...props}
