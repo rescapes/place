@@ -721,12 +721,17 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
           )
         ) {
           // Loading
-          return containerForApolloType(
-            apolloConfig,
+          return userStateMutationContainer(
+            // Skip if we don't have the variable ready
+            R.set(R.lensPath(['options', 'skip']), true, apolloConfig),
             {
-              render: getRenderPropFunction(props),
-              response: userStateResponse
-            }
+              outputParams: userStateOutputParamsCreator(
+                userScopeOutputParams
+              ),
+              normalizeUserStatePropsForMutating,
+              userStatePropPath
+            },
+            props
           );
         }
         // Update/Set userState to the response or what was passed in
