@@ -628,6 +628,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
     })]
   ], 'userStateScopeObjsMutationContainer');
 
+
 /***
  * Convenience method for mutating the userState after setting a property on a target userScope instance
  * For instance, a method can be made to set the {activity: isActive: true|false} of the targeted userRegion or
@@ -665,8 +666,26 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
   setPath,
   setPropPath
 }, props) => {
+
+  const propsWithSetUserScopePath = ({userStateResponse, ...props}) => {
+    const propsWithUserState = R.merge(props, {userState: reqStrPathThrowing('data.userStates.0', userStateResponse)})
+    return R.merge(propsWithUserState, {
+      // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
+      // The mutation will be set to skip if this resolves as null because of missing props
+      userScope: setPathOnResolvedUserScopeInstance({
+        scopeName,
+        userStatePropPath,
+        userScopeInstancePropPath,
+        scopeInstancePropPath,
+        // These mean set the value of the user scopeInstance[...setPath...]. from propSets[..setPropPath...]
+        setPath,
+        setPropPath
+      }, propsWithUserState),
+    })
+  }
+
   return composeWithComponentMaybeOrTaskChain([
-    ({userStateMutation, ...props}) => {
+    ({userStateResponse, userStateMutation, ...props}) => {
       return containerForApolloType(
         apolloConfig,
         {
@@ -674,8 +693,17 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
           response: R.over(
             R.lensProp('mutation'),
             mutation => {
-              return props => {
-                return mutation(props)
+              return mutationProps => {
+                // If the user passed the setPropPath props in to mutation, then use that
+                mutation(R.when(
+                  () => R.identity,
+                  () => {
+                    return propsWithSetUserScopePath(
+                      // Prefer the mutationProps version of setPropPath in
+                      {userStateResponse, ...R.merge(props, mutationProps)}
+                    )
+                  }
+                )(strPathOr(null, setPropPath, mutationProps)))
               }
             },
             userStateMutation
@@ -702,20 +730,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
           );
         }
         // Update/Set userState to the response or what was passed in
-        const propsWithUserState = R.merge(props, {userState: reqStrPathThrowing('data.userStates.0', userStateResponse)})
-        const propsWithUserStateAndUserScope = R.merge(propsWithUserState, {
-          // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
-          // The mutation will be set to skip if this resolves as null because of missing props
-          userScope: setPathOnResolvedUserScopeInstance({
-            scopeName,
-            userStatePropPath,
-            userScopeInstancePropPath,
-            scopeInstancePropPath,
-            // These mean set the value of the user scopeInstance[...setPath...]. from propSets[..setPropPath...]
-            setPath,
-            setPropPath
-          }, propsWithUserState),
-        })
+        const propsWithUserStateAndUserScope = propsWithSetUserScopePath({userStateResponse, ...props})
 
         return userStateScopeObjsMutationContainer(
           apolloConfig,
