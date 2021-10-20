@@ -41,7 +41,6 @@ import {createSampleRegionContainer} from '../../scopeStores/region/regionStore.
 import {currentUserQueryContainer, deleteItemsOfExistingResponses, userOutputParams} from '@rescapes/apollo';
 import {regionOutputParamsMinimized} from '../../scopeStores/region/regionStore.js';
 import {querySearchLocationsContainer} from "../../search/searchLocation/searchLocationStore.js";
-import {queryUserScopeRelatedInstancesContainer} from "./userScopeStore.js";
 
 describe('userRegionStore', () => {
   test('userRegionsQueryContainer', done => {
@@ -118,17 +117,17 @@ describe('userRegionStore', () => {
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       mapToMergedResponseAndInputs(
-      ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectsAndRegionsContainer(
-          apolloConfig,
-          {},
-          {
-            user: R.pick(['id'], user),
-            regionKeys: ['earth'],
-            projectKeys: ['shrangrila']
-          }
-        );
-      }),
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig,
+            {},
+            {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth'],
+              projectKeys: ['shrangrila']
+            }
+          );
+        }),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => {
           return currentUserQueryContainer(apolloConfig, userOutputParams, {});
@@ -155,22 +154,22 @@ describe('userRegionStore', () => {
         return userStateRegionsActiveQueryContainer(
           apolloConfig,
           {},
-            // UserState defaults to current. UserRegion will be set to {active: {isActive: true}
+          // UserState defaults to current. UserRegion will be set to {active: {isActive: true}
           {}
         );
       },
       // Set the UserState, returns previous values and {userState, project, region}
       // where project and region are scope instances of userState
       mapToMergedResponseAndInputs(
-      ({apolloConfig, user}) => {
-        return mutateSampleUserStateWithProjectsAndRegionsContainer(
-          apolloConfig,
-          {}, {
-          user: R.pick(['id'], user),
-          regionKeys: ['earth', 'mars'],
-          projectKeys: ['shrangrila']
-        });
-      }),
+        ({apolloConfig, user}) => {
+          return mutateSampleUserStateWithProjectsAndRegionsContainer(
+            apolloConfig,
+            {}, {
+              user: R.pick(['id'], user),
+              regionKeys: ['earth', 'mars'],
+              projectKeys: ['shrangrila']
+            });
+        }),
       mapToNamedPathAndInputs('user', 'data.currentUser',
         ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
       ),
@@ -189,7 +188,7 @@ describe('userRegionStore', () => {
     const errors = [];
     const regionKey = `testRegionKey${moment().format('HH-mm-ss-SSS')}`;
     const regionName = `TestRegionName${moment().format('HH-mm-ss-SSS')}`;
-    R.composeK(
+    composeWithChain([
       // Since this is a mutation, it's okay to not have a userRegion defined, but then we can't mutate
       mapToNamedResponseAndInputs('undefinedUserRegion',
         ({apolloConfig, userState, region}) => {
@@ -200,7 +199,7 @@ describe('userRegionStore', () => {
               userRegionOutputParams: userStateRegionOutputParams({})
             },
             {
-              userState,
+              userState: userState.result.data.mutate.userState,
               userRegion: null
             }
           );
@@ -288,14 +287,14 @@ describe('userRegionStore', () => {
       mapToNamedResponseAndInputs('apolloConfig',
         () => testAuthTask()
       )
-    )({}).run().listen(defaultRunConfig({
+    ])({}).run().listen(defaultRunConfig({
       onResolved:
-        ({region, userState, undefinedUserRegion}) => {
+        ({region, userState, undefinedUserRegion, userRegionWithMutationUpdates}) => {
           expect(strPathOr(null, 'result.data.updateUserState.userState.data.userRegions.0.region.id', userState)).toEqual(region.id);
           expect(R.propOr(false, 'skip', undefinedUserRegion)).toBeTruthy();
         }
     }, errors, done));
-  }, 100000);
+  }, 10000);
 
   test('queryAndMergeUserRegionInstancesContainer', done => {
     const errors = [];

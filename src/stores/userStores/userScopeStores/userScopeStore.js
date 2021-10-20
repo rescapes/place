@@ -399,7 +399,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
 
 
 // Operate on the userScope instances in useState
-const updateUserStateWithUserScope = ({userState, userScopeObjsResponse, userScope}) => {
+const updateUserStateWithUserScope = ({scopeName}, {userState, userScopeObjsResponse, userScope}) => {
   const userScopeName = _userScopeName(scopeName);
   // Find the userScopeObjs that we just queried for
   // There might be none if nothing in our userState exists yet
@@ -491,6 +491,8 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
      {userScope, render, ...props}) => {
 
       const userState = strPathOr(null, userStatePropPath, props)
+      // If userScope isn't ready then skip. We don't need the mutated userScope at this time,
+      // just the unedited value, including a new one without an id
       if (!userScope) {
         return userStateMutationContainer(
           // Skip if we don't have the variable ready
@@ -516,16 +518,23 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
               response: R.over(
                 R.lensProp('mutation'),
                 mutation => {
-                  return ({userScope}) => {
+                  return ({userScopeData}) => {
                     // If the user passes the userScope to the mutation, update the userState with it
-                    const userStateWithCreatedOrUpdatedScopeObj = R.when(() => userScope,
-                      updateUserStateWithUserScope({userState, userScopeObjsResponse, userScope})
-                    )(userState)
+                    const userScopeDataUpdated = R.when(
+                      () => userScope,
+                      userScope => {
+                        return updateUserStateWithUserScope(
+                          {scopeName},
+                          {userState, userScopeObjsResponse, userScope}
+                        )
+                      }
+                    )(userScopeData)
                     // Call the mutation with the updated userState
-                    return mutation({userStateData: userStateWithCreatedOrUpdatedScopeObj})
+                    return mutation({userStateData: userScopeDataUpdated})
                   }
                 },
-                mutateUserStateResponse)
+                mutateUserStateResponse
+              )
             }
           );
         },
@@ -543,10 +552,16 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
                 );
               }
 
-              // Prop the userState with the new/updated userScope if already available. Otherwise this step is
+              // Prep the userState with the new/updated userScope if already available. Otherwise this step is
               // done in the mutation call then userScope is passed in
-              const userStateWithCreatedOrUpdatedScopeObj = R.when(() => userScope,
-                updateUserStateWithUserScope({userState, userScopeObjsResponse, userScope})
+              const userStateWithCreatedOrUpdatedScopeObj = R.when(
+                () => userScope,
+                userState => {
+                  return updateUserStateWithUserScope(
+                    {scopeName},
+                    {userState, userScopeObjsResponse, userScope}
+                  )
+                }
               )(userState)
 
               // Create a mutation container that saves changes to the userState
