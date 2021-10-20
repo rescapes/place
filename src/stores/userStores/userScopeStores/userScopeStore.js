@@ -491,9 +491,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
      {userScope, render, ...props}) => {
 
       const userState = strPathOr(null, userStatePropPath, props)
-      // If userScope isn't ready then skip. We don't need the mutated userScope at this time,
-      // just the unedited value, including a new one without an id
-      if (!userScope) {
+      const skippedUserStateMutationContainer = props => {
         return userStateMutationContainer(
           // Skip if we don't have the variable ready
           R.set(R.lensPath(['options', 'skip']), true, apolloConfig),
@@ -504,8 +502,13 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
             normalizeUserStatePropsForMutating,
             userStatePropPath
           },
-          {render, ...props}
+          props
         );
+      }
+      // If userScope isn't ready then skip. We don't need the mutated userScope at this time,
+      // just the unedited value, including a new one without an id
+      if (!userScope) {
+        return skippedUserStateMutationContainer({render, ...props})
       }
 
       return composeWithComponentMaybeOrTaskChain([
@@ -543,13 +546,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
           nameComponent('userStateMutation', userScopeObjsResponse => {
               // If we are in a loading or error state, return the response without proceeding
               if (R.any(prop => R.prop(prop, userScopeObjsResponse), ['loading', 'error'])) {
-                return containerForApolloType(
-                  apolloConfig,
-                  {
-                    render: getRenderPropFunction({render}),
-                    response: userScopeObjsResponse
-                  }
-                );
+                return skippedUserStateMutationContainer({render, ...props})
               }
 
               // Prep the userState with the new/updated userScope if already available. Otherwise this step is
@@ -731,7 +728,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
               normalizeUserStatePropsForMutating,
               userStatePropPath
             },
-            props
+            R.pick(['render'], props)
           );
         }
         // Update/Set userState to the response or what was passed in
