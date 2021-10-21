@@ -704,10 +704,14 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
                 return mutation(R.when(
                   () => R.identity,
                   () => {
-                    return propsWithSetUserScopePath(
-                      // Prefer the mutationProps version of setPropPath in
-                      {userStateResponse, ...R.merge(props, mutationProps)}
-                    )
+                    return {
+                      // Use the setPropPath prop to create the userScope, which must be passed to the
+                      // mutation function as userScopeData.
+                      userScopeData: reqStrPathThrowing('userScope', propsWithSetUserScopePath(
+                        // Prefer the mutationProps version of setPropPath in
+                        {userStateResponse, ...R.merge(props, mutationProps)}
+                      ))
+                    }
                   }
                 )(strPathOr(null, setPropPath, mutationProps)))
               }
