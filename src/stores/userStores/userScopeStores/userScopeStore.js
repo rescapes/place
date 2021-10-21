@@ -697,7 +697,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
             mutation => {
               return mutationProps => {
                 // If the user passed the setPropPath props in to mutation, then use that
-                mutation(R.when(
+                return mutation(R.when(
                   () => R.identity,
                   () => {
                     return propsWithSetUserScopePath(
