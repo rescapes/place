@@ -541,7 +541,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
                       R.identity,
                       userScopeDataUpdated => mutation({userStateData: userScopeDataUpdated}),
                       () => mutation()
-                    )
+                    )(userScopeDataUpdated)
                   }
                 },
                 mutateUserStateResponse
