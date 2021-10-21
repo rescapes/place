@@ -471,6 +471,9 @@ const updateUserStateWithUserScope = ({scopeName}, {userState, userScopeObjsResp
  * @param {Object} props.userScope userRegion, userProject, etc. query to add/update in the userState.
  * userScope will usually be passed directly to the mutation function, since userStateScopeObjsMutationContainer
  * is called beforehand when the containers are called and the user edits a value in userScope in the components.
+ * When passed to the mutation function, it is named userScopeData to match the gql. Even thought it's passed via
+ * the mutation, it must be passed to this function in order to determine if it is an existing or new userScope
+ * by querying.
  * @param {Number} props.userScope.[region|project].id
  * Required id of the scope instance to add or update within userState.data[scope]
  * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {
@@ -521,10 +524,11 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
               response: R.over(
                 R.lensProp('mutation'),
                 mutation => {
+                  // The parameter crated by the mutation is userScopeData, but it's the same as the userScope
                   return ({userScopeData}) => {
                     // If the user passes the userScope to the mutation, update the userState with it
                     const userScopeDataUpdated = R.when(
-                      () => userScope,
+                      R.identity,
                       userScope => {
                         return updateUserStateWithUserScope(
                           {scopeName},
