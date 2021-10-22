@@ -16,8 +16,8 @@ import * as R from 'ramda'
 import {
   capitalize,
   compact,
-  eqStrPath,
-  flattenObj,
+  eqStrPath, filterWithKeys,
+  flattenObj, hasStrPath,
   mergeDeep,
   mergeDeepAll,
   pathOr,
@@ -398,54 +398,38 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
 ], 'queryScopeObjsOfUserStateContainer');
 
 
-// Operate on the userScope instances in useState
-const updateUserStateWithUserScope = ({scopeName}, {userState, userScopeObjsResponse, userScope}) => {
+/**
+ * Operate on the userScope instances in useState and remove all other userScopes. We don't ever want
+ * to mutate a userScope other than the given one
+ * @param {String} scopeName Either 'region' or 'project'
+ * @param {Object} userState The existing userState
+ * @param {Object} userScopeObjsResponse The response of the query for the existing userScope objects of the userState.
+ * The purpose of this is to find out if the given userScope already exists in the userState or not.
+ * TODO this is only needed when the userState wasn't specified to the calling function, which seems unlikely
+ * @param {Object} userScope The userScope object that is being added or updated in the userState. It is
+ * either a userRegion is scopeName is region or a userProject if scopeName is project
+ * @returns {Object} The userState limited to the single userScope instance and non-data properties.
+ * When the mutation occurs only this userScope will be updated and all others will be left alone by the server.
+ */
+const updateUserScopeAndLimitUserStateToIt = ({scopeName}, {userState, userScope}) => {
+  // userRegions or userProjects
   const userScopeName = _userScopeName(scopeName);
-  // Find the userScopeObjs that we just queried for
-  // There might be none if nothing in our userState exists yet
-  const existingUserScopeObjs = strPathOr(null, `data.userStates.0.data.${userScopeName}`, userScopeObjsResponse);
-  return R.over(
-    R.lensPath(['data', userScopeName]),
-    (userScopeObjs = []) => {
-      // First merge userScope with what's in the given userState
-      const [existingUserScopeObjsById, userScopeObjsById, userScopeById] = R.map(
-        userScopeObjs => {
-          return R.compose(
-            userScopeObjs => R.indexBy(
-              userScopeObj => {
-                return reqPathThrowing(
-                  [scopeName, 'id'],
-                  userScopeObj
-                );
-              },
-              userScopeObjs
-            ),
-            userScopeObjs => R.map(
-              userScopeObj => {
-                // Modify the scope instance to only contain the id. We can't submit any changes to the scope instance
-                return R.over(
-                  R.lensProp(scopeName),
-                  scopeInstance => R.pick(['id'], scopeInstance),
-                  userScopeObj
-                );
-              },
-              userScopeObjs
-            )
-          )(userScopeObjs);
-        },
-        [existingUserScopeObjs || [], userScopeObjs || [], [userScope]]
-      );
-      // Merge deep all userScopeObjs. When matches exist prefer those in userState over existing,
-      // and prefer userScope over all.
-      const merged = mergeDeepAll([
-        existingUserScopeObjsById,
-        userScopeObjsById,
-        userScopeById
-      ]);
-      // Return the merged values
-      return R.values(merged);
-    }
-  )(userState)
+  return R.compose(
+    userState => {
+      // Limit userState.data to just userScopeName
+      return R.over(R.lensProp('data'), data => R.pick([userScopeName], data), userState)
+    },
+    R.over(
+      R.lensPath(['data', userScopeName]),
+      userScopeObjs => {
+        // Ignore other userScopeObjs and just set userState.data[userRegions|userProjects] to [userScope]
+        // TODO we could merge userScope with its version already existing in userState, but I don't think
+        // we need to since we are only updating one scopeInstance of the userScope and leaving everything else
+        // alone
+        return [userScope]
+      },
+      userState
+    ))(userState)
 };
 
 /**
@@ -530,7 +514,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
                     const userScopeDataUpdated = R.when(
                       R.identity,
                       userScope => {
-                        return updateUserStateWithUserScope(
+                        return updateUserScopeAndLimitUserStateToIt(
                           {scopeName},
                           {userState, userScopeObjsResponse, userScope}
                         )
@@ -562,7 +546,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
               const userStateWithCreatedOrUpdatedScopeObj = R.when(
                 () => userScope,
                 userState => {
-                  return updateUserStateWithUserScope(
+                  return updateUserScopeAndLimitUserStateToIt(
                     {scopeName},
                     {userState, userScopeObjsResponse, userScope}
                   )
@@ -591,6 +575,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
             }
           )
         ),
+        // TODO can't we skp this if the userState is given? The userState should have all the userScopes in it
         mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userScopeObjsResponse',
           // Query for userScopeObjs that match the userScope
           nameComponent('queryUserScopeObjs', ({userState, userScope, render}) => {

@@ -15,7 +15,7 @@ import {
   hasStrPath,
   isResolvePropPathForAllSets,
   onlyOneThrowing,
-  pathOr,
+  pathOr, pickDeepPaths,
   renameKey,
   reqStrPathThrowing,
   strPathOr,
@@ -209,7 +209,10 @@ export const userScopeFromProps = (
 
 /***
  * Calls userScopeFromProps to resolve the user scope instance (userRegion or userProject)
- * and additionally adds the value propSets[...setPropPath...] * to userScope[...setPath...].
+ * and additionally adds the value props[...setPropPath...] * to userScope[...setPath...].
+ * If config.limitUserScopeToSetPropPath is true (default true) only paths setPath and scopeName are returned
+ * in the userScope. This prevents a mutation from passing userScope data that isn't updated
+ * and might be out of date if a mutation container was built with the userScope.
  * This method is used to create convenient API methods that set a given property of
  * user.data.userRegions|userProjects[x].[...setPath...] when the caller specifies the userState and current
  * region or project and the values to set. For instance, if a caller wanted to make a certain region the active region
@@ -225,6 +228,8 @@ export const userScopeFromProps = (
  * The corresponding prop value does not have to be available at this point, because
  * it might be set by a user action that triggers the mutation. If the prop is defined
  * we update the userScope to it.
+ * @param {Boolean} [config.limitUserScopeToSetPropPath] Default true. Limits the userScope to the scope instance
+ * and the setPath so that mutations don't use stale userScope data.
  * @param props {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
  * at scopeInstancePropPath or a user scope instance
  * @returns {Object} The resolved and user scope instance with setPath set to propSets[...setPropPath...]
@@ -237,7 +242,8 @@ export const setPathOnResolvedUserScopeInstance = (
     userScopeInstancePropPath,
     scopeInstancePropPath,
     setPath,
-    setPropPath
+    setPropPath,
+    limitUserScopeToSetPropPath=true
   },
   props) => {
   // If any propPathSet doesn't have a corresponding value in propSets, return null.
@@ -249,6 +255,15 @@ export const setPathOnResolvedUserScopeInstance = (
     return null;
   }
   return R.compose(
+    userScope => {
+      // Limit userScope to scopeName and setPath unless limitUserScopeToSetPropPath is set false
+      return R.when(
+        userScope => R.and(userScope, limitUserScopeToSetPropPath),
+        userScope => {
+          return pickDeepPaths([scopeName, setPath], userScope)
+        }
+      )(userScope)
+    },
     // Set setPath to the object at props[...setPropPath...] if userScope was resolved
     // and the prop at setPropPath exists. It doesn't need to exist because it
     // might be passed in directly to the mutation function

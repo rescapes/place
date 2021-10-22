@@ -121,13 +121,13 @@ describe('userStateHelpers', () => {
     const userState = {
       data: {
         userRegions: [
-          {region: {id: 1}},
-          {region: {id: 2}}
+          {region: {id: 1}, fiddles: [{fum: 1}, {fum: 2}], foo: {bill: 'kid'}},
+          {region: {id: 2}, fiddles: [{fum: 1}, {fum: 2}], foo: {billy: 'goat'}}
         ]
       }
     };
     const region = {id: 2};
-    const fooData = {foo: true}
+    const fooData = {billy: 'nanny'}
 
     // Using scopeInstancePropPath
     const found = setPathOnResolvedUserScopeInstance({
@@ -137,7 +137,7 @@ describe('userStateHelpers', () => {
       setPath: 'foo',
       setPropPath: 'fooData'
     }, {userState, region, fooData});
-    expect(found).toEqual(R.set(R.lensProp('foo'), fooData, userState.data.userRegions[1]))
+    expect(found).toEqual(R.set(R.lensProp('foo'), fooData, R.omit(['fiddles'], userState.data.userRegions[1])))
 
     // Using userScopeInstancePropPath
     const foundAgain = setPathOnResolvedUserScopeInstance({
@@ -147,7 +147,7 @@ describe('userStateHelpers', () => {
       setPath: 'foo',
       setPropPath: 'fooData'
     }, {userState, userRegion: {region}, fooData});
-    expect(foundAgain).toEqual(R.set(R.lensProp('foo'), fooData, userState.data.userRegions[1]))
+    expect(found).toEqual(R.set(R.lensProp('foo'), fooData, R.omit(['fiddles'], userState.data.userRegions[1])))
 
     // If we are missing the given region
     const notFound = setPathOnResolvedUserScopeInstance({
