@@ -419,17 +419,20 @@ const updateUserScopeAndLimitUserStateToIt = ({scopeName}, {userState, userScope
       // Limit userState.data to just userScopeName
       return R.over(R.lensProp('data'), data => R.pick([userScopeName], data), userState)
     },
-    R.over(
-      R.lensPath(['data', userScopeName]),
-      userScopeObjs => {
-        // Ignore other userScopeObjs and just set userState.data[userRegions|userProjects] to [userScope]
-        // TODO we could merge userScope with its version already existing in userState, but I don't think
-        // we need to since we are only updating one scopeInstance of the userScope and leaving everything else
-        // alone
-        return [userScope]
-      },
-      userState
-    ))(userState)
+    userState => {
+      return R.over(
+        R.lensPath(['data', userScopeName]),
+        userScopeObjs => {
+          // Ignore other userScopeObjs and just set userState.data[userRegions|userProjects] to [userScope]
+          // TODO we could merge userScope with its version already existing in userState, but I don't think
+          // we need to since we are only updating one scopeInstance of the userScope and leaving everything else
+          // alone
+          return [userScope]
+        },
+        userState
+      )
+    }
+  )(userState)
 };
 
 /**
