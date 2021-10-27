@@ -34,16 +34,6 @@ import {
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {
-  regionOutputParams,
-  regionOutputParamsMinimized,
-  regionReadInputTypeMapper
-} from '../scopeStores/region/regionStore.js';
-import {
-  projectOutputParams,
-  projectOutputParamsMinimized,
-  projectReadInputTypeMapper
-} from '../scopeStores/project/projectStore.js';
-import {
   capitalize, hasStrPath,
   mergeDeep, omitDeep,
   pathOr,
@@ -52,16 +42,26 @@ import {
   reqStrPathThrowing,
   strPathOr
 } from '@rescapes/ramda';
-import {selectionOutputParamsFragment} from './selectionStore.js';
-import {activityOutputParamsMixin} from './activityStore.js';
+import {selectionOutputParamsFragment} from '../selectionStore.js';
+import {activityOutputParamsMixin} from '../activityStore.js';
 import moment from 'moment';
-import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore.js";
+import {createUserSearchOutputParams} from "./userSearchStore.js";
 import {
   defaultSearchLocationOutputParams,
   defaultSearchLocationOutputParamsMinimized
-} from "../search/searchLocation/defaultSearchLocationOutputParams.js";
-import {userStateRegionOutputParams} from "./userScopeStores/userStateRegionStoreHelpers.js";
-import {userStateProjectOutputParams} from "./userScopeStores/userStateProjectStoreHelpers.js";
+} from "../../search/searchLocation/defaultSearchLocationOutputParams.js";
+import {userStateRegionOutputParams} from "./userStateRegionStoreHelpers.js";
+import {userStateProjectOutputParams} from "./userStateProjectStoreHelpers.js";
+import {
+  regionOutputParams,
+  regionOutputParamsMinimized,
+  regionReadInputTypeMapper
+} from "../../scopeStores/region/regionStore.js";
+import {
+  projectOutputParams,
+  projectOutputParamsMinimized,
+  projectReadInputTypeMapper
+} from "../../scopeStores/project/projectStore.js";
 
 
 // TODO should be derived from the remote schema

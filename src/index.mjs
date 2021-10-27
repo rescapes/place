@@ -137,9 +137,5 @@ export {
 
 export {deleteSearchLocationsContainer, querySearchLocationsContainer, makeSearchLocationMutationContainer, RELATED_PROPS, searchLocationReadInputTypeMapper} from './stores/search/searchLocation/searchLocationStore.js'
 export {defaultSearchLocationOutputParams, defaultSearchLocationOutputParamsMinimized} from './stores/search/searchLocation/defaultSearchLocationOutputParams.js'
-export {queryUserScopeRelatedInstancesContainer, queryAndMergeInUserScopeRelatedInstancesContainer
-} from "./stores/userStores/userScopeStores/userScopeStore.js";
-export {userStateScopeObjsQueryContainer} from "./stores/userStores/userScopeStores/userScopeStore.js";
-export {userStateScopeObjsMutationContainer} from "./stores/userStores/userScopeStores/userScopeStore.js";
 export {setPathOnResolvedUserScopeInstance} from "./stores/userStores/userScopeStores/userScopeHelpers.js";
 export {getPathOnResolvedUserScopeInstances} from "./stores/userStores/userScopeStores/userScopeHelpers.js";
