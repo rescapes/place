@@ -1,747 +1,983 @@
-/**
- * Created by Andy Likuski on 2018.12.31
- * Copyright (c) 2018 Andy Likuski
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
-import * as R from 'ramda';
 import {
-  addMutateKeyToMutationResponse,
-  callMutationNTimesAndConcatResponses,
-  composeFuncAtPathIntoApolloConfig,
-  composeWithComponentMaybeOrTaskChain,
-  containerForApolloType,
-  createCacheOnlyProps,
-  createReadInputTypeMapper,
-  currentUserQueryContainer,
-  filterOutNullDeleteProps,
-  filterOutReadOnlyVersionProps,
-  getRenderPropFunction,
-  makeCacheMutationContainer,
-  makeMutationRequestContainer,
-  makeQueryContainer,
-  mapTaskOrComponentToNamedResponseAndInputs,
-  mergeCacheable,
-  omitClientFields,
-  updateRelatedObjectsToIdForm,
-  versionOutputParamsMixin
-} from '@rescapes/apollo';
-import {v} from '@rescapes/validate';
-import PropTypes from 'prop-types';
+  currentUserStateQueryContainer,
+  normalizeDefaultUserStatePropsForMutating,
+  userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
+  userStateMutationContainer,
+  userStateOutputParamsCreator,
+  userStateReadInputTypeMapper
+} from "../userStateStore.js";
 import {
-  capitalize, hasStrPath,
-  mergeDeep, omitDeep,
+  _userScopeName,
+  getPathOnResolvedUserScopeInstances,
+  hasScopeParams,
+  setPathOnResolvedUserScopeInstance
+} from "./userScopeHelpers.js";
+import * as R from 'ramda'
+import {
+  capitalize,
+  compact,
+  eqStrPath, filterWithKeys,
+  flattenObj, hasStrPath,
+  mergeDeep,
+  mergeDeepAll,
   pathOr,
-  pickDeepPaths,
+  pickDeepPaths, renameKey,
   reqPathThrowing,
   reqStrPathThrowing,
   strPathOr
-} from '@rescapes/ramda';
-import {selectionOutputParamsFragment} from '../selectionStore.js';
-import {activityOutputParamsMixin} from '../activityStore.js';
-import moment from 'moment';
-import {createUserSearchOutputParams} from "./userSearchStore.js";
+} from "@rescapes/ramda";
 import {
-  defaultSearchLocationOutputParams,
-  defaultSearchLocationOutputParamsMinimized
-} from "../../search/searchLocation/defaultSearchLocationOutputParams.js";
-import {userStateRegionOutputParams} from "./userStateRegionStoreHelpers.js";
-import {userStateProjectOutputParams} from "./userStateProjectStoreHelpers.js";
-import {
-  regionOutputParams,
-  regionOutputParamsMinimized,
-  regionReadInputTypeMapper
-} from "../../scopeStores/region/regionStore.js";
-import {
-  projectOutputParams,
-  projectOutputParamsMinimized,
-  projectReadInputTypeMapper
-} from "../../scopeStores/project/projectStore.js";
-
-
-// TODO should be derived from the remote schema
-const RELATED_PROPS = ['user'];
-export const USER_STATE_RELATED_DATA_PROPS = [
-  'data.userRegions.region', 'data.userProjects.project',
-  // Although related, leave these out since we can create searchLocations when we save a user state
-  'data.userRegions.userSearch.userSearchLocations.searchLocation',
-  'data.userProjects.userSearch.userSearchLocations.searchLocation',
-];
-// User search locations can be saved with the following props when we mutate a userState
-export const USER_SEARCH_LOCATION_ALLOWED_PROPS = ['name', 'identification', 'street', 'jurisdictions', 'geojson', 'data']
-const USER_STATE_RELATED_DATA_PROPS_ALLOWED = {
-  'data.userRegions.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
-  'data.userProjects.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
-}
-
-// Variables of complex input type needs a type specified in graphql. Our type names are
-// always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
-// Following this location.data is represented as follows:
-// TODO These value should be derived from the schema
-export const userStateReadInputTypeMapper = createReadInputTypeMapper(
-  'userState', R.concat(['data'], RELATED_PROPS)
-);
-
-/***
- * userState data for scope objects (Project, Region, etc) output params fragment when we only want ids or
- * something custom.
- * The project property represents a single project and the other properties represent the relationship
- * between the user and the project. This can be properties that are stored on the server or only in cache.
- * @param {String} scopeName 'project' or 'region'
- * @param {Object} [userScopeOutputParams] Defaults to {activity: {isActive:1}} deep merged with {[scopeName]: {id: 1, deleted: 1}} We include deleted
- * for the odd case that the userState has maintained references to deleted scope instances. The Server
- * returns deleted instances when they are referenced.
- */
-export const userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds = (
-  scopeName,
-  userScopeOutputParams = {[scopeName]: {id: 1, deleted: 1}}) => {
-  const capitalized = capitalize((scopeName));
-  return {
-    [`user${capitalized}s`]: R.merge({
-        [scopeName]: mergeDeep(
-          {id: 1, deleted: 1},
-          R.propOr({}, scopeName, userScopeOutputParams)
-        ),
-        activity: {isActive: 1}
-      },
-      R.omit([scopeName], userScopeOutputParams)
-    )
-  };
-};
+  composeFuncAtPathIntoApolloConfig,
+  composeWithComponentMaybeOrTaskChain,
+  containerForApolloType,
+  getRenderPropFunction,
+  makeQueryContainer,
+  mapTaskOrComponentToNamedResponseAndInputs,
+  nameComponent
+} from "@rescapes/apollo";
+import {v} from "@rescapes/validate";
+import PropTypes from 'prop-types'
 
 /**
- * Gets all the django model ids as output params for userState.date.userRegions|userProjects
- * @param {String} scopeName 'region' or 'project'
- * @returns {Object} The userRegion or userProject outputParams
+ * Queries scope objects (Region, Project, etc) that are in the scope of the given user. If scopeArguments are
+ * specified the returned scope objects are queried by the scopeArguments to possibly reduce those matching
+ * @param {Object} apolloConfig
+ * @param {Object} apolloConfig.apolloClient The Apollo Client for non-component queries
+ * @param {Object} [apolloConfig.options]
+ * @param {Function} [apolloConfig.options.variables] Function to limit the props for the scope query. This
+ * is not used for the userState query
+ * @param {Object} requestConfig
+ * @param {Object} [requestConfig.completeWithRenderProp] Default true, set false if this is being
+ * used within another call to composeWithComponentMaybeOrTaskChain
+ * @param {Function} scopeQueryContainer Task querying the scope class, such as regionsQueryContainer
+ * @param {String} scopeName The name of the scope, such as 'region' or 'project'
+ * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
+ * and returning output parameters for each the scope class query. If don't have to query scope separately
+ * then scopeOutputParams is passed to this. Otherwise we just was ['id'] since that's all the initial query needs
+ * @param {[Object]} [userScopeOutputParams] Output parameters for each the user scope class query. For example
+ * {region: {id: 1, name: 1, key: 1}, activity: {isActive: 1}} If null it must be defaulted in the call to
+ * userStateOutputParamsCreator
+ * @param {Object} userStateArgumentsCreator arguments for the UserStates query. {user: {id: }} is required to limit
+ * the query to one user
+ * @param {Object} props Props to query with. userState is required and a scope property that can contain none
+ * or more of region, project, etc. keys with their query values
+ * @param {Object} [props.userState] props for the UserState. If omitted defaults to the current userState query
+ * @param {Object} props.userScope props for the region, project, etc. query in the form {region|project: {}}. This can be {} or null to not filter.
+ * Scope will be limited to those scope values returned by the UserState query. These should not specify ids since
+ * the UserState query selects the ids
+ * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {data: usersScopeName: [...]}}
+ * where ScopeName is the capitalized and pluralized version of scopeName (e.g. region is Regions)
  */
-export const userScopeOutputParamsOnlyIds = scopeName => {
-  return R.compose(
-    userScopeData => {
-      return pickDeepPaths(
-        [`${scopeName}.id`, 'userSearch.userSearchLocations.searchLocation.id', 'activity'],
-        userScopeData
-      )
-    },
-    userScopeName => {
-      return reqPathThrowing(['data', userScopeName], userStateOutputParamsMetaAndScopeIds({
-          searchLocationOutputParams: defaultSearchLocationOutputParamsMinimized,
-        })
-      )
-    },
-    scopeName => {
-      const capitalized = capitalize((scopeName));
-      return `user${capitalized}s`;
-    }
-  )(scopeName)
-}
-
-
-/**
- * Creates userState output params
- * @param userScopeFragmentOutputParams Object keyed by 'region', 'project', etc with
- * the output params those should return within userState.data.[userRegions|userProject|...]
- * @return {*} The complete UserState output params
- * @return {Object} The params
- */
-export const userStateOutputParamsCreator = userScopeFragmentOutputParams => {
-  return ({
-    id: 1,
-    user: {id: 1},
-    data: userScopeFragmentOutputParams,
-    ...versionOutputParamsMixin
-  });
-}
-
-/**
- * User state output params with full scope output params. This should only be used for querying when values of the scope
- * instances are needed beyond the ids
- * @return {Object} The outputParams
- */
-export const createUserStateOutputParamsFull = searchLocationOutputParams => {
-  return {
-    id: 1,
-    user: {id: 1},
-    data: {
-      userRegions: R.mergeAll([
-        {
-          region: regionOutputParams,
-          userSearch: createUserSearchOutputParams(searchLocationOutputParams)
-        },
-        selectionOutputParamsFragment,
-        activityOutputParamsMixin
-      ]),
-      userProjects: R.mergeAll([
-        {
-          project: projectOutputParams,
-          userSearch: createUserSearchOutputParams(searchLocationOutputParams)
-        },
-        selectionOutputParamsFragment,
-        activityOutputParamsMixin
-      ])
-    }
-  };
-};
-
-// Local version of createUserStateOutputParamsFull for tests
-export const userStateLocalOutputParamsFull = () => createUserStateOutputParamsFull(defaultSearchLocationOutputParams)
-
-/**
- * When meta data of the user scope instances is needed but only the id of the scope instances
- * @param {Object} searchLocationOutputParams Required searchLocation outputParams
- * @param {Object} [additionalUserScopeOutputParams] Defaults to {}, use to add outputParams to userRegion and userProject
- * @returns {Object} Props such as activity and selection for each userScope instance, but just
- * ids for the scope instance
- */
-export const userStateOutputParamsMetaAndScopeIds = ({
-                                                       searchLocationOutputParams,
-                                                       additionalUserScopeOutputParams = {}
-                                                     }) => {
-  return {
-    id: 1,
-    user: {id: 1},
-    data: {
-      userRegions: userStateRegionOutputParams({
-        searchLocationOutputParams: searchLocationOutputParams,
-        explicitRegionOutputParams: regionOutputParamsMinimized,
-        additionalUserScopeOutputParams
-      }),
-      userProjects: userStateProjectOutputParams({
-        searchLocationOutputParams: searchLocationOutputParams,
-        explicitRegionOutputParams: projectOutputParamsMinimized,
-        additionalUserScopeOutputParams
-      }),
-    }
-  };
-};
-
-// Local version of createUserStateOutputParamsFull for tests
-export const userStateLocalOutputParamsMetaAndScopeIds = () => createUserStateOutputParamsFull(
-  defaultSearchLocationOutputParamsMinimized
-)
-
-
-/**
- * User state output params with id-only scope output params. Should be used for mutations and common cases when
- * only the scope ids of the user state are needed (because scope instances are already loaded, for instance)
- */
-export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
-  ...userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds('region'),
-  ...userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds('project')
-});
-
-/**
- * Creates UserState output params for a certain scope prop path value fragment.
- * For example if we want mapbox data from userState.data.regions[*].mapbox,  userState.data.projects[*].mapbox,
- * we would pass in
- mapbox: {
-    viewport: {
-      latitude: 1,
-      longitude: 1,
-      zoom: 1
-    }
-  }
- * @param {Object} scopePropPathValueOutputParamsFragment The fragment
- * @return {*[]}
- */
-export const userStateScopePropPathOutputParamsCreator = scopePropPathValueOutputParamsFragment => {
-  // Merge in {[scopeName]: {id: 1}} and {activity: {isActive: 1}} since we use often use that to filter the scope instances
-  // we want
-  const mergedOutputFragment = scopeName => R.merge({
-      [scopeName]: {id: true},
-      activity: {
-        isActive: true
-      }
-    },
-    scopePropPathValueOutputParamsFragment
-  );
-  return {
-    data: {
-      userGlobal: scopePropPathValueOutputParamsFragment,
-      userRegions: mergedOutputFragment('region'),
-      userProjects: mergedOutputFragment('project')
-    }
-  };
-};
-
-export const userStateMutateOutputParams = userStateOutputParamsOnlyIds;
-
-
-// Paths to prop values that we don't store in the database, but only in the cache
-// The prop paths are marked with a client directive when querying (see settingsOutputParams)
-// so we never try to load them from the database.
-const cacheOnlyObjs = ['data.userProjects.*.selection', 'data.userRegions.*.selection'];
-const filterOutCacheOnlyObjs = obj => {
-  // TODO this should be done with wildcard lens 'data.userProjects|userRegions.*.selection' to handle arrays
-  return R.compose(
-    ...R.map(
-      userScopePath => {
-        return composedObj => {
-          return R.when(
-            composedObj => pathOr(null, ['data', userScopePath], composedObj),
-            composedObj => {
-              return R.over(
-                R.lensPath(['data', userScopePath]),
-                userScopeObjs => R.map(
-                  userScopeObj => R.omit(['selection'], userScopeObj),
-                  userScopeObjs
-                ),
-                composedObj
-              );
-            }
-          )(composedObj);
-        };
-      },
-      ['userRegions', 'userProjects']
-    )
-  )(obj);
-};
-
-
-// These values come back from the server and get merged into cacheOnlyProps for identification
-const cacheIdProps = [
-  'id',
-  '__typename',
-  'data.__typename',
-  // Use region.id to identify the userRegion
-  'data.userRegions.*.region',
-  'data.userRegions.*.region.id',
-  'data.userRegions.*.region.__typename',
-  'data.userRegions.*.userSearch.userSearchLocations.*.searchLocation',
-  'data.userRegions.*.userSearch.userSearchLocations.*.searchLocation.id',
-  'data.userRegions.*.userSearch.userSearchLocations.*.searchLocation.__typename',
-  // Use project.id to identify the userProject
-  'data.userProjects.*.project',
-  'data.userProjects.*.project.id',
-  'data.userProjects.*.project.__typename',
-  'data.userProjects.*.userSearch.userSearchLocations.*.searchLocation',
-  'data.userProjects.*.userSearch.userSearchLocations.*.searchLocation.id',
-  'data.userProjects.*.userSearch.userSearchLocations.*.searchLocation.__typename',
-];
-
-export const userStateDataTypeIdPathLookup = {
-  // Merge userRegions by region. The two paths apply for non-ref and ref versions
-  userRegions: ['region.id', 'region.__ref'],
-  userProjects: ['project.id', 'project.__ref']
-};
-
-// These fields need deep merge methods to keep cache only values
-export const userStateStorePoliciesConfig = R.indexBy(R.prop('type'), [
-  {type: 'UserStateType', fields: ['data']},
-  {
-    type: 'UserStateDataType',
-    fields: ['userRegions', 'userProjects'],
-    idPathLookup: userStateDataTypeIdPathLookup,
-    cacheOnlyFieldLookup: {
-      userRegions: {selection: true},
-      userProjects: {selection: true}
-    }
-  },
-  // cacheOnly true instructs the merge function not to overwrite existing objects on this
-  // field if the incoming object is not defined. This is because we add to the cache when
-  // we mutate but subsequent queries don't have the cache only data, but we dont want to lose the cache-only data
-  {type: 'UserRegionDataType', fields: ['selection']},
-  {type: 'UserProjectDataType', fields: ['selection']}
-]);
-
-export const createCacheOnlyPropsForUserState = props => {
-  return createCacheOnlyProps({name: 'userStore', cacheIdProps, cacheOnlyObjs}, props);
-};
-
-/**
- * Queries userState for the current user as identified by the apollo client.
- * @param {Object} apolloClient The Apollo Client
- * @param {Object} options
- * @param [Object] options.outputParams OutputParams for the query
- * @param {Object} props Arguments for the UserState query. This can be null but it's better to pass the user
- * to avoid a query to the current userResponse
- * @param {Object} props.currentUserResponse. The response of querying for the current user to avoid having to query for the
- * user again.
- * @returns {Task|Object} A Task or apollo container resolving to the single item user state response {data: {usersStates: []}}
- */
-export const currentUserStateQueryContainer = v(R.curry(
-    (apolloConfig, {outputParams}, props) => {
+export const userStateScopeObjsQueryContainer = v(R.curry(
+    (apolloConfig,
+     {
+       scopeQueryContainer,
+       scopeName,
+       readInputTypeMapper,
+       userStateOutputParamsCreator,
+       userScopeOutputParams = {[scopeName]: {id: 1}}
+     },
+     props) => {
+      const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams);
+      // Since we only store the id of the scope obj in the userState, if there are other queryParams
+      // besides id we need to do a second query on the scope objs directly
       return composeWithComponentMaybeOrTaskChain([
-        ({currentUserResponse, ...props}) => {
-          const user = strPathOr(null, 'data.currentUser', currentUserResponse)
-          if (!user) {
-            // Loading, error or skipped because not authenticated
+        // If we got Result.Ok and there are scope props, query for the user's scope objs
+        // Result Object -> Task Object
+        nameComponent('queryScopeObjsOfUserStateContainerIfUserScope', userStatesResponse => {
+          if (!strPathOr(false, 'data', userStatesResponse)) {
             return containerForApolloType(
               apolloConfig,
               {
                 render: getRenderPropFunction(props),
-                response
+                response: userStatesResponse
               }
             );
           }
-          // Get the current user state
-          return makeQueryContainer(
-            composeFuncAtPathIntoApolloConfig(
+          const userScopeName = _userScopeName(scopeName);
+          const userStateScopePath = `data.userStates.0.data.${userScopeName}`;
+          const userScopeObjs = strPathOr(null, userStateScopePath, userStatesResponse);
+
+          return queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams(apolloConfig, {
+            scopeQueryContainer,
+            scopeName,
+            userScopeName,
+            userScopeOutputParams
+          }, R.merge(props, {userStatesResponse, userScopeObjs}));
+        }),
+
+        // First query for UserState
+        // Dig into the results and return the userStates with the scope objects
+        // where scope names is 'Regions', 'Projects', etc
+        nameComponent('queryUserStates', props => {
+          const userPropPaths = ['id', 'user.id'];
+          // Use currentUserStateQueryContainer unless user params are specified.
+          // Only admins can query for other users (to be controlled on the server)
+          const userState = strPathOr({}, 'userState', props);
+          const queryContainer = R.any(p => strPathOr(null, p, userState), userPropPaths) ?
+            makeQueryContainer :
+            currentUserStateQueryContainer;
+
+          return queryContainer(
+            mergeDeep(
               apolloConfig,
-              'options.variables',
-              props => {
-                // Merge any other props (usually null) with current user
-                return R.merge(
-                  props,
-                  {
-                    user: R.pick(['id'], user)
-                  }
-                );
+              // Keep all props
+              {
+                options: {
+                  variables: ({userState}) => {
+                    return pickDeepPaths(userPropPaths, userState || {});
+                  },
+                  errorPolicy: 'all',
+                  partialRefetch: true
+                }
               }
             ),
-            {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
+            {
+              name: 'userStates',
+              readInputTypeMapper,
+              outputParams: userStateOutputParamsCreator(
+                // If we have to query for scope objs separately then
+                // pass null to default to the id
+                R.when(
+                  () => hasScopeParams(R.omit(['id'], scopeOutputParams)),
+                  // Just query for the id of the scope object, since we have to query more thoroughly later
+                  // The userState.data only has the ids of the scope objects. We need to query them separately
+                  // to get other properties
+                  userScopeOutputParams => R.over(
+                    R.lensProp(scopeName),
+                    () => ({id: 1}),
+                    userScopeOutputParams
+                  )
+                )(userScopeOutputParams)
+              )
+            },
             props
           );
-        },
-        // Get the current user
-        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'currentUserResponse',
-          ({currentUserResponse, ...props}) => {
-            return R.ifElse(
-              R.isNil,
-              () => {
-                return currentUserQueryContainer(apolloConfig, {id: 1}, props)
-              },
-              currentUserResponse => containerForApolloType(
-                apolloConfig,
-                {
-                  render: getRenderPropFunction(props),
-                  // Override the data with the consolidated mapbox
-                  response: currentUserResponse
-                }
-              )
-            )(currentUserResponse);
-          })
+        })
       ])(props);
     }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
-    ['queryStructure', PropTypes.shape({
-      outputParams: PropTypes.shape().isRequired
-    })],
-    ['props', PropTypes.shape()]
-  ], 'currentUserStateQueryContainer');
+    ['scopeSettings', PropTypes.shape({
+      scopeQueryContainer: PropTypes.func.isRequired,
+      scopeName: PropTypes.string.isRequired,
+      readInputTypeMapper: PropTypes.shape().isRequired,
+      userStateOutputParamsCreator: PropTypes.func.isRequired,
+      userScopeOutputParams: PropTypes.shape()
+    }).isRequired],
+    ['props', PropTypes.shape({
+      userState: PropTypes.shape({
+        user: PropTypes.shape({
+          id: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.number
+          ])
+        })
+      }),
+      scope: PropTypes.shape()
+    })]
+  ], 'userStateScopeObjsQueryContainer'
+);
 
 /**
- * Admin only. Queries userState. This will fail unless the apollo client is authenticated to an admin
- * @param {Object} apolloClient The Apollo Client
- * @param [Object] outputParams OutputParams for the query
- * @param {Object} userStateArguments Arguments for the UserState query. This can be {} or null to not filter.
- * @returns {Task|Object} A Task or Apollo container resolving the user states an object with obj.data.userStates or errors in obj.errors
+ * Calls queryScopeObjsOfUserStateContainer if the scope objects need to be filtered.
  */
-export const adminUserStateQueryContainer = v(R.curry(
-    (apolloConfig, {outputParams}, props) => {
-      return makeQueryContainer(
-        apolloConfig,
-        {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
-        props
+const queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams = R.curry(
+  (apolloConfig,
+   {scopeQueryContainer, scopeName, userScopeName, userScopeOutputParams},
+   props
+  ) => {
+    const userScope = R.prop('userScope', props);
+    const scopeOutputParams = R.propOr({}, scopeName, userScopeOutputParams);
+    return R.ifElse(
+      () => {
+        // If there are not no-id scope params and scopeOutputParams is minimized, we're done
+        // We don't need to query if we already have the scope ids we need and we don't need other properties
+        // of those scope objects
+        return R.and(
+          // userScope is empty or just filtering by scope id
+          R.compose(
+            flattened => !R.length(R.keys(flattened)),
+            userScope => flattenObj(userScope),
+            userScope => R.over(
+              R.lensProp(scopeName),
+              scopeProps => R.omit(['id'], scopeProps), userScope
+            ),
+          )(userScope),
+          // Only requesting id from the userScope instances
+          R.and(
+            R.equals(1, R.length(R.keys(scopeOutputParams))),
+            R.propOr(false, 'id', scopeOutputParams)
+          )
+        );
+      },
+      // Done, return all of the userScopeObjs in the appropriate containers
+      () => {
+        return containerForApolloType(
+          apolloConfig,
+          {
+            render: getRenderPropFunction(props),
+            response: reqStrPathThrowing('userStatesResponse', props)
+          }
+        );
+      },
+      // Query to get the desired outputParams and/ore limit by scope params
+      props => {
+        return queryScopeObjsOfUserStateContainer(
+          apolloConfig,
+          {scopeQueryContainer, scopeName, userScopeName, scopeOutputParams},
+          props
+        );
+      }
+    )(props);
+  }
+);
+
+/**
+ * Given resolved objects from the user state about the scope and further arguments to filter those scope objects,
+ * query for the scope objects
+ * @param {Object} apolloClient The Apollo Client
+ * @param {Function} scopeQueryContainer Task querying the scope class, such as regionsQueryContainer
+ * @param {Object} scopeSettings
+ * @param {String} scopeSettings.scopeName The name of the scope, such as 'region' or 'project'
+ * @param {[Object]} scopeSettings.scopeOutputParams Output parameters for each the scope class query
+ * @param {Object} props The props for the queries. userState and scope are required
+ * @param {Object} props.scope Arguments for the scope class query. ids are ignored but other properties are passed
+ * unless we don't have any usersScopeObjects, in which cases ids are passed
+ * @param {Object} props.userScopeObjs The userScopeObjs in the form {scopeName: {id: x}}
+ * where scopeName is 'region', 'project', etc
+ * @param {Object} [props.scope] The scope props for the queries, such as region, project, etc.
+ * This can be null or {} to not filter by scope
+ * @return {Task|Object} Task resolving to or Component resolving to the scope objs that match the scopeArguments
+ */
+export const queryScopeObjsOfUserStateContainer = v(R.curry(
+  (apolloConfig,
+   {scopeQueryContainer, scopeName, userScopeName, scopeOutputParams},
+   props
+  ) => {
+    const scopeNamePlural = `${scopeName}s`;
+    return composeWithComponentMaybeOrTaskChain([
+      // Match any returned scope objs with the corresponding userScopeObjs
+      nameComponent('matchUserScopeObjs', scopeObjsResponse => {
+        // If we are in a loading or error state, return the response without proceeding
+        if (R.any(prop => R.prop(prop, scopeObjsResponse), ['loading', 'error'])) {
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: scopeObjsResponse
+            }
+          );
+        }
+
+        const matchingScopeObjs = pathOr([], ['data', scopeNamePlural], scopeObjsResponse)
+        const matchingScopeObjsById = R.indexBy(R.prop('id'), matchingScopeObjs);
+        const userScopeObjs = R.propOr([], 'userScopeObjs', props);
+        return R.compose(
+          // Return the task or component with the modified userScopeObj and render props
+          matchingUserScopeObjs => {
+            const compactedMatchingUserScopeObjs = R.ifElse(
+              scopeObjsResponse => R.propOr(null, 'data', scopeObjsResponse),
+              () => compact(matchingUserScopeObjs),
+              () => null
+            )(scopeObjsResponse);
+            // If we have compactedMatchingUserScopeObjs, replace these values with the data of scopeObjsResponse
+            // scopeObjsResponse is our most recent query, so we inject our data into it
+            const scopeUserObjsResponse = R.when(
+              R.identity,
+              compactedMatchingUserScopeObjs => R.set(
+                R.lensProp('data'),
+                {userStates: [{data: {[userScopeName]: compactedMatchingUserScopeObjs}}]},
+                scopeObjsResponse
+              )
+            )(compactedMatchingUserScopeObjs);
+            return containerForApolloType(
+              apolloConfig,
+              {
+                // The render prop is based with the response for components
+                render: getRenderPropFunction(scopeObjsResponse),
+                // If the data isn't loaded then return scopeObjsResponse, which is either loading or was skipped
+                response: scopeUserObjsResponse || scopeObjsResponse
+              }
+            );
+          },
+          userScopeObjs => {
+            return R.map(
+              R.ifElse(
+                // Does this user scope's scope object match one of the scope ids
+                userScopeObj => {
+                  return R.has(userScopeObj[scopeName].id, matchingScopeObjsById);
+                },
+                // If so merge the query result for that scope object with the user scope version
+                userScopeObj => {
+                  return R.merge(
+                    userScopeObj,
+                    {
+                      // Get the matching scope object
+                      [scopeName]: R.prop(userScopeObj[scopeName].id, matchingScopeObjsById)
+                    }
+                  );
+                },
+                // Otherwise return null, which will remove the user scope obj from the list
+                () => null
+              ),
+              userScopeObjs
+            );
+          }
+        )(userScopeObjs);
+      }),
+
+      // Find the scope instances that match the ids of userScopeObj
+      nameComponent('scopeQueryContainer', props => {
+        const {userScope, userScopeObjs} = props;
+        const scopeProps = R.prop(scopeName, userScope);
+        // Hack, filter by activity.isActive. We have no way to filter by non scope objects yet.
+        // TODO This should instead by done by setting variables within the graphql query: e.g. userRegions(variables)
+        // but we don't support that yet on the client
+        const _userScopeObjs = R.filter(
+          userScopeObj => !R.has('activity', userScope) || eqStrPath('activity.isActive', userScope, userScopeObj),
+          userScopeObjs
+        )
+        return scopeQueryContainer(
+          composeFuncAtPathIntoApolloConfig(
+            R.mergeDeepRight(
+              apolloConfig,
+              {
+                options: {
+                  // If userScopeObjs is null, it means a dependent query is not ready
+                  // See userStateScopeObjsQueryContainer for an example
+                  // If it is simply empty, we still want to query
+                  skip: !userScopeObjs
+                }
+              }
+            ),
+            'options.variables',
+            _props => {
+              // If there is not a previous filter, filter
+              return R.when(
+                () => {
+                  return R.complement(strPathOr)(false, 'options.variables', apolloConfig);
+                },
+                p => {
+                  const userScopeObjs = R.propOr(null, 'userScopeObjs', p);
+                  return R.merge(
+                    // Limit by any properties in the scope that aren't id. Keep id if we don't have userScopeObjs
+                    R.omit(R.length(userScopeObjs || []) ? ['id'] : [], scopeProps || {}),
+                    R.filter(R.length, {
+                      // Map each scope object to its id
+                      idIn: R.map(
+                        userScopeObj => reqPathThrowing([scopeName, 'id'], userScopeObj),
+                        // If we don't have any we'll skip the query above
+                        userScopeObjs || []
+                      )
+                    })
+                  );
+                }
+              )(_props);
+            }
+          ),
+          {
+            outputParams: scopeOutputParams
+          },
+          R.merge(props, {userScopeObjs: _userScopeObjs})
+        );
+      })
+    ])(props);
+  }), [
+  ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
+  ['scopeSettings', PropTypes.shape({
+    scopeQueryContainer: PropTypes.func.isRequired,
+    scopeName: PropTypes.string.isRequired,
+    scopeOutputParams: PropTypes.shape().isRequired
+  }).isRequired
+  ],
+  ['props', PropTypes.shape({
+    scope: PropTypes.shape(),
+    userScopeObjs: PropTypes.array
+  })]
+], 'queryScopeObjsOfUserStateContainer');
+
+
+/**
+ * Operate on the userScope instances in useState and remove all other userScopes. We don't ever want
+ * to mutate a userScope other than the given one
+ * @param {String} scopeName Either 'region' or 'project'
+ * @param {Object} userState The existing userState
+ * @param {Object} userScopeObjsResponse The response of the query for the existing userScope objects of the userState.
+ * The purpose of this is to find out if the given userScope already exists in the userState or not.
+ * TODO this is only needed when the userState wasn't specified to the calling function, which seems unlikely
+ * @param {Object} userScope The userScope object that is being added or updated in the userState. It is
+ * either a userRegion is scopeName is region or a userProject if scopeName is project
+ * @returns {Object} The userState limited to the single userScope instance and non-data properties.
+ * When the mutation occurs only this userScope will be updated and all others will be left alone by the server.
+ */
+const updateUserScopeAndLimitUserStateToIt = ({scopeName}, {userState, userScope}) => {
+  // userRegions or userProjects
+  const userScopeName = _userScopeName(scopeName);
+  return R.compose(
+    userState => {
+      // Limit userState.data to just userScopeName
+      return R.over(R.lensProp('data'), data => R.pick([userScopeName], data), userState)
+    },
+    userState => {
+      return R.over(
+        R.lensPath(['data', userScopeName]),
+        userScopeObjs => {
+          // Ignore other userScopeObjs and just set userState.data[userRegions|userProjects] to [userScope]
+          // TODO we could merge userScope with its version already existing in userState, but I don't think
+          // we need to since we are only updating one scopeInstance of the userScope and leaving everything else
+          // alone
+          return [userScope]
+        },
+        userState
+      )
+    }
+  )(userState)
+};
+
+/**
+ * Mutates the given scope object (UserRegion, UserProject, etc) that are in the scope of the given user.
+ * @param {Object} apolloClient The Apollo Client
+ * @param {Object} options
+ * @param {Function} [options.normalizeUserStatePropsForMutating] Default normalizeDefaultUserStatePropsForMutating. UserState normalization function
+ * @param {Function} options.scopeQueryContainer Task querying the scope class, such as regionsQueryContainer
+ * @param {String} options.scopeName The name of the scope, such as 'region' or 'project'
+ * @[aram {String} [options.userStatePropPath] Default 'userState', path in the props to the userState, e.g.
+ * 'queryCurrentUserState.data.userStates.0'
+ * @param {Function} userStateOutputParamsCreator Unary function expecting scopeOutputParams
+ * and returning output parameters for each the scope class query. If don't have to query scope seperately
+ * then scopeOutputParams is passed to this. Otherwise we just was ['id'] since that's all the initial query needs
+ * @param {[Object]} userScopeOutputParams Output parameters for the user state mutation
+ * @param {Object} userStateArgumentsCreator arguments for the UserStates query. {user: {id: }} is required to limit
+ * the query to one user
+ * @param {Object} props Props to query with. userState is required and a scope property that can contain none
+ * or more of region, project, etc. keys with their query values
+ * @param {Object} [props.userState] props for the UserState. Defaults to the current user
+ * @param {Object} [props.userState.id] Either this or user.id can be used to identify the user
+ * @param {Object} [props.userState.user.id]
+ * @param {Object} props.userScope userRegion, userProject, etc. query to add/update in the userState.
+ * userScope will usually be passed directly to the mutation function, since userStateScopeObjsMutationContainer
+ * is called beforehand when the containers are called and the user edits a value in userScope in the components.
+ * When passed to the mutation function, it is named userScopeData to match the gql. Even thought it's passed via
+ * the mutation, it must be passed to this function in order to determine if it is an existing or new userScope
+ * by querying.
+ * @param {Number} props.userScope.[region|project].id
+ * Required id of the scope instance to add or update within userState.data[scope]
+ * @returns {Task|Just} The resulting Scope objects in a Task or Just.Maybe in the form {
+ * createUserState|updateUserState: {userState: {data: [userScopeName]: [...]}}}}
+ * where userScopeName is the capitalized and pluralized version of scopeName (e.g. region is UserRegions)
+ */
+export const userStateScopeObjsMutationContainer = v(R.curry(
+    (apolloConfig,
+     {
+       normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating,
+       scopeQueryContainer,
+       scopeName,
+       readInputTypeMapper,
+       userStateOutputParamsCreator,
+       userScopeOutputParams,
+       userStatePropPath = 'userState'
+     },
+     {userScope, render, ...props}) => {
+
+      const userState = strPathOr(null, userStatePropPath, props)
+      const skippedUserStateMutationContainer = props => {
+        return userStateMutationContainer(
+          // Skip if we don't have the variable ready
+          R.set(R.lensPath(['options', 'skip']), true, apolloConfig),
+          {
+            outputParams: userStateOutputParamsCreator(
+              userScopeOutputParams
+            ),
+            normalizeUserStatePropsForMutating,
+            userStatePropPath
+          },
+          props
+        );
+      }
+      // If userScope isn't ready then skip. We don't need the mutated userScope at this time,
+      // just the unedited value, including a new one without an id
+      if (!userScope) {
+        return skippedUserStateMutationContainer({render, ...props})
+      }
+
+      return composeWithComponentMaybeOrTaskChain([
+        ({mutateUserStateResponse, userScopeObjsResponse, ...props}) => {
+          // Modify the mutation to update userState to the userScope if not done earlier
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: R.over(
+                R.lensProp('mutation'),
+                mutation => {
+                  // The parameter crated by the mutation is userScopeData, but it's the same as the userScope
+                  return ({userScopeData}) => {
+                    // If the user passes the userScope to the mutation, update the userState with it
+                    const userScopeDataUpdated = R.when(
+                      R.identity,
+                      userScope => {
+                        return updateUserScopeAndLimitUserStateToIt(
+                          {scopeName},
+                          {userState, userScopeObjsResponse, userScope}
+                        )
+                      }
+                    )(userScopeData)
+                    // Call the mutation with the updated userState
+                    return R.ifElse(
+                      R.identity,
+                      userScopeDataUpdated => mutation({userStateData: userScopeDataUpdated}),
+                      () => mutation()
+                    )(userScopeDataUpdated)
+                  }
+                },
+                mutateUserStateResponse
+              )
+            }
+          );
+        },
+        // If there is a match with what the caller is submitting, update it, else add it
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'mutateUserStateResponse',
+          nameComponent('userStateMutation', ({userScopeObjsResponse, render, ...props}) => {
+              // If we are in a loading or error state, return the response without proceeding
+              if (R.any(prop => R.prop(prop, userScopeObjsResponse), ['loading', 'error'])) {
+                return skippedUserStateMutationContainer({render})
+              }
+
+              // Prep the userState with the new/updated userScope if already available. Otherwise this step is
+              // done in the mutation call then userScope is passed in
+              const userStateWithCreatedOrUpdatedScopeObj = R.when(
+                () => userScope,
+                userState => {
+                  return updateUserScopeAndLimitUserStateToIt(
+                    {scopeName},
+                    {userState, userScopeObjsResponse, userScope}
+                  )
+                }
+              )(userState)
+
+              // Create a mutation container that saves changes to the userState
+              return userStateMutationContainer(
+                // Skip if we don't have the variable ready
+                R.over(
+                  R.lensPath(['options', 'skip']),
+                  skip => skip || R.complement(R.propOr)(false, 'data', userScopeObjsResponse),
+                  apolloConfig
+                ),
+                {
+                  outputParams: userStateOutputParamsCreator(
+                    userScopeOutputParams
+                  ),
+                  normalizeUserStatePropsForMutating
+                },
+                {
+                  userState: userStateWithCreatedOrUpdatedScopeObj,
+                  render
+                }
+              );
+            }
+          )
+        ),
+        // TODO can't we skp this if the userState is given? The userState should have all the userScopes in it
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userScopeObjsResponse',
+          // Query for userScopeObjs that match the userScope
+          nameComponent('queryUserScopeObjs', ({userState, userScope, render}) => {
+            // Query for the userScope instance by id to see if the userState already contains the userScope object
+            // UserState defaults to the current user
+            return userStateScopeObjsQueryContainer(
+              apolloConfig,
+              {
+                scopeQueryContainer,
+                scopeName,
+                readInputTypeMapper,
+                userStateOutputParamsCreator,
+                userScopeOutputParams
+              },
+              {
+                // We can only query userState by id or user.id or neither to use the current user
+                userState: pickDeepPaths(['id', 'user.id'], userState),
+                userScope: pickDeepPaths([`${scopeName}.id`], userScope),
+                render
+              }
+            );
+          })
+        )
+      ])(
+        {userState: userState || {}, userScope, render, ...props}
       );
     }),
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
-    ['queryStructure', PropTypes.shape({
-      outputParams: PropTypes.shape().isRequired
-    })],
-    ['props', PropTypes.shape().isRequired]
-  ], 'adminUserStateQueryContainer');
+    ['scopeSettings', PropTypes.shape({
+      scopeQueryContainer: PropTypes.func.isRequired,
+      scopeName: PropTypes.string.isRequired,
+      readInputTypeMapper: PropTypes.shape().isRequired,
+      userStateOutputParamsCreator: PropTypes.func.isRequired,
+      userScopeOutputParams: PropTypes.shape().isRequired
+    }).isRequired
+    ],
+    ['props', PropTypes.shape({
+      // Not required when setting up mutation
+      userScope: PropTypes.shape({})
+    })]
+  ], 'userStateScopeObjsMutationContainer');
 
-/**
- * Default version of normalizeUserStatePropsForMutating used for UserState mutations
- * @param userState
- * @returns {Object} The normalized userState
- */
-export const normalizeDefaultUserStatePropsForMutating = userState => {
-  return normalizeUserStatePropsForMutating({}, userState)
-}
 
-/**
- * Normalized project props for for mutation
+/***
+ * Convenience method for mutating the userState after setting a property on a target userScope instance
+ * For instance, a method can be made to set the {activity: isActive: true|false} of the targeted userRegion or
+ * userProject
+ * @param apolloConfig
  * @param {Object} config
- * @param {[String]} [config.relatedPropPaths] Default R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS)
- * Override this if an implementor has additional relatedPropPaths
- * @param {Object} [config.relatedPropPathsToAllowedFields] Default USER_STATE_SOP_RELATED_DATA_PROPS_ALLOWED
- * Allows relatedPropPaths to optional
- * be reduced to something more than just the id for cases when the object at the path is allowed to be mutated
- * during the userState mutation. This applies to things like searchLocations that don't need to be created
- * before mutating a userState that references them.
- * @param {Object} userState
- * @return {Object} The normalized userState
+ * @param {Function} scopeQueryContainer Query container for resolving the scope instance, namely
+ * regionsQueryContainer or projectsQueryContainer
+ * @param {String} config.scopeName Required scope name 'region' for userRegions or 'project' for userProjects
+ * @param {String} config.userStatePropPath Required propSets path to the userState, e.g. 'userState'
+ * @param {String} config.scopeInstancePropPath Required propSets path the the scope instance, e.g' 'region' or 'project'
+ * @param {String} config.userScopeInstancePropPath Required propSets path the the scope instance, e.g' 'userRegion' or 'userProject'
+ * @param {String | [String]} config.setPath Array or string path used to make a lens to set the value at propSets[setPropPath]
+ * @param {String} config.setPropPath String path of value in propSets to use for setting.
+ * The value props[...setPropPath...] doesn't need to exist until
+ * the mutation() function is called, at which point it must be passed in if
+ * it didn't previously exist in order to update the userScope to the desired values
+ * @param {Function} [config.normalizeUserStatePropsForMutating] Default normalizeDefaultUserStatePropsForMutating.
+ * apolloConfig.options.variables function to normalized the
+ * userState, including the targeted user scope instance. This function must remove values in userState.data
+ * instances not expected by the server, such as userState.data.userRegions[*].region.name (region should only
+ * provide id)
+ * @param props {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
+ * @returns {*}
  */
-export const normalizeUserStatePropsForMutating = (
-  {
-    relatedPropPaths = R.concat(RELATED_PROPS, USER_STATE_RELATED_DATA_PROPS),
-    relatedPropPathsToAllowedFields = USER_STATE_RELATED_DATA_PROPS_ALLOWED
-  },
-  userState
-) => {
-  // If we don't have a userState and are skipping the mutation, return without doing anything
-  if (!userState) {
-    return userState
+export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig, {
+  scopeName,
+  userScopeOutputParams,
+  scopeQueryContainer,
+  readInputTypeMapper,
+  normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating,
+  userStatePropPath,
+  userScopeInstancePropPath,
+  scopeInstancePropPath,
+  setPath,
+  setPropPath
+}, props) => {
+
+  const propsWithSetUserScopePath = ({userStateResponse, ...props}) => {
+    const propsWithUserState = R.merge(props, {userState: reqStrPathThrowing('data.userStates.0', userStateResponse)})
+    return R.merge(propsWithUserState, {
+      // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
+      // The mutation will be set to skip if this resolves as null because of missing props
+      userScope: setPathOnResolvedUserScopeInstance({
+        scopeName,
+        userStatePropPath,
+        userScopeInstancePropPath,
+        scopeInstancePropPath,
+        // These mean set the value of the user scopeInstance[...setPath...]. from propSets[..setPropPath...]
+        setPath,
+        setPropPath
+      }, propsWithUserState),
+    })
   }
-  return R.compose(
-    // Omit in case we are updating data that came from a query
-    userState => omitDeep(['__typename'], userState),
-    // Make sure related objects only have an id
-    userState => updateRelatedObjectsToIdForm(
-      {relatedPropPaths, relatedPropPathsToAllowedFields},
-      userState
-    ),
-    userState => filterOutReadOnlyVersionProps(userState),
-    userState => filterOutNullDeleteProps(userState),
-    userState => filterOutCacheOnlyObjs(userState)
-  )(userState);
-};
 
-/**
- * Soft delete scope instances and the references to them in the user state
- * TODO: There is currently no way to prevent deleting regions that do not belong to the user
- * This will be fixed when Region ownership permissions are set up
- * @param {Object} apolloConfig The Apollo config. See makeQueryContainer for options
- * @param {Object} apolloConfig.options
- * @param {Boolean} apolloConfig.options.skip Set true to skip the mutation or disable the ability
- * to call mutation (for component) when the props aren't ready
- * @param {Object} mutationConfig
- * @param {Object} mutationConfig.outputParams OutputParams for the query of the mutation
- * @param {Function} [mutationConfig.normalizeUserStatePropsForMutating] Defaults to normalizeDefaultUserStatePropsForMutating
- * @param {String} [mutationConfig.userStatePropPath] Default 'userState', The prop path to the userState
- * Normalization function for userStateProps. If overriding make sure to include the logic in the default
- * @param {Object} props Object matching the shape of a userState for the create or update
- * @param {Object} [props.userState] Object matching the shape of a userState for the create or update.
- * If omitted then the other props will be assumed to be the props of the userState, minus the render prop
- * @param {Function} [props.render] required for component mutations
- * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
- * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
- */
-export const userStateMutationContainer = v(R.curry((
-    apolloConfig,
-    {
-      outputParams,
-      normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating,
-      userStatePropPath='userState'
-    },
-    props
-  ) => {
-    return makeMutationRequestContainer(
-      R.compose(
-        // Merge in the update function
-        apolloConfig => {
-          return R.merge(apolloConfig, {
-              update: (store, {data, render, ...rest}) => {
-                const response = {result: {data}, ...rest};
-                // Add mutate to response.data so we dont' have to guess if it's a create or update
-                const userState = reqStrPathThrowing(
-                  'result.data.mutate.userState',
-                  addMutateKeyToMutationResponse({silent: true}, response)
-                );
-                // Add the cache only values to the persisted settings
-                // Deep merge the result of the mutation with the props so that we can add cache only values
-                // in props. We'll only cache values that are cache only since the mutation will have put
-                // the other return objects from the server into the cache
-                // TODO this is a bit redundant since the cache write also triggers a merge
-                const propsWithCacheOnlyItems = mergeCacheable({idPathLookup: userStateDataTypeIdPathLookup}, userState, {
-                  userState,
-                  render
-                });
-
-                // Mutate the cache to save settings to the database that are not stored on the server
-                makeCacheMutationContainer(
-                  R.merge(apolloConfig, {store}),
-                  {
-                    name: 'userState',
-                    // Always pass the full params so can pick out the cache only props
-                    outputParams: userStateLocalOutputParamsFull(),
-                    // For merging cached array items of userState.data.userRegions|userProjedts
-                    idPathLookup: userStateDataTypeIdPathLookup
-                  },
-                  filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
-                );
+  return composeWithComponentMaybeOrTaskChain([
+    ({userStateResponse, userStateMutation, ...props}) => {
+      return containerForApolloType(
+        apolloConfig,
+        {
+          render: getRenderPropFunction(props),
+          response: R.over(
+            R.lensProp('mutation'),
+            mutation => {
+              return mutationProps => {
+                // If the user passed the setPropPath props in to mutation, then use that
+                return mutation(R.when(
+                  () => R.identity,
+                  () => {
+                    return {
+                      // Use the setPropPath prop to create the userScope, which must be passed to the
+                      // mutation function as userScopeData.
+                      userScopeData: reqStrPathThrowing('userScope', propsWithSetUserScopePath(
+                        // Prefer the mutationProps version of setPropPath in
+                        {userStateResponse, ...R.merge(props, mutationProps)}
+                      ))
+                    }
+                  }
+                )(strPathOr(null, setPropPath, mutationProps)))
               }
-            }
-          )
-        },
-        apolloConfig => {
-          // Compose 'options.variables' with a function that might have been passed in
-          return composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables',
-            props => {
-              // If the userState is specified use it, otherwise assume the userState props are at the top-level
-              const userState = strPathOr(props, userStatePropPath, props)
-              return normalizeUserStatePropsForMutating(userState)
-            }
+            },
+            userStateMutation
           )
         }
-      )(apolloConfig),
-      {
-        name: 'userState',
-        outputParams
-      },
-      props
-    );
-  }), [
-    ['apolloConfig', PropTypes.shape().isRequired],
-    ['mutationConfig', PropTypes.shape({
-      outputParams: PropTypes.shape().isRequired
-    })],
-    ['props', PropTypes.shape({
-      userState: PropTypes.shape(),
-      render: PropTypes.function
-    }).isRequired]
-  ],
-  'userStateMutationContainer'
-);
-
-
-/**
- * Soft delete scope instances and the references to them in the user state
- * TODO: There is currently no way to prevent deleting regions that do not belong to the user
- * This will be fixed when Region ownership permissions are set up
- * @param {Object} apolloConfig The Apollo config
- * @param {Object} scopeConfig
- * @param {Object} scopeConfig.outputParams
- * @param {Object} [scopeConfig.normalizeUserStatePropsForMutating] Defaults to normalizeDefaultUserStatePropsForMutating,
- * the normalization function
- * @param {Object} scopeConfig.readInputTypeMapper
- * @param {Object} scopeConfig.scopeName e.g. 'project' or 'region'
- * @param {Object} scopeConfig.scopeProps The scope props to match test the scope, such as {keyContains: 'test'}
- * @param {Object} props
- * @param {Object} props.userState The user state for which to delete scope objects
- * @param {Function} [props.render] Render function, required for component requests
- * @return {Object} {deleted[scope name]s: deleted objects, clearedScopeObjsUserState: Response after mutating the
- * user state to clear the scope instances. In the form {data: {mutate|updateUserState: {...}}}
- */
-export const deleteScopeObjectsContainer = (
-  apolloConfig,
-  {
-    outputParams,
-    normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating,
-    readInputTypeMapper,
-    scopeName,
-    scopeProps
-  },
-  {userState, render}
-) => {
-  const capitalized = capitalize(scopeName);
-  return composeWithComponentMaybeOrTaskChain([
-    // Delete those test scope objects
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'clearedScopeObjsUserState',
-      ({userStateResponse, scopeObjsToDeleteResponse, userState}) => {
-        const scopeObjsToDelete = strPathOr([], `data.${scopeName}s`, scopeObjsToDeleteResponse);
-        return callMutationNTimesAndConcatResponses(
-          apolloConfig,
-          {
-            items: scopeObjsToDelete,
-            mutationContainer: makeMutationRequestContainer,
-            responsePath: `result.data.mutate.${scopeName}`,
-            propVariationFunc: ({item}) => {
-              return R.compose(
-                // And the deleted datetime
-                item => R.set(R.lensProp('deleted'), moment().toISOString(true), item),
-                // Just pass the id
-                item => R.pick(['id'], item)
-              )(item);
+      );
+    },
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateMutation',
+      ({userStateResponse, ...props}) => {
+        if (
+          !strPathOr(null, 'data', userStateResponse) ||
+          !strPathOr(null, userStatePropPath, props) ||
+          (!strPathOr(null, userScopeInstancePropPath, props) &&
+            !strPathOr(null, scopeInstancePropPath, props)
+          )
+        ) {
+          // Loading
+          return userStateMutationContainer(
+            // Skip if we don't have the variable ready
+            R.set(R.lensPath(['options', 'skip']), true, apolloConfig),
+            {
+              outputParams: userStateOutputParamsCreator(
+                userScopeOutputParams
+              ),
+              normalizeUserStatePropsForMutating,
+              userStatePropPath
             },
-            name: scopeName,
-            outputParams: {id: 1}
-          },
-          {}
-        );
-      }),
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'scopeObjsToDeleteResponse',
-      ({render}) => {
-        return makeQueryContainer(
+            R.pick(['render'], props)
+          );
+        }
+        // Update/Set userState to the response or what was passed in
+        const propsWithUserStateAndUserScope = propsWithSetUserScopePath({userStateResponse, ...props})
+
+        return userStateScopeObjsMutationContainer(
           apolloConfig,
           {
-            name: `${scopeName}s`,
-            outputParams: outputParams,
-            readInputTypeMapper
+            normalizeUserStatePropsForMutating,
+            scopeQueryContainer,
+            scopeName,
+            readInputTypeMapper: userStateReadInputTypeMapper,
+            userStateOutputParamsCreator: userScopeOutputParams => {
+              return userStateOutputParamsCreator(
+                userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+              );
+            },
+            userScopeOutputParams,
+            userStatePropPath
           },
-          R.merge(scopeProps, {render})
-        );
-      }),
-    // Remove existing scope objects from the userState if userState was given
-    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'clearedScopeObjsUserState',
-      ({userState, render}) => {
+          propsWithUserStateAndUserScope
+        )
+      }
+    ),
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userStateResponse',
+      // Fetch the current userState if not passed in
+      propSets => {
         return R.ifElse(
-          R.identity,
-          userState => {
-            const modifiedUserState = R.set(R.lensPath(['data', `user${capitalized}s`]), [], userState);
-            return userStateMutationContainer(
-              apolloConfig,
-              // userStateOutputParamsFull is needed so our update writes everything to the tempermental cache
-              {
-                outputParams: omitClientFields(userStateLocalOutputParamsFull()),
-                normalizeUserStatePropsForMutating
-              },
-              {userState: modifiedUserState, render}
-            );
-          },
-          () => {
+          propSets => strPathOr(false, userStatePropPath, propSets),
+          propSets => {
             return containerForApolloType(
               apolloConfig,
               {
-                render: getRenderPropFunction({render}),
-                // Override the data with the consolidated mapbox
-                response: null
+                render: getRenderPropFunction(propSets),
+                response: {data: {userStates: [reqStrPathThrowing(userStatePropPath, propSets)]}}
               }
             );
-          }
-        )(userState);
-      })
-  ])
-  ({userState, render});
-};
+          },
+          ({render, ...propSets}) => currentUserStateQueryContainer(apolloConfig, {
+            outputParams: userStateOutputParamsCreator(
+              userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds(scopeName, userScopeOutputParams)
+            )
+          }, {render})
+        )(propSets)
+      }
+    )
+  ])(props);
+}
 
-/**
- * Soft-delete the regions give by props. If userState is passed it will remove the deleted regions
- * from the userState (TODO perhaps we should search for all userStates containing the regions and remove themn)
- * @param apolloConfig
- * @param {Object} options. None for now
- * @param {Object} props
- * @param {Object} [props.userState] optional
- * @param props
- * @return {Object} {deleteRegions: deleted region, clearedScopeObjsUserState: The user state post clearing}
+/***
+ * Gets related instance ids and query for the corresponding instances. This is used so that if a userState's
+ * userRegions or userProjects reference instances such as searchLocations, that we have a way to load
+ * the full searchLocations for the userRegion or userProject of the active region or project.
+ * @param {Object} apolloConfig
+ * @param {Object} config
+ * @param {String} config.scopeName Required scope name 'region' for userRegions or 'project' for userProjects
+ * @param {String} config.userStatePropPath Required propSets path to the userState, e.g. 'userState'
+ * @param {String} [config.scopeInstancePropPath] Required if userScopeInstancePropPath not given. propSets path to the scope instance, e.g' 'region' or 'project'
+ * @param {String} [config.userScopeInstancePropPath] Required if scopeInstancePropPath not given. propSets path to the scope instance, e.g' 'userRegion' or 'userProject'
+ * @param {String | [String]} config.getPath Array or string path used to make a lens to set the value at propSets[setPropPath]
+ * @param {Object} props Must contain a userState at userStatePropPath. Must contain either a scope instance
+ * at scopeInstancePropPath or a user scope instance
+ * @param {Function} queryContainer The queryContainer to call. It must match the types resolved by userStatePropPath.
+ * The query is given a parameter, idIn: [..] where the ids are those found in the userState.userRegions|userProjects[*]
+ * instance that was matched and within which the ids are exracted based on getPath
+ * @param {Object} [queryOptions]. Default {} Options to pass to the second argument of queryContainer
+ * @param {Function} [queryOptions.outputParams] The outputParams to send to the query. Might not be needed depending on the
+ * query
+ * @returns {Task|Object} The resolved tasked or Apollo component of the query
  */
-export const deleteRegionsContainer = (apolloConfig, {normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating}, {
-  userState = null,
-  scopeProps,
-  render
-}) => {
-  return deleteScopeObjectsContainer(
-    apolloConfig,
-    {
-      outputParams: regionOutputParamsMinimized,
-      normalizeUserStatePropsForMutating,
-      readInputTypeMapper: regionReadInputTypeMapper,
-      scopeName: 'region',
-      scopeProps
+export const queryUserScopeRelatedInstancesContainer = (
+  apolloConfig,
+  {
+    scopeName,
+    userStatePropPath,
+    userScopeInstancePropPath,
+    scopeInstancePropPath,
+    userScopeInstancesPath,
+    queryContainer,
+    queryOptions = {},
+  },
+  props
+) => {
+  // Get the ids of the related objects that are in the userState.data.userRegions|userProjects instances specified
+  // by scopeInstancePropPath and getPath
+  const idInstances = getPathOnResolvedUserScopeInstances({
+      scopeName,
+      userStatePropPath,
+      userScopeInstancePropPath,
+      scopeInstancePropPath,
+      getPath: userScopeInstancesPath,
+      // We neve want more than the id, because we ware going to query by ids
+      getProps: [],
     },
-    {userState, render}
-  );
-};
-/**
- * Soft-delete the projects give by props. If userState is passed it will remove the deleted projects
- * from the userState (TODO perhaps we should search for all userStates containing the projects and remove them)
- * @param apolloConfig
- * @param {Object} requestConfig
- * @param {Object} [requestConfig.userState] optional
- * @param props
- * @return {Object}  {deletedProjects: deleted project, clearedScopeObjsUserState: The user state post clearing}
+    props
+  )
+  return queryContainer(
+    composeFuncAtPathIntoApolloConfig(
+      R.merge(
+        apolloConfig,
+        // Skip if we didn't get idObjects
+        {options: {skip: !idInstances}},
+      ),
+      'options.variables',
+      props => {
+        // TODO it might be desirable to merge props in here so that the caller could pass
+        // other props that cam from another options.variable filter, but then we have to
+        // check if options.variables is already defined before merging
+        return {
+          idIn: R.map(R.prop('id'), idInstances)
+        }
+      }
+    ),
+    queryOptions,
+    props
+  )
+}
+
+
+/***
+ * Like queryUserScopeInstancesContainer but additionally merges the resolved instances
+ * into the wrapper user instances (e.g. searchLocations are queried and merged into each userSearchLocation.searchLocation)
+ * This gives us userInstances with complete data for use in React components without forcing us to query for
+ * userScope instances in other userRegions or userProjects that aren't active
+ * @param {Object} apolloConfig
+ * @param {Object} config
+ * @param {String} config.scopeName Required scope name 'region' for userRegions or 'project' for userProjects
+ * @param {String} config.userStatePropPath Required propSets path to the userState, e.g. 'userState'
+ * @param {String} [config.scopeInstancePropPath] Required if userScopeInstancePropPath not given. propSets path to the scope instance, e.g' 'region' or 'project'
+ * @param {String} [config.userScopeInstancePropPath] Required if scopeInstancePropPath not given. propSets path to the scope instance, e.g' 'userRegion' or 'userProject'
+ * @param {String | [String]} config.userScopePath Array or string path used to make a lens to set the value at propSets[setPropPath]
+ * that leads to the userScope instances, not the instance themselves. For example. 'searchLocations.userSearchLocations'
+ * returns the userSearchLocations that each have a searchLocation
+ * @param {String} config.instancePath The path to the instance in the userScope instance, usually just one segment.
+ * For example, if config.userScopePath is 'searchLocations.userSearchLocations', then config.instancePath is 'searchLocation'
+ * @param {Object} props Must contain a userState at userStatePropPath. Must contain either a scope instance
+ * at scopeInstancePropPath or a user scope instance
+ * @param {Function} queryContainer The queryContainer to call. It must match the types resolved by userStatePropPath.
+ * The query is given a parameter, idIn: [..] where the ids are those found in the userState.userRegions|userProjects[*]
+ * instance that was matched and within which the ids are exracted based on getPath
+ * @param {Object} [queryOptions]. Default {} Options to pass to the second argument of queryContainer
+ * @param {Function} [queryOptions.outputParams] The outputParams to send to the query. Might not be needed depending on the
+ * query
+ * @returns {Task|Object} The resolved tasked or Apollo component of the query
  */
-export const deleteProjectsContainer = (apolloConfig, {
-  userState = null,
-  normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating
-}, props) => {
-  return deleteScopeObjectsContainer(
-    apolloConfig,
-    {
-      outputParams: projectOutputParamsMinimized,
-      normalizeUserStatePropsForMutating,
-      readInputTypeMapper: projectReadInputTypeMapper,
-      scopeName: 'project',
-      scopeProps: props
+export const queryAndMergeInUserScopeRelatedInstancesContainer = (
+  apolloConfig,
+  {
+    scopeName,
+    userStatePropPath,
+    scopeInstancePropPath,
+    userScopeInstancePropPath,
+    userScopePath,
+    instancePath,
+    queryContainer,
+    queryOptions = {},
+  },
+  props
+) => {
+  // Get the ids of the related objects that are in the userState.data.userRegions|userProjects instances specified
+  // by scopeInstancePropPath and getPath
+  const userScopeObjects = getPathOnResolvedUserScopeInstances({
+      scopeName,
+      userStatePropPath,
+      userScopeInstancePropPath,
+      scopeInstancePropPath,
+      getPath: userScopePath,
+      // Don't limit to id, get everything since we are at the userScope level
+      getProps: null
     },
-    userState
+    props
   );
-};
+  const idInstances = userScopeObjects ?
+    R.map(reqStrPathThrowing(instancePath), userScopeObjects) :
+    [];
+
+  return composeWithComponentMaybeOrTaskChain([
+    ({instancesResponse, ...props}) => {
+      // Return the response unless data is loaded
+      if (R.any(prop => R.prop(prop, instancesResponse), ['loading', 'error', 'skip'])) {
+        return containerForApolloType(apolloConfig,
+          {
+            render: getRenderPropFunction(props),
+            response: instancesResponse
+          }
+        )
+      }
+      // Manipulate the response to replace instances with userScopeObjects
+      const idToUserScopeObj = R.indexBy(reqPathThrowing([instancePath, 'id']), userScopeObjects)
+      // Assume the response.data has just one key it with the responses
+      const responseCollectionKey = R.head(R.keys(R.prop('data', instancesResponse)))
+      const modifidResponse = R.compose(
+        instancesResponse => {
+          // Rename the key from responseCollectionKey to userResponseCollectionKey
+          return renameKey(
+            R.lensProp('data'),
+            responseCollectionKey,
+            `user${capitalize(responseCollectionKey)}`,
+            instancesResponse
+          )
+        },
+        instancesResponse => {
+          return R.over(
+            R.lensPath(['data', responseCollectionKey]),
+            instances => {
+              return R.map(
+                instance => {
+                  return mergeDeep(
+                    // userScopeObject
+                    R.prop(R.prop('id', instance), idToUserScopeObj),
+                    // Place the full instance at userScopeObject[instancePath], preserving cache only data
+                    // that might be at userScopeObject[instancePath]
+                    {[instancePath]: instance}
+                  )
+                },
+                instances
+              )
+            },
+            instancesResponse
+          )
+        }
+      )(instancesResponse)
+      return containerForApolloType(apolloConfig, {
+        render: getRenderPropFunction(props),
+        response: modifidResponse
+      })
+    },
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'instancesResponse',
+      props => {
+        // Query for the ids of the instances we need
+        return queryContainer(
+          composeFuncAtPathIntoApolloConfig(
+            R.merge(
+              apolloConfig,
+              // Skip if we didn't get idObjects
+              {options: {skip: !R.length(idInstances)}},
+            ),
+            'options.variables',
+            props => {
+              return {
+                idIn: R.map(R.prop('id'), idInstances)
+              }
+            }
+          ),
+          queryOptions,
+          props
+        )
+      }
+    )
+  ])(props)
+}

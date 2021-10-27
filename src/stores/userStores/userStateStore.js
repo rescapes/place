@@ -34,34 +34,35 @@ import {
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {
-  regionOutputParams,
-  regionOutputParamsMinimized,
-  regionReadInputTypeMapper
-} from '../scopeStores/region/regionStore.js';
-import {
-  projectOutputParams,
-  projectOutputParamsMinimized,
-  projectReadInputTypeMapper
-} from '../scopeStores/project/projectStore.js';
-import {
-  capitalize, hasStrPath,
+  capitalize,
   mergeDeep,
+  omitDeep,
   pathOr,
   pickDeepPaths,
   reqPathThrowing,
   reqStrPathThrowing,
   strPathOr
 } from '@rescapes/ramda';
-import {selectionOutputParamsFragment} from './selectionStore.js';
-import {activityOutputParamsMixin} from './activityStore.js';
+import {selectionOutputParamsFragment} from '../selectionStore.js';
+import {activityOutputParamsMixin} from '../activityStore.js';
 import moment from 'moment';
-import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore.js";
+import {createUserSearchOutputParams} from "./userSearchStore.js";
 import {
   defaultSearchLocationOutputParams,
   defaultSearchLocationOutputParamsMinimized
-} from "../search/searchLocation/defaultSearchLocationOutputParams.js";
-import {userStateRegionOutputParams} from "./userScopeStores/userStateRegionStoreHelpers.js";
-import {userStateProjectOutputParams} from "./userScopeStores/userStateProjectStoreHelpers.js";
+} from "../../search/searchLocation/defaultSearchLocationOutputParams.js";
+import {userStateRegionOutputParams} from "./userStateRegionStoreHelpers.js";
+import {userStateProjectOutputParams} from "./userStateProjectStoreHelpers.js";
+import {
+  regionOutputParams,
+  regionOutputParamsMinimized,
+  regionReadInputTypeMapper
+} from "../../scopeStores/region/regionStore.js";
+import {
+  projectOutputParams,
+  projectOutputParamsMinimized,
+  projectReadInputTypeMapper
+} from "../../scopeStores/project/projectStore.js";
 
 
 // TODO should be derived from the remote schema
@@ -482,6 +483,8 @@ export const normalizeUserStatePropsForMutating = (
     return userState
   }
   return R.compose(
+    // Omit in case we are updating data that came from a query
+    userState => omitDeep(['__typename'], userState),
     // Make sure related objects only have an id
     userState => updateRelatedObjectsToIdForm(
       {relatedPropPaths, relatedPropPathsToAllowedFields},
