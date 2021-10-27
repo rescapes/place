@@ -43,26 +43,26 @@ import {
   reqStrPathThrowing,
   strPathOr
 } from '@rescapes/ramda';
-import {selectionOutputParamsFragment} from '../selectionStore.js';
-import {activityOutputParamsMixin} from '../activityStore.js';
+import {selectionOutputParamsFragment} from './selectionStore.js';
+import {activityOutputParamsMixin} from './activityStore.js';
 import moment from 'moment';
-import {createUserSearchOutputParams} from "./userSearchStore.js";
 import {
   defaultSearchLocationOutputParams,
   defaultSearchLocationOutputParamsMinimized
-} from "../../search/searchLocation/defaultSearchLocationOutputParams.js";
-import {userStateRegionOutputParams} from "./userStateRegionStoreHelpers.js";
-import {userStateProjectOutputParams} from "./userStateProjectStoreHelpers.js";
+} from "../search/searchLocation/defaultSearchLocationOutputParams.js";
+import {userStateRegionOutputParams} from "./userScopeStores/userStateRegionStoreHelpers.js";
+import {userStateProjectOutputParams} from "./userScopeStores/userStateProjectStoreHelpers.js";
 import {
   regionOutputParams,
   regionOutputParamsMinimized,
   regionReadInputTypeMapper
-} from "../../scopeStores/region/regionStore.js";
+} from "../scopeStores/region/regionStore.js";
 import {
   projectOutputParams,
   projectOutputParamsMinimized,
   projectReadInputTypeMapper
-} from "../../scopeStores/project/projectStore.js";
+} from "../scopeStores/project/projectStore.js";
+import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore.js";
 
 
 // TODO should be derived from the remote schema
@@ -521,7 +521,7 @@ export const userStateMutationContainer = v(R.curry((
     {
       outputParams,
       normalizeUserStatePropsForMutating = normalizeDefaultUserStatePropsForMutating,
-      userStatePropPath='userState'
+      userStatePropPath = 'userState'
     },
     props
   ) => {
