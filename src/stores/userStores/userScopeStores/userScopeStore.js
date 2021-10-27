@@ -512,7 +512,7 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
                 R.lensProp('mutation'),
                 mutation => {
                   // The parameter crated by the mutation is userScopeData, but it's the same as the userScope
-                  return ({userScopeData}) => {
+                  return ({variables: {userScopeData}}) => {
                     // If the user passes the userScope to the mutation, update the userState with it
                     const userScopeDataUpdated = R.when(
                       R.identity,
@@ -526,7 +526,13 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
                     // Call the mutation with the updated userState
                     return R.ifElse(
                       R.identity,
-                      userScopeDataUpdated => mutation({userStateData: userScopeDataUpdated}),
+                      userScopeDataUpdated => {
+                        return mutation({
+                          variables: {
+                            userStateData: normalizeUserStatePropsForMutating(userScopeDataUpdated)
+                          }
+                        })
+                      },
                       () => mutation()
                     )(userScopeDataUpdated)
                   }
@@ -693,15 +699,17 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
                   () => R.identity,
                   () => {
                     return {
-                      // Use the setPropPath prop to create the userScope, which must be passed to the
-                      // mutation function as userScopeData.
-                      userScopeData: reqStrPathThrowing('userScope', propsWithSetUserScopePath(
-                        // Prefer the mutationProps version of setPropPath in
-                        {userStateResponse, ...R.merge(props, mutationProps)}
-                      ))
+                      variables: {
+                        // Use the setPropPath prop to create the userScope, which must be passed to the
+                        // mutation function as userScopeData.
+                        userScopeData: reqStrPathThrowing('userScope', propsWithSetUserScopePath(
+                          // Prefer the mutationProps version of setPropPath in
+                          {userStateResponse, ...R.merge(props, mutationProps.variables)}
+                        ))
+                      }
                     }
                   }
-                )(strPathOr(null, setPropPath, mutationProps)))
+                )(strPathOr(null, `variables.${setPropPath}`, mutationProps)))
               }
             },
             userStateMutation
