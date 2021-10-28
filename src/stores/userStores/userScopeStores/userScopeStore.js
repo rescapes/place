@@ -651,6 +651,10 @@ export const userStateScopeObjsMutationContainer = v(R.curry(
  * userState, including the targeted user scope instance. This function must remove values in userState.data
  * instances not expected by the server, such as userState.data.userRegions[*].region.name (region should only
  * provide id)
+ * @param {Function} config.userScopePreMutation Function that expects the updated userScope before mutation
+ * and modifies it as needed. This is only needed in cases where updating one prop path such as userSearch.userSearchLocations
+ * causes a side-effect on another such as userSearch.userSearchHistory.
+ * The returned userScope is then mutated with changes to both or more properties
  * @param props {Object} Must contain a userState at userStatePropPath. Must contain either a scope instance
  * @returns {*}
  */
@@ -664,7 +668,8 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
   userScopeInstancePropPath,
   scopeInstancePropPath,
   setPath,
-  setPropPath
+  setPropPath,
+  userScopePreMutation
 }, props) => {
 
   const propsWithSetUserScopePath = ({userStateResponse, ...props}) => {
@@ -672,15 +677,29 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
     return R.merge(propsWithUserState, {
       // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
       // The mutation will be set to skip if this resolves as null because of missing props
-      userScope: setPathOnResolvedUserScopeInstance({
-        scopeName,
-        userStatePropPath,
-        userScopeInstancePropPath,
-        scopeInstancePropPath,
-        // These mean set the value of the user scopeInstance[...setPath...]. from propSets[..setPropPath...]
-        setPath,
-        setPropPath
-      }, propsWithUserState),
+      userScope:
+        R.compose(
+          userScope => {
+            // Call userScopePreMutation if defined to modify the userScope as needed
+            return R.when(R.always(userScopePreMutation), userScope => {
+              return userScopePreMutation(userScope)
+            })(userScope)
+          },
+          props => {
+            return setPathOnResolvedUserScopeInstance({
+              scopeName,
+              userStatePropPath,
+              userScopeInstancePropPath,
+              scopeInstancePropPath,
+              // These mean set the value of the user scopeInstance[...setPath...]. from propSets[..setPropPath...]
+              setPath,
+              setPropPath,
+              // Don't limit the userScope to the propPath userScopePreMutation is defined, because it means
+              // we probably want to modify other prop paths
+              limitUserScopeToSetPropPath: !userScopePreMutation
+            }, props)
+          }
+        )(propsWithUserState),
     })
   }
 
@@ -721,7 +740,6 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
       ({userStateResponse, ...props}) => {
         if (
           !strPathOr(null, 'data', userStateResponse) ||
-          !strPathOr(null, userStatePropPath, props) ||
           (!strPathOr(null, userScopeInstancePropPath, props) &&
             !strPathOr(null, scopeInstancePropPath, props)
           )

@@ -269,7 +269,7 @@ export const setPathOnResolvedUserScopeInstance = (
     // might be passed in directly to the mutation function
     userScope => {
       return R.when(
-        userScope => R.and(userScope, strPathOr(null, setPropPath, props)),
+        userScope => R.and(userScope, null !== strPathOr(null, setPropPath, props)),
         userScope => R.set(
           R.lensPath(R.unless(Array.isArray, R.split('.'), setPath)),
           reqStrPathThrowing(setPropPath, props),

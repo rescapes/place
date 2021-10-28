@@ -151,6 +151,7 @@ export const userStateRegionSetPropertyThenMutationContainer = v((
       userStatePropPath,
       userScopeInstancePropPath,
       scopeInstancePropPath,
+      userScopePreMutation
     }, propSets
   ) => {
     return userStateScopeObjsSetPropertyThenMutationContainer(
@@ -166,6 +167,7 @@ export const userStateRegionSetPropertyThenMutationContainer = v((
         scopeInstancePropPath: scopeInstancePropPath || 'region',
         setPath,
         setPropPath,
+        userScopePreMutation
       },
       propSets
     )

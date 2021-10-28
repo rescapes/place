@@ -166,6 +166,7 @@ export const userStateProjectSetPropertyThenMutationContainer = v((apolloConfig,
     userStatePropPath,
     userScopeInstancePropPath,
     scopeInstancePropPath,
+    userScopePreMutation
   }, propSets) => {
     return userStateScopeObjsSetPropertyThenMutationContainer(
       apolloConfig, {
@@ -178,6 +179,7 @@ export const userStateProjectSetPropertyThenMutationContainer = v((apolloConfig,
         scopeInstancePropPath: scopeInstancePropPath || 'project',
         setPath,
         setPropPath,
+        userScopePreMutation
       },
       propSets
     )

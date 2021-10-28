@@ -124,7 +124,7 @@ export const userScopeOutputParamsOnlyIds = scopeName => {
   return R.compose(
     userScopeData => {
       return pickDeepPaths(
-        [`${scopeName}.id`, 'userSearch.userSearchLocations.searchLocation.id', 'activity'],
+        [`${scopeName}.id`, 'userSearch.userSearchLocations.activity', 'userSearch.userSearchLocations.searchLocation.id', 'activity'],
         userScopeData
       )
     },

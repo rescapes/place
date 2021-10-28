@@ -47,7 +47,14 @@ describe('userStateHelpers', () => {
               userScopeInstancePropPath: 'userRegion',
               scopeInstancePropPath: 'region',
               setPath: 'activity.isActive',
-              setPropPath: 'newIsActiveValue'
+              setPropPath: 'newIsActiveValue',
+              userScopePreMutation: userScope => {
+                // Do a side effect prior to mutation
+                return R.compose(
+                  userScope => R.set(R.lensPath(['userSearch', 'userSearchLocations', 1, 'activity', 'isActive']), true, userScope),
+                  userScope => R.set(R.lensPath(['userSearch', 'userSearchLocations', 0, 'activity', 'isActive']), false, userScope)
+                )(userScope)
+              }
             },
             {
               // The userState is optional. The current userState will be fetched from the cache or server
@@ -64,8 +71,7 @@ describe('userStateHelpers', () => {
         ({apolloConfig, currentUserResponse, settingsResponse}) => {
           return mutateSampleUserStateWithProjectsAndRegionsContainer(
             apolloConfig,
-            {
-            },
+            {},
             {
               user: R.pick(['id'], reqStrPathThrowing('data.currentUser', currentUserResponse)),
               regionKeys: ['earth'],
@@ -108,9 +114,14 @@ describe('userStateHelpers', () => {
     ])({}).run().listen(defaultRunConfig({
       onResolved:
         ({userState, updatedUserState}) => {
-          // We should have added on designFeatureLayer
           expect(strPathOr(null, 'result.data.mutate.userState.data.userRegions.0.activity.isActive', updatedUserState)).toEqual(
             false
+          );
+          expect(strPathOr(null, 'result.data.mutate.userState.data.userRegions.0.userSearch.userSearchLocations.0.activity.isActive', updatedUserState)).toEqual(
+            false
+          );
+          expect(strPathOr(null, 'result.data.mutate.userState.data.userRegions.0.userSearch.userSearchLocations.1.activity.isActive', updatedUserState)).toEqual(
+            true
           );
         }
     }, errors, done));
