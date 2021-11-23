@@ -22,15 +22,16 @@ const {fromPromised, of} = T;
 
 /**
  * Creates a sample searchLocation
- * @params apolloClient
+ * @params {Object} apolloConfig
+ * @params {Object} apolloConfig.apolloClient
  * @params {Object} props Overrides the defaults. {user: {id}} is required
  * @params {Object} props.user
  * @params {Number} props.user.id Required
  * @return {Object} {data: searchLocation: {...}}
  */
-export const createSampleSearchLocationContainer = ({apolloClient}, {outputParams= defaultSearchLocationOutputParams}, props) => {
+export const createSampleSearchLocationContainer = (apolloConfig, {outputParams= defaultSearchLocationOutputParams}, props) => {
   return makeSearchLocationMutationContainer(
-    {apolloClient},
+    apolloConfig,
     {outputParams},
     props
   );
