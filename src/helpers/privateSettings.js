@@ -25,10 +25,10 @@ export const rescapePlaceDefaultSettingsKey = 'rescape-place.settings.default';
 export default {
   key: rescapePlaceDefaultSettingsKey,
   data: {
-    domain: 'localhost',
+    domain: '127.0.0.1',
     api: {
       protocol: 'http',
-      host: 'localhost',
+      host: '127.0.0.1',
       port: '8008',
       path: '/graphql/'
     },

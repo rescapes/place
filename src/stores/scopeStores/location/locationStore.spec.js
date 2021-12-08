@@ -32,7 +32,7 @@ import {createSampleLocationContainer, createSampleLocationsContainer} from './l
 
 const someLocationKeys = ['name', 'key', 'data'];
 
-// These test REQUIRE an SOP server running at localhost:8004. See README.md
+// These test REQUIRE an SOP server running at 127.0.0.1:8004. See README.md
 describe('locationStore', () => {
 
   test('queryLocationVariationsContainers', done => {

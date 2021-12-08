@@ -35,7 +35,7 @@ const {of} = T;
 
 const someSearchLocationKeys = ['name', 'street'];
 
-// These test REQUIRE an SOP server running at localhost:8004. See README.md
+// These test REQUIRE an SOP server running at 127.0.0.1:8004. See README.md
 describe('searchLocationStore', () => {
 
   test('querySearchLocations', done => {
