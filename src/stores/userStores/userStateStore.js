@@ -375,7 +375,7 @@ export const currentUserStateQueryContainer = v(R.curry(
               apolloConfig,
               {
                 render: getRenderPropFunction(props),
-                response
+                response: currentUserResponse
               }
             );
           }
