@@ -35,7 +35,7 @@ describe('projectStore', () => {
       mapToNamedPathAndInputs('project', 'result.data.createProject.project',
         ({apolloConfig, userId}) => createSampleProjectContainer(
           apolloConfig,
-          {locationsContainer: createSampleLocationsContainer},
+          {createSampleLocationsContainer},
           {user: {id: userId}}
         )
       ),

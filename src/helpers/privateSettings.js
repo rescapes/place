@@ -29,7 +29,7 @@ export default {
     api: {
       protocol: 'http',
       host: '127.0.0.1',
-      port: '8008',
+      port: '8999',
       path: '/graphql/'
     },
     // Used to authenticate with the API above in tests

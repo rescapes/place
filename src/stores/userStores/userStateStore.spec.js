@@ -36,6 +36,7 @@ import {currentUserQueryContainer, userOutputParams} from '@rescapes/apollo';
 import {createSampleLocationsContainer} from '../scopeStores/location/locationStore.sample.js';
 import {regionOutputParamsMinimized, regionsQueryContainer} from "../scopeStores/region/regionStore.js";
 import {projectsQueryContainer} from "../scopeStores/project/projectStore.js";
+import {createSampleSearchLocationsContainer} from "../search/searchLocation/searchLocationStore.sample.js";
 
 
 describe('userStateStore', () => {
@@ -167,8 +168,8 @@ describe('userStateStore', () => {
               user,
               regionKeys: ['earth'],
               projectKeys: ['shrangrila'],
-              locationsContainer: createSampleLocationsContainer,
-              searchLocationNames: ['search me', 'i am innocent'],
+              createSampleLocationsContainer,
+              createSampleSearchLocationsContainer
             });
         }
       ),
@@ -211,8 +212,8 @@ describe('userStateStore', () => {
               user,
               regionKeys: ['earth'],
               projectKeys: ['shrangrila'],
-              locationsContainer: createSampleLocationsContainer,
-              searchLocationNames: ['search me', 'i am innocent'],
+              createSampleLocationsContainer,
+              createSampleSearchLocationsContainer,
             });
         }
       ),
@@ -234,8 +235,8 @@ describe('userStateStore', () => {
               user,
               regionKeys: ['earth'],
               projectKeys: ['shrangrila'],
-              locationsContainer: createSampleLocationsContainer,
-              searchLocationNames: ['search me', 'i am innocent'],
+              createSampleLocationsContainer,
+              createSampleSearchLocationsContainer
             }
           );
         }
@@ -267,7 +268,7 @@ describe('userStateStore', () => {
           expect(_thirdProjects).toEqual(_secondProjects)
         }
     }, errors, done));
-  }, 10000000);
+  }, 100000);
 
   test('userStateMutationWithCacheValuesContainer', done => {
     const errors = [];

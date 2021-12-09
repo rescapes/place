@@ -30,7 +30,7 @@ import {
  * @params {Object} config.apolloConfig
  * @params {Object} options
  * @params {Boolean} [options.deleteExisting] Default false. If true delete existing projects of the user first
- * @params {Function} options.locationsContainer Optional function to create locations for the project
+ * @params {Function} options.createSampleLocationsContainer Optional function to create locations for the project
  * @params {Object} options.outputParams Optional
  * @params {Object} props Overrides the defaults. {user: {id}} is required
  * @params {Object} props.user
@@ -39,7 +39,7 @@ import {
  */
 export const createSampleProjectContainer = (apolloConfig, {
   outputParams,
-  locationsContainer,
+  createSampleLocationsContainer,
   deleteExisting = false
 }, props) => {
 
@@ -70,7 +70,7 @@ export const createSampleProjectContainer = (apolloConfig, {
             }
           );
         }
-      )(locationsContainer);
+      )(createSampleLocationsContainer);
     },
     // Delete all projects of this user if desired.
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedResponse',
@@ -170,7 +170,7 @@ export const createSampleProjectsContainer = v((apolloConfig, {count=10}, props)
                 apolloConfig,
                 R.merge(
                   options,
-                  {locationsContainer: createSampleLocationsContainer}
+                  {createSampleLocationsContainer}
                 ),
                 props
               );
