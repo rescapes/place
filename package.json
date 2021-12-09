@@ -34,6 +34,7 @@
   "dependencies": {
     "@apollo/client": "^3.5.6",
     "@mapbox/geo-viewport": "^0.5.0",
+    "@rescapes/osm": "^0.3.163",
     "@turf/bbox": "^6.5.0",
     "@turf/bbox-polygon": "^6.5.0",
     "@turf/center": "^6.5.0",

@@ -13,10 +13,10 @@ import * as R from 'ramda';
 import {
   composeWithComponentMaybeOrTaskChain,
   createReadInputTypeMapper,
-  deleteItemsOfExistingResponses,
+  deleteItemsOfExistingResponses, filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
   makeQueryContainer,
-  mapTaskOrComponentToNamedResponseAndInputs
+  mapTaskOrComponentToNamedResponseAndInputs, updateRelatedObjectsToIdForm
 } from '@rescapes/apollo';
 import PropTypes from 'prop-types';
 import {v} from '@rescapes/validate';
@@ -26,6 +26,8 @@ import {
 } from './defaultSearchLocationOutputParams.js';
 import T from 'folktale/concurrency/task/index.js';
 import {composeFuncAtPathIntoApolloConfig} from "@rescapes/apollo"
+import {strPathOr} from "@rescapes/ramda";
+import {cleanGeojson} from "@rescapes/osm";
 
 const {of} = T;
 
@@ -39,11 +41,54 @@ export const RELATED_PROPS = [];
 // Following this searchLocation.data is represented as follows:
 export const searchLocationReadInputTypeMapper = createReadInputTypeMapper(
   'searchLocation',
-  ['identification', 'street', 'jurisdictions', 'geojson', 'intersections'],
+  ['identification', 'street', 'jurisdictions', 'geojson'],
   // This special argument adds 'Search' to the start of each ReadInputType, since our Graphql type differs
   // from the django field name (because we want the django field name to match those of Location)
   'search'
 );
+
+/**
+ * Omits some unsupported searchLocation props from querying
+ * Does nothing at the moment
+ * @param {Object} searchLocation
+ * @return {Object}
+ */
+export const normalizeSearchLocationPropsForQuerying = searchLocation => {
+  // Placeholder
+  return searchLocation
+}
+
+/**
+ * Omits some unsupported location props from mutating
+ * @param {Object} options
+ * @param {String} [options.searchLocationPropsPath] Path of location in props. By default
+ * props are the location
+ * @param {Object} props
+ * @return {Object} The normalized location in props or props itself
+ */
+export const normalizeSearchLocationPropsForMutating = ({searchLocationPropsPath}, props) => {
+  return R.over(
+    // If locationPropsPath is null, over will operate on props
+    R.lensPath(searchLocationPropsPath ? R.split('.', searchLocationPropsPath) : []),
+    props => {
+      return R.compose(
+        searchLocation => updateRelatedObjectsToIdForm({relatedPropPaths: RELATED_PROPS}, searchLocation),
+        searchLocation => filterOutReadOnlyVersionProps(searchLocation),
+        // If we have geojson, make sure each feature has clean geojson.
+        // The main problem is feature property tags sometimes have colon keys like tiger:, which
+        // graphql can't handle.
+        searchLocation => R.when(
+          searchLocation => strPathOr(null, 'geojson.features', searchLocation),
+          searchLocation => R.over(
+            R.lensPath(['geojson', 'features']),
+            features => R.map(cleanGeojson, features || []),
+            searchLocation
+          )
+        )(searchLocation)
+      )(props);
+    },
+    props);
+}
 
 /**
  * Chained Task to query searchLocations and return searchLocations and the queryParams
@@ -61,7 +106,8 @@ export const querySearchLocationsContainer = v(R.curry(
       {
         name: 'searchLocations',
         readInputTypeMapper ,
-        outputParams
+        outputParams,
+        normalizeProps: normalizeSearchLocationPropsForQuerying
       },
       props
     );
@@ -93,16 +139,7 @@ export const makeSearchLocationMutationContainer = v(R.curry(
       composeFuncAtPathIntoApolloConfig(
         apolloConfig,
         'options.variables',
-        props => {
-          return R.over(
-            // If searchLocationPropsPath is null, over will operate on props
-            R.lensPath(searchLocationPropsPath ? R.split('.', searchLocationPropsPath) : []),
-            props => {
-              return props;
-            },
-            props
-          )
-        }
+        props => normalizeSearchLocationPropsForMutating({searchLocationPropsPath}, props)
       ),
       {
         name: 'searchLocation',
