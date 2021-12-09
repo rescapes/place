@@ -38,7 +38,7 @@ export const RELATED_PROPS = [];
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
 // Following this searchLocation.data is represented as follows:
 export const searchLocationReadInputTypeMapper = createReadInputTypeMapper(
-  'searchLocation', ['street', 'jurisdictions', 'geojson']
+  'searchLocation', ['street', 'jurisdictions', 'geojson', 'intersections']
 );
 
 /**
@@ -46,16 +46,17 @@ export const searchLocationReadInputTypeMapper = createReadInputTypeMapper(
  * @param {Object} apolloConfig The Apollo config
  * @param {Object} options
  * @param {Object} [options.outputParams] Defaults to defaultSearchLocationOutputParams, The output params of the query
+ * @param {OBject} [options.readInputTypeMapper] Defaults to searchLocationReadInputTypeMapper
  * @param {Object} props The props for the query
  * @return {Task|Object} A task or React container containing the searchLocations and the queryParams
  */
 export const querySearchLocationsContainer = v(R.curry(
-  (apolloConfig, {outputParams=defaultSearchLocationOutputParams}, props) => {
+  (apolloConfig, {outputParams=defaultSearchLocationOutputParams, readInputTypeMapper=searchLocationReadInputTypeMapper}, props) => {
     return makeQueryContainer(
       apolloConfig,
       {
         name: 'searchLocations',
-        readInputTypeMapper: searchLocationReadInputTypeMapper,
+        readInputTypeMapper ,
         outputParams
       },
       props
