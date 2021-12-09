@@ -56,7 +56,7 @@
     "request": "^2.88.2"
   },
   "devDependencies": {
-    "@rescapes/apollo": "^0.1.598",
+    "@rescapes/apollo": "^0.1.600",
     "@rescapes/geospatial-sankey": "^0.7.62",
     "@rescapes/helpers": "^1.1.127",
     "@rescapes/log": "^0.1.30",
@@ -87,7 +87,7 @@
     "promise": "8.1.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "rollup": "^2.60.2",
+    "rollup": "^2.61.0",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-commonjs": "10.1.0",
     "rollup-plugin-json": "^4.0.0",

@@ -38,7 +38,11 @@ export const RELATED_PROPS = [];
 // always in the form [GrapheneFieldType]of[GrapheneModeType]RelatedReadInputType
 // Following this searchLocation.data is represented as follows:
 export const searchLocationReadInputTypeMapper = createReadInputTypeMapper(
-  'searchLocation', ['street', 'jurisdictions', 'geojson', 'intersections']
+  'searchLocation',
+  ['street', 'jurisdictions', 'geojson', 'intersections'],
+  // This special argument adds 'Search' to the start of each ReadInputType, since our Graphql type differs
+  // from the django field name (because we want the django field name to match those of Location)
+  'search'
 );
 
 /**
