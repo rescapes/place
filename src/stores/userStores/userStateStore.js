@@ -18,7 +18,7 @@ import {
   containerForApolloType,
   createCacheOnlyProps,
   createReadInputTypeMapper,
-  currentUserQueryContainer,
+  currentUserQueryContainer, filterOutNullAndEmptyDeep,
   filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
   getRenderPropFunction,
@@ -69,9 +69,9 @@ import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore.js
 const RELATED_PROPS = ['user'];
 export const USER_STATE_RELATED_DATA_PROPS = [
   'data.userRegions.region', 'data.userProjects.project',
-  // Although related, leave these out since we can create searchLocations when we save a user state
   'data.userRegions.userSearch.userSearchLocations.searchLocation',
-  'data.userProjects.userSearch.userSearchLocations.searchLocation',
+  'data.userRegions.userSearch.userSearchLocations.searchLocation.jurisdictions',
+  'data.userProjects.userSearch.userSearchLocations.searchLocation.jurisdictions',
 ];
 // User search locations can be saved with the following props when we mutate a userState
 export const USER_SEARCH_LOCATION_ALLOWED_PROPS = ['name', 'identification', 'street', 'jurisdictions', 'geojson', 'data']
@@ -483,6 +483,10 @@ export const normalizeUserStatePropsForMutating = (
     return userState
   }
   return R.compose(
+    // Remove nulls and empty objs, since this object can be huge
+    userState => {
+      return filterOutNullAndEmptyDeep(userState)
+    },
     // Omit in case we are updating data that came from a query
     userState => omitDeep(['__typename'], userState),
     // Make sure related objects only have an id
