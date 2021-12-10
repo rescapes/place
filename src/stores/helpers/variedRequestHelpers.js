@@ -87,11 +87,11 @@ export const queryVariationContainers = R.curry((
                         // Skip queries not specified by queryKey in allowQueries if allowQueries is truthy
                         () => allowQueries && !R.includes(queryKey, allowQueries),
                         // If apolloConfig.options.skip is defined, test it
-                        props => strPathOr(R.always(false), 'options.skip', apolloConfig)(props),
+                        () => strPathOr(R.always(false), 'options.skip', apolloConfig),
                         // If an authRequestFilter is provided test it. Usually it's better to test authentication
                         // using the options.skip function, so that the authentication props don't get hard-coded
                         // in a caller to queryVariationContainers
-                        props => (R.complement(authRequestFilter || R.always(true)))(props)
+                        props => R.complement(authRequestFilter || R.always(true))(props)
                     ])(props);
                     // Update apolloConfig so that props.objects are passed to the optional options.variables function
                     const _apolloConfig = mergeDeep(
