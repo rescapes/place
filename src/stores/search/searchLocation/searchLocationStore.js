@@ -13,7 +13,7 @@ import * as R from 'ramda';
 import {
   composeWithComponentMaybeOrTaskChain,
   createReadInputTypeMapper,
-  deleteItemsOfExistingResponses, filterOutReadOnlyVersionProps,
+  deleteItemsOfExistingResponses, filterOutNullAndEmptyDeep, filterOutReadOnlyVersionProps,
   makeMutationRequestContainer,
   makeQueryContainer,
   mapTaskOrComponentToNamedResponseAndInputs, updateRelatedObjectsToIdForm
@@ -72,19 +72,29 @@ export const normalizeSearchLocationPropsForMutating = ({searchLocationPropsPath
     R.lensPath(searchLocationPropsPath ? R.split('.', searchLocationPropsPath) : []),
     props => {
       return R.compose(
-        searchLocation => updateRelatedObjectsToIdForm({relatedPropPaths: RELATED_PROPS}, searchLocation),
-        searchLocation => filterOutReadOnlyVersionProps(searchLocation),
+        searchLocation => {
+          // Remove nulls and empty dicts/arrays
+          return filterOutNullAndEmptyDeep(searchLocation)
+        },
+        searchLocation => {
+          return updateRelatedObjectsToIdForm({relatedPropPaths: RELATED_PROPS}, searchLocation)
+        },
+        searchLocation => {
+          return filterOutReadOnlyVersionProps(searchLocation)
+        },
         // If we have geojson, make sure each feature has clean geojson.
         // The main problem is feature property tags sometimes have colon keys like tiger:, which
         // graphql can't handle.
-        searchLocation => R.when(
-          searchLocation => strPathOr(null, 'geojson.features', searchLocation),
-          searchLocation => R.over(
-            R.lensPath(['geojson', 'features']),
-            features => R.map(cleanGeojson, features || []),
-            searchLocation
-          )
-        )(searchLocation)
+        searchLocation => {
+          return R.when(
+            searchLocation => strPathOr(null, 'geojson.features', searchLocation),
+            searchLocation => R.over(
+              R.lensPath(['geojson', 'features']),
+              features => R.map(cleanGeojson, features || []),
+              searchLocation
+            )
+          )(searchLocation)
+        }
       )(props);
     },
     props);
@@ -100,18 +110,21 @@ export const normalizeSearchLocationPropsForMutating = ({searchLocationPropsPath
  * @return {Task|Object} A task or React container containing the searchLocations and the queryParams
  */
 export const querySearchLocationsContainer = v(R.curry(
-  (apolloConfig, {outputParams=defaultSearchLocationOutputParams, readInputTypeMapper=searchLocationReadInputTypeMapper}, props) => {
-    return makeQueryContainer(
-      apolloConfig,
-      {
-        name: 'searchLocations',
-        readInputTypeMapper ,
-        outputParams,
-        normalizeProps: normalizeSearchLocationPropsForQuerying
-      },
-      props
-    );
-  }),
+    (apolloConfig, {
+      outputParams = defaultSearchLocationOutputParams,
+      readInputTypeMapper = searchLocationReadInputTypeMapper
+    }, props) => {
+      return makeQueryContainer(
+        apolloConfig,
+        {
+          name: 'searchLocations',
+          readInputTypeMapper,
+          outputParams,
+          normalizeProps: normalizeSearchLocationPropsForQuerying
+        },
+        props
+      );
+    }),
   [
     ['apolloConfig', PropTypes.shape().isRequired
     ],
@@ -134,7 +147,7 @@ export const querySearchLocationsContainer = v(R.curry(
  * @returns {Task|Object} A task or Reach container that resolves to the mutation
  */
 export const makeSearchLocationMutationContainer = v(R.curry(
-  (apolloConfig, {outputParams=defaultSearchLocationOutputParamsMinimized, searchLocationPropsPath}, props) => {
+  (apolloConfig, {outputParams = defaultSearchLocationOutputParamsMinimized, searchLocationPropsPath}, props) => {
     return makeMutationRequestContainer(
       composeFuncAtPathIntoApolloConfig(
         apolloConfig,
