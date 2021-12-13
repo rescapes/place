@@ -74,7 +74,7 @@ export const normalizeSearchLocationPropsForMutating = ({searchLocationPropsPath
       return R.compose(
         searchLocation => {
           // Remove nulls and empty dicts/arrays
-          return filterOutNullAndEmptyDeep(searchLocation)
+          return filterOutNullAndEmptyDeep({}, searchLocation)
         },
         searchLocation => {
           return updateRelatedObjectsToIdForm({relatedPropPaths: RELATED_PROPS}, searchLocation)

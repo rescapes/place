@@ -485,7 +485,7 @@ export const normalizeUserStatePropsForMutating = (
   return R.compose(
     // Remove nulls and empty objs, since this object can be huge
     userState => {
-      return filterOutNullAndEmptyDeep(userState)
+      return filterOutNullAndEmptyDeep({}, userState)
     },
     // Omit in case we are updating data that came from a query
     userState => omitDeep(['__typename'], userState),
