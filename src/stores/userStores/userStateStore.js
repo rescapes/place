@@ -70,6 +70,7 @@ const RELATED_PROPS = ['user'];
 export const USER_STATE_RELATED_DATA_PROPS = [
   'data.userRegions.region', 'data.userProjects.project',
   'data.userRegions.userSearch.userSearchLocations.searchLocation',
+  'data.userProjects.userSearch.userSearchLocations.searchLocation',
   'data.userRegions.userSearch.userSearchLocations.searchLocation.jurisdictions',
   'data.userProjects.userSearch.userSearchLocations.searchLocation.jurisdictions',
 ];
@@ -488,15 +489,25 @@ export const normalizeUserStatePropsForMutating = (
       return filterOutNullAndEmptyDeep({}, userState)
     },
     // Omit in case we are updating data that came from a query
-    userState => omitDeep(['__typename'], userState),
+    userState => {
+      return omitDeep(['__typename'], userState)
+    },
     // Make sure related objects only have an id
-    userState => updateRelatedObjectsToIdForm(
-      {relatedPropPaths, relatedPropPathsToAllowedFields},
-      userState
-    ),
-    userState => filterOutReadOnlyVersionProps(userState),
-    userState => filterOutNullDeleteProps(userState),
-    userState => filterOutCacheOnlyObjs(userState)
+    userState => {
+      return updateRelatedObjectsToIdForm(
+        {relatedPropPaths, relatedPropPathsToAllowedFields},
+        userState
+      )
+    },
+    userState => {
+      return filterOutReadOnlyVersionProps(userState)
+    },
+    userState => {
+      return filterOutNullDeleteProps(userState)
+    },
+    userState => {
+      return filterOutCacheOnlyObjs(userState)
+    }
   )(userState);
 };
 
