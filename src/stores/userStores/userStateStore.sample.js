@@ -333,6 +333,8 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     userState,
     regionKeys,
     projectKeys,
+    createSampleRegionsContainer,
+    createSampleProjectsContainer,
     createSampleLocationsContainer,
     createSampleSearchLocationsContainer,
     searchLocationNames,
