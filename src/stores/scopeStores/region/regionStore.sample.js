@@ -1,20 +1,11 @@
-import {regionMutationContainer, regionsQueryContainer, regionOutputParams} from './regionStore.js';
-import {
-  composeWithChain,
-  mapToNamedResponseAndInputs,
-  mergeDeep,
-  reqStrPathThrowing,
-  traverseReduce
-} from '@rescapes/ramda';
-import T from 'folktale/concurrency/task/index.js';
-
-const {fromPromised, of} = T;
+import {regionMutationContainer, regionOutputParams, regionsQueryContainer} from './regionStore.js';
+import {mergeDeep} from '@rescapes/ramda';
 import moment from 'moment';
 import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
-import * as R from 'ramda';
 import {queryAndDeleteIfFoundContainer} from '../../helpers/scopeHelpers.js';
 import {callMutationNTimesAndConcatResponses, composeWithComponentMaybeOrTaskChain} from '@rescapes/apollo';
+
 
 /**
  * Created by Andy Likuski on 2019.01.22

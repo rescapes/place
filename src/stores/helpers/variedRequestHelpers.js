@@ -12,9 +12,9 @@ import * as R from 'ramda';
 import {queryPageContainer, queryUsingPaginationContainer} from './pagedRequestHelpers.js';
 import {capitalize, mergeDeep, strPathEq, strPathOr} from '@rescapes/ramda';
 import {
-    composeFuncAtPathIntoApolloConfig,
-    containerForApolloType,
-    getRenderPropFunction, nameComponent
+  composeFuncAtPathIntoApolloConfig,
+  containerForApolloType,
+  getRenderPropFunction, nameComponent
 } from '@rescapes/apollo';
 
 
@@ -57,116 +57,116 @@ import {
  * the query container
  */
 export const queryVariationContainers = R.curry((
-    apolloConfig,
-    {
-        name,
-        requestTypes,
-        queryConfig,
-        queryContainer,
-        normalizeProps = R.identity,
-        allowRequestPropPath,
-        allowQueries,
-        authRequestFilter,
-    }
+  apolloConfig,
+  {
+    name,
+    requestTypes,
+    queryConfig,
+    queryContainer,
+    normalizeProps = R.identity,
+    allowRequestPropPath,
+    allowQueries,
+    authRequestFilter,
+  }
 ) => {
-    return R.fromPairs(R.map(
-        ({type, name: typeName, args}) => {
-            const pluralName = `${name}s`;
-            const queryKey = `query${capitalize(pluralName)}${capitalize(typeName || type || '')}`;
-            return [
-                queryKey,
-                props => {
-                    // Skip if our skipFilter returns true or authRequestFilter returns false
-                    const skip = R.anyPass([
-                        // Skip unless the props['allowRequestPropPath'] equals queryKey
-                        // This check is disabled by the presence of queryVariationContainersTestAll
-                        // or allowQueries being non-null/non-empty
-                        props => !R.propOr(false, 'queryVariationContainersTestAll', props) &&
-                            !allowQueries &&
-                            R.complement(strPathEq)(allowRequestPropPath, queryKey)(props),
-                        // Skip queries not specified by queryKey in allowQueries if allowQueries is truthy
-                        () => allowQueries && !R.includes(queryKey, allowQueries),
-                        // If apolloConfig.options.skip is defined, test it
-                        () => strPathOr(R.always(false), 'options.skip', apolloConfig),
-                        // If an authRequestFilter is provided test it. Usually it's better to test authentication
-                        // using the options.skip function, so that the authentication props don't get hard-coded
-                        // in a caller to queryVariationContainers
-                        props => R.complement(authRequestFilter || R.always(true))(props)
-                    ])(props);
-                    // Update apolloConfig so that props.objects are passed to the optional options.variables function
-                    const _apolloConfig = mergeDeep(
-                        composeFuncAtPathIntoApolloConfig(
-                            apolloConfig,
-                            'options.variables',
-                            normalizeProps
-                        ),
-                        // Merge skip into options
-                        {options: {skip}}
-                    )
+  return R.fromPairs(R.map(
+    ({type, name: typeName, args}) => {
+      const pluralName = `${name}s`;
+      const queryKey = `query${capitalize(pluralName)}${capitalize(typeName || type || '')}`;
+      return [
+        queryKey,
+        props => {
+          // Skip if our skipFilter returns true or authRequestFilter returns false
+          const skip = R.anyPass([
+            // Skip unless the props['allowRequestPropPath'] equals queryKey
+            // This check is disabled by the presence of queryVariationContainersTestAll
+            // or allowQueries being non-null/non-empty
+            props => !R.propOr(false, 'queryVariationContainersTestAll', props) &&
+              !allowQueries &&
+              R.complement(strPathEq)(allowRequestPropPath, queryKey)(props),
+            // Skip queries not specified by queryKey in allowQueries if allowQueries is truthy
+            () => allowQueries && !R.includes(queryKey, allowQueries),
+            // If apolloConfig.options.skip is defined, test it
+            () => strPathOr(false, 'options.skip', apolloConfig),
+            // If an authRequestFilter is provided test it. Usually it's better to test authentication
+            // using the options.skip function, so that the authentication props don't get hard-coded
+            // in a caller to queryVariationContainers
+            props => R.complement(authRequestFilter || R.always(true))(props)
+          ])(props);
+          // Update apolloConfig so that props.objects are passed to the optional options.variables function
+          const _apolloConfig = mergeDeep(
+            composeFuncAtPathIntoApolloConfig(
+              apolloConfig,
+              'options.variables',
+              normalizeProps
+            ),
+            // Merge skip into options
+            {options: {skip}}
+          )
 
-                    return R.cond([
-                        // Queries for one page at a time
-                        [R.equals('paginated'),
-                            () => {
-                                return queryPageContainer(
-                                    _apolloConfig,
-                                    R.omit(['readInputTypeMapper'],
-                                        R.mergeAll([
-                                            // Defaults
-                                            queryConfig,
-                                            {
-                                                typeName: name,
-                                                name: `${pluralName}Paginated`
-                                            },
-                                            // Overrides for particular query type
-                                            args
-                                        ])
-                                    ),
-                                    props
-                                );
-                            }
-                        ],
-                        // Queries for all objects using pages whose results are combined.
-                        // This prevents large query results that tax the server
-                        [R.equals('paginatedAll'),
-                            () => {
-                                return queryUsingPaginationContainer(
-                                    _apolloConfig,
-                                    R.omit(['readInputTypeMapper'],
-                                        R.mergeAll([
-                                                // Defaults
-                                                queryConfig,
-                                                {
-                                                    typeName: name,
-                                                    name: `${pluralName}Paginated`
-                                                },
-                                                // Overrides for particular query type
-                                                args
-                                            ]
-                                        )
-                                    ),
-                                    props
-                                );
-                            }
-                        ],
-                        // Normal queries such as with full outputParams or minimized outputParams
-                        // Type is optional here
-                        [R.T,
-                            () => {
-                                // Perform the normal query
-                                return nameComponent(queryKey, queryContainer(
-                                    _apolloConfig,
-                                    R.mergeAll([queryConfig, args]),
-                                    props
-                                ));
-                            }
-                        ]
-                    ])(type);
-                }
-            ];
-        },
-        requestTypes
-    ));
+          return R.cond([
+            // Queries for one page at a time
+            [R.equals('paginated'),
+              () => {
+                return queryPageContainer(
+                  _apolloConfig,
+                  R.omit(['readInputTypeMapper'],
+                    R.mergeAll([
+                      // Defaults
+                      queryConfig,
+                      {
+                        typeName: name,
+                        name: `${pluralName}Paginated`
+                      },
+                      // Overrides for particular query type
+                      args
+                    ])
+                  ),
+                  props
+                );
+              }
+            ],
+            // Queries for all objects using pages whose results are combined.
+            // This prevents large query results that tax the server
+            [R.equals('paginatedAll'),
+              () => {
+                return queryUsingPaginationContainer(
+                  _apolloConfig,
+                  R.omit(['readInputTypeMapper'],
+                    R.mergeAll([
+                        // Defaults
+                        queryConfig,
+                        {
+                          typeName: name,
+                          name: `${pluralName}Paginated`
+                        },
+                        // Overrides for particular query type
+                        args
+                      ]
+                    )
+                  ),
+                  props
+                );
+              }
+            ],
+            // Normal queries such as with full outputParams or minimized outputParams
+            // Type is optional here
+            [R.T,
+              () => {
+                // Perform the normal query
+                return nameComponent(queryKey, queryContainer(
+                  _apolloConfig,
+                  R.mergeAll([queryConfig, args]),
+                  props
+                ));
+              }
+            ]
+          ])(type);
+        }
+      ];
+    },
+    requestTypes
+  ));
 });
 
 /**
@@ -178,22 +178,22 @@ export const queryVariationContainers = R.curry((
  * @returns {Object} queryVariationContainers or modified if not authenticated
  */
 export const variationContainerAuthDependency = (apolloConfig, authenticationPath, queryVariationContainers) => {
-    return R.map(
-        component => {
-            // Skip if not authenticated
-            return props => {
-                if (!strPathOr(false, authenticationPath, props)) {
-                    return containerForApolloType(
-                        apolloConfig,
-                        {
-                            render: getRenderPropFunction(props),
-                            response: props
-                        }
-                    );
-                }
-                return component(props);
-            };
-        },
-        queryVariationContainers
-    );
+  return R.map(
+    component => {
+      // Skip if not authenticated
+      return props => {
+        if (!strPathOr(false, authenticationPath, props)) {
+          return containerForApolloType(
+            apolloConfig,
+            {
+              render: getRenderPropFunction(props),
+              response: props
+            }
+          );
+        }
+        return component(props);
+      };
+    },
+    queryVariationContainers
+  );
 };

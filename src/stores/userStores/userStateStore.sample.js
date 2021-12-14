@@ -56,7 +56,11 @@ const log = loggers.get('rescapeDefault');
  * @param {Object} props
  * @param {Object} props.user A real user object
  * @param {Object} props.userState Alternative to props.user, when the userState already exists
+ * @param {Function} [props.createSampleRegionsContainer] Optional function to create regions.
+ * Don't use with props.regionKeys
  * @param {[String]} props.regionKeys Region keys to use to make sample regions
+ * @param {Function} [props.createSampleProjectsContainer] Optional function to create projects.
+ * Don't use with props.projectKeys
  * @param {[String]} props.projectKeys Project keys to use to make sample projects
  * @param {Function} [props.createSampleLocationsContainer] Optional function to create Locations
  * This function expects two arguments, apolloConfig and props.
@@ -82,6 +86,8 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
     userState,
     regionKeys,
     projectKeys,
+    createSampleRegionsContainer,
+    createSampleProjectsContainer,
     createSampleLocationsContainer,
     createSampleSearchLocationsContainer,
     searchLocationNames,
@@ -122,89 +128,117 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
 
     // Create sample projects
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projects',
-      ({locations, regions, render}) => {
-        return callMutationNTimesAndConcatResponses(
-          apolloConfig, {
-            items: projectKeys,
-            // These help us find existing regions from the API and either reuse them or destroy and recreate them
-            forceDelete,
-            existingMatchingProps: {user: R.pick(['id'], user), nameIn: R.map(capitalize, projectKeys)},
-            existingItemMatch: (item, existingItemsResponses) => {
-              const existing = R.find(
-                existingItem => {
-                  // TODO it's possible to get a deleted item here because the item can be found in the cache
-                  // after it's been deleted. We should make sure deleted items are removed from the cache
-                  return !strPathOr(false, 'deleted', existingItem) && R.propEq('name', capitalize(item), existingItem)
-                },
-                existingItemsResponses
-              )
-              if (existing) {
-                log.debug(`Found existing sample project with id ${existing.id} for name ${existing.name}`)
-              }
-              return existing
-            },
-            queryForExistingContainer: projectsQueryContainer,
-            queryResponsePath: 'data.projects',
+      ({render, regions, createSampleProjectsContainer, projectKeys}) => {
+        return R.cond([
+          [
+            // Create SearchLocations based on createSampleSearchLocationsContainer
+            R.prop('createSampleProjectsContainer'),
+            ({regions, createSampleProjectsContainer, render}) => {
+              return createSampleProjectsContainer(apolloConfig, {forceDelete}, {regions, render});
+            }
+          ],
+          [
+            ({locations, regions, projectKeys, render}) => {
+              return callMutationNTimesAndConcatResponses(
+                apolloConfig, {
+                  items: projectKeys,
+                  // These help us find existing regions from the API and either reuse them or destroy and recreate them
+                  forceDelete,
+                  existingMatchingProps: {user: R.pick(['id'], user), nameIn: R.map(capitalize, projectKeys)},
+                  existingItemMatch: (item, existingItemsResponses) => {
+                    const existing = R.find(
+                      existingItem => {
+                        // TODO it's possible to get a deleted item here because the item can be found in the cache
+                        // after it's been deleted. We should make sure deleted items are removed from the cache
+                        return !strPathOr(false, 'deleted', existingItem) && R.propEq('name', capitalize(item), existingItem)
+                      },
+                      existingItemsResponses
+                    )
+                    if (existing) {
+                      log.debug(`Found existing sample project with id ${existing.id} for name ${existing.name}`)
+                    }
+                    return existing
+                  },
+                  queryForExistingContainer: projectsQueryContainer,
+                  queryResponsePath: 'data.projects',
 
-            mutationContainer: projectMutationContainer,
-            responsePath: 'result.data.mutate.project',
-            propVariationFunc: ({item: projectKey}) => {
-              return projectSample({
-                // Keys have to be unique through the system, so might have a suffix assigned by the server
-                key: projectKey,
-                // These don't have to be unique
-                name: capitalize(projectKey),
-                user: R.pick(['id'], user),
-                region: R.pick(['id'], R.head(regions)),
-                locations: R.map(R.pick(['id']), locations)
-              });
-            },
-            // Need the full outputParams for createUserProjectWithDefaults()
-            outputParams: projectOutputParams
-          },
-          {regions, locations, render}
-        );
+                  mutationContainer: projectMutationContainer,
+                  responsePath: 'result.data.mutate.project',
+                  propVariationFunc: ({item: projectKey}) => {
+                    return projectSample({
+                      // Keys have to be unique through the system, so might have a suffix assigned by the server
+                      key: projectKey,
+                      // These don't have to be unique
+                      name: capitalize(projectKey),
+                      user: R.pick(['id'], user),
+                      region: R.pick(['id'], R.head(regions)),
+                      locations: R.map(R.pick(['id']), locations)
+                    });
+                  },
+                  // Need the full outputParams for createUserProjectWithDefaults()
+                  outputParams: projectOutputParams
+                },
+                {regions, projectKeys, locations, render}
+              );
+            }
+          ]
+        ])({render, createSampleProjectsContainer, projectKeys})
       }
     ),
     // Create sample regions
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'regions',
-      ({render, regionKeys}) => {
-        return callMutationNTimesAndConcatResponses(
-          apolloConfig,
-          {
-            items: regionKeys,
-            // These help us find existing regions from the API and either reuse them or destroy and recreate them
-            forceDelete,
-            existingMatchingProps: {nameIn: R.map(capitalize, regionKeys)},
-            existingItemMatch: (item, existingItemsResponses) => {
-              const existing = R.find(
-                existingItem => {
-                  // TODO it's possible to get a deleted item here because the item can be found in the cache
-                  // after it's been deleted. We should make sure deleted items are removed from the cache
-                  return !strPathOr(false, 'deleted', existingItem) && R.propEq('name', capitalize(item), existingItem)
-                },
-                existingItemsResponses
-              )
-              if (existing) {
-                log.debug(`Found existing sample region with id ${existing.id} for name ${existing.name}`)
-              }
-              return existing
-            },
-            queryForExistingContainer: regionsQueryContainer,
-            // Need the full to get region.data.mapbox for sample data userRegion data
-            outputParams: regionOutputParams,
-            queryResponsePath: 'data.regions',
-            mutationContainer: createSampleRegionContainer,
-            responsePath: 'result.data.mutate.region',
-            propVariationFunc: ({item: regionKey}) => {
-              return {
-                key: regionKey,
-                name: capitalize(regionKey)
-              };
+      ({render, createSampleRegionsContainer, regionKeys}) => {
+        return R.cond([
+          [
+            // Create SearchLocations based on createSampleSearchLocationsContainer
+            R.prop('createSampleRegionsContainer'),
+            ({createSampleRegionsContainer, render}) => {
+              return createSampleRegionsContainer(apolloConfig, {forceDelete}, {render});
             }
-          },
-          {render}
-        );
+          ],
+          [
+            // Create SearchLocations based on names
+            R.prop('regionKeys'),
+            ({createSampleRegionsContainer, render}) => {
+              return callMutationNTimesAndConcatResponses(
+                apolloConfig,
+                {
+                  items: regionKeys,
+                  // These help us find existing regions from the API and either reuse them or destroy and recreate them
+                  forceDelete,
+                  existingMatchingProps: {nameIn: R.map(capitalize, regionKeys)},
+                  existingItemMatch: (item, existingItemsResponses) => {
+                    const existing = R.find(
+                      existingItem => {
+                        // TODO it's possible to get a deleted item here because the item can be found in the cache
+                        // after it's been deleted. We should make sure deleted items are removed from the cache
+                        return !strPathOr(false, 'deleted', existingItem) && R.propEq('name', capitalize(item), existingItem)
+                      },
+                      existingItemsResponses
+                    )
+                    if (existing) {
+                      log.debug(`Found existing sample region with id ${existing.id} for name ${existing.name}`)
+                    }
+                    return existing
+                  },
+                  queryForExistingContainer: regionsQueryContainer,
+                  // Need the full to get region.data.mapbox for sample data userRegion data
+                  outputParams: regionOutputParams,
+                  queryResponsePath: 'data.regions',
+                  mutationContainer: createSampleRegionContainer,
+                  responsePath: 'result.data.mutate.region',
+                  propVariationFunc: ({item: regionKey}) => {
+                    return {
+                      key: regionKey,
+                      name: capitalize(regionKey)
+                    };
+                  }
+                },
+                {render}
+              );
+            }
+          ]
+        ])({render, createSampleRegionsContainer, regionKeys})
       }
     ),
 
