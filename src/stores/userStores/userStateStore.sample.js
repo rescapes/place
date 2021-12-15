@@ -128,13 +128,13 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
 
     // Create sample projects
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'projects',
-      ({render, regions, searchLocations, createSampleProjectsContainer, projectKeys}) => {
+      ({render, user, regions, searchLocations, createSampleProjectsContainer, projectKeys}) => {
         return R.cond([
           [
             // Create SearchLocations based on createSampleSearchLocationsContainer
             R.prop('createSampleProjectsContainer'),
             ({regions, searchLocations, createSampleProjectsContainer, render}) => {
-              return createSampleProjectsContainer(apolloConfig, {forceDelete}, {regions, searchLocations, render});
+              return createSampleProjectsContainer(apolloConfig, {forceDelete}, {user, regions, searchLocations, render});
             }
           ],
           [
