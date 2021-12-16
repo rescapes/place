@@ -322,10 +322,14 @@ describe('userStateStore', () => {
         }
       ),
       mapToNamedPathAndInputs('user', 'data.currentUser',
-        ({apolloConfig}) => currentUserQueryContainer(apolloConfig, userOutputParams, {})
+        ({apolloConfig}) => {
+          return currentUserQueryContainer(apolloConfig, userOutputParams, {})
+        }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
-        () => testAuthTask()
+        () => {
+          return testAuthTask()
+        }
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
@@ -333,6 +337,6 @@ describe('userStateStore', () => {
           expectKeys(someUserStateKeys, userState);
         }
     }, errors, done));
-  }, 100000);
+  }, 10000);
 });
 

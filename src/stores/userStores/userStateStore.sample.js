@@ -138,6 +138,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
             }
           ],
           [
+            R.prop('projectKeys'),
             ({locations, regions, projectKeys, render}) => {
               return callMutationNTimesAndConcatResponses(
                 apolloConfig, {
@@ -179,6 +180,18 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                   outputParams: projectOutputParams
                 },
                 {regions, projectKeys, locations, render}
+              );
+            }
+          ],
+          [
+            R.T,
+            ({render}) => {
+              return containerForApolloType(
+                apolloConfig,
+                {
+                  render: getRenderPropFunction({render}),
+                  response: {objects: []}
+                }
               );
             }
           ]
@@ -235,6 +248,18 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
                   }
                 },
                 {render}
+              );
+            }
+          ],
+          [
+            R.T,
+            ({render}) => {
+              return containerForApolloType(
+                apolloConfig,
+                {
+                  render: getRenderPropFunction({render}),
+                  response: {objects: []}
+                }
               );
             }
           ]
@@ -295,6 +320,7 @@ export const mutateSampleUserStateWithProjectsAndRegionsContainer = (
             }
           ],
           [
+            R.T,
             ({render}) => {
               return containerForApolloType(
                 apolloConfig,

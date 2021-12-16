@@ -544,36 +544,39 @@ export const userStateMutationContainer = v(R.curry((
       R.compose(
         // Merge in the update function
         apolloConfig => {
-          return R.merge(apolloConfig, {
-              update: (store, {data, render, ...rest}) => {
-                const response = {result: {data}, ...rest};
-                // Add mutate to response.data so we dont' have to guess if it's a create or update
-                const userState = reqStrPathThrowing(
-                  'result.data.mutate.userState',
-                  addMutateKeyToMutationResponse({silent: true}, response)
-                );
-                // Add the cache only values to the persisted settings
-                // Deep merge the result of the mutation with the props so that we can add cache only values
-                // in props. We'll only cache values that are cache only since the mutation will have put
-                // the other return objects from the server into the cache
-                // TODO this is a bit redundant since the cache write also triggers a merge
-                const propsWithCacheOnlyItems = mergeCacheable({idPathLookup: userStateDataTypeIdPathLookup}, userState, {
-                  userState,
-                  render
-                });
+          return mergeDeep(apolloConfig, {
+              options: {
+                update: (store, {data, render, ...rest}) => {
+                  const response = {result: {data}, ...rest};
+                  // Add mutate to response.data so we dont' have to guess if it's a create or update
+                  const userState = reqStrPathThrowing(
+                    'result.data.mutate.userState',
+                    addMutateKeyToMutationResponse({silent: true}, response)
+                  );
+                  // Add the cache only values to the persisted settings
+                  // Deep merge the result of the mutation with the props so that we can add cache only values
+                  // in props. We'll only cache values that are cache only since the mutation will have put
+                  // the other return objects from the server into the cache
+                  // TODO this is a bit redundant since the cache write also triggers a merge
+                  const propsWithCacheOnlyItems = mergeCacheable(
+                    {idPathLookup: userStateDataTypeIdPathLookup}, R.prop('userState', props),
+                    userState
+                  );
 
-                // Mutate the cache to save settings to the database that are not stored on the server
-                makeCacheMutationContainer(
-                  R.merge(apolloConfig, {store}),
-                  {
-                    name: 'userState',
-                    // Always pass the full params so can pick out the cache only props
-                    outputParams: userStateLocalOutputParamsFull(),
-                    // For merging cached array items of userState.data.userRegions|userProjedts
-                    idPathLookup: userStateDataTypeIdPathLookup
-                  },
-                  filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
-                );
+                  // Mutate the cache to save settings to the database that are not stored on the server
+                  makeCacheMutationContainer(
+                    // Omit options here so we don't winnow props with the options.variables func
+                    R.merge(R.omit(['options'], apolloConfig), {store}),
+                    {
+                      name: 'userState',
+                      // Always pass the full params so can pick out the cache only props
+                      outputParams: userStateLocalOutputParamsFull(),
+                      // For merging cached array items of userState.data.userRegions|userProjedts
+                      idPathLookup: userStateDataTypeIdPathLookup
+                    },
+                    filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
+                  );
+                }
               }
             }
           )
