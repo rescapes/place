@@ -9,6 +9,7 @@ import {pickDeepPaths} from "@rescapes/ramda";
 export const defaultSearchLocationOutputParams = {
     id: 1,
     name: 1,
+    category: 1,
     identification: {
         identifier: 1,
         identifierContains: 1,
