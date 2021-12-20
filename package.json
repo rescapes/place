@@ -1,6 +1,6 @@
 {
   "name": "@rescapes/place",
-  "version": "0.1.125",
+  "version": "0.1.126",
   "description": "Apollo-backed place schema",
   "main": "./src/index.mjs",
   "module": "./src/index.mjs",
