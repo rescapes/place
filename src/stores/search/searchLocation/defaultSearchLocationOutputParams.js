@@ -12,8 +12,6 @@ export const defaultSearchLocationOutputParams = {
     category: 1,
     identification: {
         identifier: 1,
-        identifierContains: 1,
-        identifierContainsNot: 1,
         identifierIn: 1,
         identifierInNot: 1,
     },
