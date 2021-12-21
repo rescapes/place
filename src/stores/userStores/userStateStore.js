@@ -69,6 +69,9 @@ import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore.js
 const RELATED_PROPS = ['user'];
 export const USER_STATE_RELATED_DATA_PROPS = [
   'data.userRegions.region', 'data.userProjects.project',
+  // These two are listed explicitly so we can limit their props in USER_STATE_RELATED_DATA_PROPS_ALLOWED
+  'data.userRegions.userSearch.userSearchLocations',
+  'data.userProjects.userSearch.userSearchLocations',
   'data.userRegions.userSearch.userSearchLocations.searchLocation',
   'data.userProjects.userSearch.userSearchLocations.searchLocation',
   'data.userRegions.userSearch.userSearchLocations.searchLocation.jurisdictions',
@@ -77,6 +80,9 @@ export const USER_STATE_RELATED_DATA_PROPS = [
 // User search locations can be saved with the following props when we mutate a userState
 export const USER_SEARCH_LOCATION_ALLOWED_PROPS = ['name', 'identification', 'street', 'jurisdictions', 'geojson', 'data']
 const USER_STATE_RELATED_DATA_PROPS_ALLOWED = {
+  // These two prevent extra fields in userSearchLocations that were used as context in forming the search
+  'data.userRegions.userSearch.userSearchLocations': ['searchLocation', 'activity'],
+  'data.userProject.userSearch.userSearchLocations': ['searchLocation', 'activity'],
   'data.userRegions.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
   'data.userProjects.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
 }
