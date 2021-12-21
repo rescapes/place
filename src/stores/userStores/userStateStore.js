@@ -82,7 +82,7 @@ export const USER_SEARCH_LOCATION_ALLOWED_PROPS = ['name', 'identification', 'st
 export const USER_STATE_RELATED_DATA_PROPS_ALLOWED = {
   // These two prevent extra fields in userSearchLocations that were used as context in forming the search
   'data.userRegions.userSearch.userSearchLocations': ['searchLocation', 'activity'],
-  'data.userProject.userSearch.userSearchLocations': ['searchLocation', 'activity'],
+  'data.userProjects.userSearch.userSearchLocations': ['searchLocation', 'activity'],
   'data.userRegions.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
   'data.userProjects.userSearch.userSearchLocations.searchLocation': USER_SEARCH_LOCATION_ALLOWED_PROPS,
 }
