@@ -56,7 +56,8 @@ export {
   USER_STATE_RELATED_DATA_PROPS,
   userScopeOutputParamsOnlyIds,
   normalizeUserStatePropsForMutating,
-  USER_SEARCH_LOCATION_ALLOWED_PROPS
+  USER_SEARCH_LOCATION_ALLOWED_PROPS,
+  USER_STATE_RELATED_DATA_PROPS_ALLOWED
 } from './stores/userStores/userStateStore.js';
 export {
   userStateRegionsQueryContainer,

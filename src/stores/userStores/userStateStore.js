@@ -79,7 +79,7 @@ export const USER_STATE_RELATED_DATA_PROPS = [
 ];
 // User search locations can be saved with the following props when we mutate a userState
 export const USER_SEARCH_LOCATION_ALLOWED_PROPS = ['name', 'identification', 'street', 'jurisdictions', 'geojson', 'data']
-const USER_STATE_RELATED_DATA_PROPS_ALLOWED = {
+export const USER_STATE_RELATED_DATA_PROPS_ALLOWED = {
   // These two prevent extra fields in userSearchLocations that were used as context in forming the search
   'data.userRegions.userSearch.userSearchLocations': ['searchLocation', 'activity'],
   'data.userProject.userSearch.userSearchLocations': ['searchLocation', 'activity'],
