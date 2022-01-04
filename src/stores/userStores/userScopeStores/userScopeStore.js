@@ -361,8 +361,8 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
                 p => {
                   const userScopeObjs = R.propOr(null, 'userScopeObjs', p);
                   return R.merge(
-                    // Limit by any properties in the scope that aren't id. Keep id if we don't have userScopeObjs
-                    R.omit(R.length(userScopeObjs || []) ? ['id'] : [], scopeProps || {}),
+                    // Use the scopeProps.id if we don't have userScopeObjs
+                    R.pick(R.length(userScopeObjs || []) ? [] : ['id'], scopeProps || {}),
                     R.filter(R.length, {
                       // Map each scope object to its id
                       idIn: R.map(
