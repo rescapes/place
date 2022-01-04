@@ -69,6 +69,7 @@ import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore.js
 const RELATED_PROPS = ['user'];
 export const USER_STATE_RELATED_DATA_PROPS = [
   'data.userRegions.region', 'data.userProjects.project',
+  'data.userProjects.project.locations',
   // These two are listed explicitly so we can limit their props in USER_STATE_RELATED_DATA_PROPS_ALLOWED
   'data.userRegions.userSearch.userSearchLocations',
   'data.userProjects.userSearch.userSearchLocations',
