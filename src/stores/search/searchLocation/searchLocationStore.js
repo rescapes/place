@@ -129,7 +129,7 @@ export const querySearchLocationsContainer = v(R.curry(
     ['apolloConfig', PropTypes.shape().isRequired
     ],
     ['options', PropTypes.shape({
-      outputParams: PropTypes.shape.isRequired
+      outputParams: PropTypes.shape().isRequired
     })
     ],
     ['props', PropTypes.shape().isRequired]
@@ -163,7 +163,7 @@ export const makeSearchLocationMutationContainer = v(R.curry(
   }), [
   ['apolloConfig', PropTypes.shape().isRequired],
   ['options', PropTypes.shape({
-    outputParams: PropTypes.shape.isRequired
+    outputParams: PropTypes.shape().isRequired
   })
   ],
   ['props', PropTypes.shape().isRequired]

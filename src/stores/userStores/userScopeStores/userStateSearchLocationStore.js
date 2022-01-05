@@ -46,7 +46,7 @@ export const queryUserStateSearchLocationsContainer = v(
     ['apolloConfig', PropTypes.shape().isRequired
     ],
     ['options', PropTypes.shape({
-      outputParams: PropTypes.shape.isRequired
+      outputParams: PropTypes.shape().isRequired
     })
     ],
     ['props', PropTypes.shape({
