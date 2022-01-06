@@ -279,8 +279,8 @@ const _consolidateViewports = viewports => {
       // Create the bounds with the first two viewports, then add more. I don't know if there's a better
       // method that takes any number of bounds to create a new viewport
       return {
-        extent: bboxPolygon.default(
-          bbox.default(
+        extent: bboxPolygon(
+          bbox(
             featureCollection(
               compact(R.map(({longitude, latitude}) => {
                 return longitude && latitude ? point([longitude, latitude]) : null;
