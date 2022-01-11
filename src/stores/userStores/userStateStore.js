@@ -612,7 +612,7 @@ export const userStateMutationContainer = v(R.curry((
     })],
     ['props', PropTypes.shape({
       userState: PropTypes.shape(),
-      render: PropTypes.function
+      render: PropTypes.func
     }).isRequired]
   ],
   'userStateMutationContainer'
