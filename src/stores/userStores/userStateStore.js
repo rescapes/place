@@ -532,8 +532,8 @@ export const normalizeUserStatePropsForMutating = (
  * @param {String} [mutationConfig.userStatePropPath] Default 'userState', The prop path to the userState
  * Normalization function for userStateProps. If overriding make sure to include the logic in the default
  * @param {Object} props Object matching the shape of a userState for the create or update
- * @param {Object} [props.userState] Object matching the shape of a userState for the create or update.
- * If omitted then the other props will be assumed to be the props of the userState, minus the render prop
+ * @param {Object} [props.userState] Default 'userState',
+ * Object matching the shape of a userState for the create or update.
  * @param {Function} [props.render] required for component mutations
  * @returns {Task|Just} A container. For ApolloClient mutations we get a Task back. For Apollo components
  * we get a Just.Maybe back. In the future the latter will be a Task when Apollo and React enables async components
@@ -553,6 +553,7 @@ export const userStateMutationContainer = v(R.curry((
         apolloConfig => {
           return mergeDeep(apolloConfig, {
               options: {
+                skip: !strPathOr(null, userStatePropPath, props),
                 update: (store, {data, render, ...rest}) => {
                   const response = {result: {data}, ...rest};
                   // Add mutate to response.data so we dont' have to guess if it's a create or update
@@ -592,8 +593,8 @@ export const userStateMutationContainer = v(R.curry((
           // Compose 'options.variables' with a function that might have been passed in
           return composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables',
             props => {
-              // If the userState is specified use it, otherwise assume the userState props are at the top-level
-              const userState = strPathOr(props, userStatePropPath, props)
+              // If the userState resolves to null, the mutation will be marked skipped so it can't run
+              const userState = strPathOr(null, userStatePropPath, props)
               return normalizeUserStatePropsForMutating(userState)
             }
           )
