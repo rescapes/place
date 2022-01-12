@@ -272,7 +272,10 @@ describe('userStateStore', () => {
 
   test('userStateMutationWithCacheValuesContainer', done => {
     const errors = [];
-    const someUserStateKeys = ['id', 'data.userRegions.0.region.id', 'data.userProjects.0.project.id'];
+    const someUserStateKeys = [
+      'id', 'data.userRegions.0.region.id', 'data.userProjects.0.project.id',
+      'data.userRegions.0.selection', 'data.userProjects.0.selection'
+    ];
 
     composeWithChain([
       // Query again to make sure we get the cache-only data
@@ -285,7 +288,7 @@ describe('userStateStore', () => {
           );
         }
       ),
-      mapToNamedResponseAndInputs('cachedUserState',
+      mapToNamedPathAndInputs('cachedUserState', 'data.userStates.0',
         ({apolloConfig}) => {
           return currentUserStateLocalQueryContainer(
             apolloConfig,
@@ -342,7 +345,8 @@ describe('userStateStore', () => {
       )
     ])({}).run().listen(defaultRunConfig({
       onResolved:
-        ({userState}) => {
+        ({cachedUserState, userState}) => {
+          expectKeys(someUserStateKeys, cachedUserState);
           expectKeys(someUserStateKeys, userState);
         }
     }, errors, done));

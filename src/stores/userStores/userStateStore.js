@@ -750,19 +750,16 @@ export const currentUserStateLocalQueryContainer = (apolloConfig, {outputParams}
  * @param {Object} props.userState The UserState passed to the mutation
  * @param {Object} userState The UserState returned from the mutation
  */
-const userStateCacheMutationContainer = async (apolloConfig, {outputParams}, props, userState) => {
+const userStateCacheMutationContainer = (apolloConfig, {outputParams}, props, userState) => {
   // Add the cache only values to the persisted userState
   // Deep merge the result of the mutation with the props so that we can add cache only values
-  // in props.
-  // Because we sometimes only pass portions of UserState.data to the server, we need to maintain the full
-  // version of UserState that was loaded into the cache, so get it here.
-  const cachedUserState = await taskToPromise(currentUserStateLocalQueryContainer(apolloConfig, {outputParams}, props))
+  // TODO the cache write should call mergeFields and preserve cache-only values, but it does not preserve
   const propsWithCacheOnlyItems = mergeCacheable(
     {idPathLookup: userStateDataTypeIdPathLookup},
     // If the UserState is cached, use it, otherwise use the userState passed to the mutation
     // The latter case only applies when we mutate a UserState to the server before we read it from the server,
     // which is only the create new user scenario.
-    strPathOr(strPathOr({}, 'userState', props), 'data.userStates.0', cachedUserState),
+    strPathOr({}, 'userState', props),
     userState
   );
 
