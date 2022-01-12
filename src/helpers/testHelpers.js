@@ -15,9 +15,11 @@ import {
   defaultSettingsCacheOnlyObjs,
   defaultSettingsOutputParams, defaultSettingsTypenames,
   defaultStateLinkResolvers, settingsConfig,
-  writeConfigToServerAndCacheContainer, cacheOptions
+  writeConfigToServerAndCacheContainer, cacheOptions, typePoliciesWithMergeObjects
 } from '@rescapes/apollo';
 import settings from './privateSettings.js';
+import {reqStrPathThrowing} from "@rescapes/ramda";
+import {typePoliciesConfigLocal} from "../config.js";
 
 /**
  * The config for test. We add some cache only properties to
@@ -37,14 +39,32 @@ export const testConfig = {
     writeDefaultsCreator: writeConfigToServerAndCacheContainer,
     stateLinkResolvers: defaultStateLinkResolvers,
     // typePolicies config combines type policies
+    typePoliciesConfig: typePoliciesConfigLocal,
     cacheOptions
   }
 };
 
+export const configForApolloClient = config => {
+  return R.merge(
+    config,
+    {
+      apollo: {
+        writeDefaultsCreator: writeConfigToServerAndCacheContainer,
+        cacheOptions: {
+          typePolicies: typePoliciesWithMergeObjects(reqStrPathThrowing('apollo.typePoliciesConfig', config))
+        }
+      }
+    }
+  );
+};
 
 /**
  * Task to return and authorized client for tests
  * Returns an object {apolloClient:An authorized client}
  */
-export const testAuthTask = () => initializeAuthorizedTask(R.merge({settingsConfig}, testConfig));
-export const testNoAuthTask = () => initializeNoAuthTask(R.merge({settingsConfig}, testConfig));
+export const testAuthTask = () => initializeAuthorizedTask(
+  configForApolloClient(R.merge({settingsConfig}, testConfig))
+);
+export const testNoAuthTask = () => initializeNoAuthTask(
+  configForApolloClient(R.merge({settingsConfig}, testConfig))
+);

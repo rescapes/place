@@ -26,7 +26,7 @@ import {
   adminUserStateQueryContainer,
   currentUserStateQueryContainer,
   userStateMutationContainer,
-  userStateLocalOutputParamsFull
+  userStateLocalOutputParamsFull, currentUserStateLocalQueryContainer
 } from './userStateStore.js';
 import {
   mutateSampleUserStateWithProjectsAndRegionsContainer
@@ -277,11 +277,20 @@ describe('userStateStore', () => {
     composeWithChain([
       // Query again to make sure we get the cache-only data
       mapToNamedPathAndInputs('userState', 'data.userStates.0',
-        ({apolloConfig, userState}) => {
+        ({apolloConfig}) => {
           return currentUserStateQueryContainer(
             apolloConfig,
             {outputParams: userStateLocalOutputParamsFull()},
-            R.pick(['id'], userState)
+            {},
+          );
+        }
+      ),
+      mapToNamedResponseAndInputs('cachedUserState',
+        ({apolloConfig}) => {
+          return currentUserStateLocalQueryContainer(
+            apolloConfig,
+            {outputParams: userStateLocalOutputParamsFull()},
+            {},
           );
         }
       ),
@@ -296,7 +305,7 @@ describe('userStateStore', () => {
                 isSelected: true
               });
             },
-            // Just include the id and the userProjects
+            // Just include the id and the userProjects, userRegions won't be touched
             pickDeepPaths(['id', 'data.userProjects'], userState)
           );
           return userStateMutationContainer(

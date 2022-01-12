@@ -63,6 +63,9 @@ import {
   projectReadInputTypeMapper
 } from "../scopeStores/project/projectStore.js";
 import {createUserSearchOutputParams} from "./userScopeStores/userSearchStore.js";
+import {makeQueryFromCacheContainer} from "@rescapes/apollo/src/helpers/queryCacheHelpers.js";
+import {readInputTypeMapper} from "@rescapes/apollo/src/helpers/settingsStore.js";
+import {taskToPromise} from "@rescapes/ramda/src/monadHelpers.js";
 
 
 // TODO should be derived from the remote schema
@@ -362,70 +365,29 @@ export const createCacheOnlyPropsForUserState = props => {
 };
 
 /**
- * Queries userState for the current user as identified by the apollo client.
+ * Queries userState for the current user as identified on the server via the Apollo Client
  * @param {Object} apolloClient The Apollo Client
  * @param {Object} options
- * @param [Object] options.outputParams OutputParams for the query
- * @param {Object} props Arguments for the UserState query. This can be null but it's better to pass the user
- * to avoid a query to the current userResponse
- * @param {Object} props.currentUserResponse. The response of querying for the current user to avoid having to query for the
- * user again.
+ * @param {Object} options.outputParams OutputParams for the UserState query
+ * @param {String} [options.userStatePropPath] Default null. Instructs the query where to find props to limit
+ * the UserState query. This is only useful for checking for filtering out the current UserState
+ * @param {Object} props Arguments for the UserState query. Usually empty except for the render method of component queries
  * @returns {Task|Object} A Task or apollo container resolving to the single item user state response {data: {usersStates: []}}
  */
-export const currentUserStateQueryContainer = v(R.curry(
-    (apolloConfig, {outputParams}, props) => {
-      return composeWithComponentMaybeOrTaskChain([
-        ({currentUserResponse, ...props}) => {
-          const user = strPathOr(null, 'data.currentUser', currentUserResponse)
-          if (!user) {
-            // Loading, error or skipped because not authenticated
-            return containerForApolloType(
-              apolloConfig,
-              {
-                render: getRenderPropFunction(props),
-                response: currentUserResponse
-              }
-            );
-          }
-          // Get the current user state
-          return makeQueryContainer(
-            composeFuncAtPathIntoApolloConfig(
-              apolloConfig,
-              'options.variables',
-              props => {
-                // Merge any other props (usually null) with current user
-                return R.merge(
-                  props,
-                  {
-                    user: R.pick(['id'], user)
-                  }
-                );
-              }
-            ),
-            {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
-            props
-          );
-        },
-        // Get the current user
-        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'currentUserResponse',
-          ({currentUserResponse, ...props}) => {
-            return R.ifElse(
-              R.isNil,
-              () => {
-                return currentUserQueryContainer(apolloConfig, {id: 1}, props)
-              },
-              currentUserResponse => containerForApolloType(
-                apolloConfig,
-                {
-                  render: getRenderPropFunction(props),
-                  // Override the data with the consolidated mapbox
-                  response: currentUserResponse
-                }
-              )
-            )(currentUserResponse);
-          })
-      ])(props);
-    }),
+export const currentUserStateQueryContainer = v((apolloConfig, {outputParams, userStatePropPath}, props) => {
+    return makeQueryContainer(
+      composeFuncAtPathIntoApolloConfig(
+        apolloConfig,
+        'options.variables',
+        props => {
+          // Get props at the userStatePropPath (unusual) or return no props
+          return userStatePropPath ? strPathOr({}, userStatePropPath, props) : {}
+        }
+      ),
+      {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
+      props
+    );
+  },
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
     ['queryStructure', PropTypes.shape({
@@ -435,7 +397,8 @@ export const currentUserStateQueryContainer = v(R.curry(
   ], 'currentUserStateQueryContainer');
 
 /**
- * Admin only. Queries userState. This will fail unless the apollo client is authenticated to an admin
+ * Admin only. Queries userState. This will return only the current user unless the user is_staff or is_superuser
+ * on the server
  * @param {Object} apolloClient The Apollo Client
  * @param [Object] outputParams OutputParams for the query
  * @param {Object} userStateArguments Arguments for the UserState query. This can be {} or null to not filter.
@@ -518,6 +481,7 @@ export const normalizeUserStatePropsForMutating = (
   )(userState);
 };
 
+
 /**
  * Soft delete scope instances and the references to them in the user state
  * TODO: There is currently no way to prevent deleting regions that do not belong to the user
@@ -561,29 +525,13 @@ export const userStateMutationContainer = v(R.curry((
                     'result.data.mutate.userState',
                     addMutateKeyToMutationResponse({silent: true}, response)
                   );
-                  // Add the cache only values to the persisted settings
-                  // Deep merge the result of the mutation with the props so that we can add cache only values
-                  // in props. We'll only cache values that are cache only since the mutation will have put
-                  // the other return objects from the server into the cache
-                  // TODO this is a bit redundant since the cache write also triggers a merge
-                  const propsWithCacheOnlyItems = mergeCacheable(
-                    {idPathLookup: userStateDataTypeIdPathLookup}, R.prop('userState', props),
-                    userState
-                  );
-
-                  // Mutate the cache to save settings to the database that are not stored on the server
-                  makeCacheMutationContainer(
+                  userStateCacheMutationContainer(
                     // Omit options here so we don't winnow props with the options.variables func
                     R.merge(R.omit(['options'], apolloConfig), {store}),
-                    {
-                      name: 'userState',
-                      // Always pass the full params so can pick out the cache only props
-                      outputParams: userStateLocalOutputParamsFull(),
-                      // For merging cached array items of userState.data.userRegions|userProjedts
-                      idPathLookup: userStateDataTypeIdPathLookup
-                    },
-                    filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
-                  );
+                    {outputParams},
+                    props,
+                    userState
+                  )
                 }
               }
             }
@@ -772,3 +720,77 @@ export const deleteProjectsContainer = (apolloConfig, {
     userState
   );
 };
+
+/**
+ * Cache-only query of the current UserState
+ * @param apolloConfig
+ * @param outputParams
+ * @param props
+ * @return {*}
+ */
+export const currentUserStateLocalQueryContainer = (apolloConfig, {outputParams}, props) => {
+  return makeQueryFromCacheContainer(
+    composeFuncAtPathIntoApolloConfig(
+      apolloConfig,
+      'options.variables',
+      props => {
+        return {}
+      }
+    ),
+    {name: 'userStates', readInputTypeMapper, outputParams},
+    props
+  );
+};
+
+/***
+ * Cache the UserState at its id and as a singleton.
+ * @param apolloConfig
+ * @param outputParams
+ * @param {Object} props
+ * @param {Object} props.userState The UserState passed to the mutation
+ * @param {Object} userState The UserState returned from the mutation
+ */
+const userStateCacheMutationContainer = async (apolloConfig, {outputParams}, props, userState) => {
+  // Add the cache only values to the persisted userState
+  // Deep merge the result of the mutation with the props so that we can add cache only values
+  // in props.
+  // Because we sometimes only pass portions of UserState.data to the server, we need to maintain the full
+  // version of UserState that was loaded into the cache, so get it here.
+  const cachedUserState = await taskToPromise(currentUserStateLocalQueryContainer(apolloConfig, {outputParams}, props))
+  const propsWithCacheOnlyItems = mergeCacheable(
+    {idPathLookup: userStateDataTypeIdPathLookup},
+    // If the UserState is cached, use it, otherwise use the userState passed to the mutation
+    // The latter case only applies when we mutate a UserState to the server before we read it from the server,
+    // which is only the create new user scenario.
+    strPathOr(strPathOr({}, 'userState', props), 'data.userStates.0', cachedUserState),
+    userState
+  );
+
+  // These run immediately even though they are containers. The results are returned async for tasks
+  // and via the render prop for components, but we discard the results of cache mutations
+
+  // Mutate the cache to save settings to the database that are not stored on the server
+  makeCacheMutationContainer(
+    apolloConfig,
+    {
+      name: 'userState',
+      // Always pass the full params so can pick out the cache only props
+      outputParams: userStateLocalOutputParamsFull(),
+      // For merging cached array items of userState.data.userRegions|userProjects
+      idPathLookup: userStateDataTypeIdPathLookup
+    },
+    filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
+  );
+  makeCacheMutationContainer(
+    apolloConfig,
+    {
+      name: 'userState',
+      // Always pass the full params so can pick out the cache only props
+      outputParams: userStateLocalOutputParamsFull(),
+      // For merging cached array items of userState.data.userRegions|userProjects
+      idPathLookup: userStateDataTypeIdPathLookup,
+      singleton: true
+    },
+    filterOutReadOnlyVersionProps(propsWithCacheOnlyItems)
+  );
+}

@@ -100,12 +100,7 @@ describe('userStateHelpers', () => {
       // Resolve the user state
       mapToNamedResponseAndInputs('userStateResponses',
         ({apolloConfig, currentUserResponse}) => {
-          return currentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {currentUserResponse});
-        }
-      ),
-      mapToNamedResponseAndInputs('currentUserResponse',
-        ({apolloConfig}) => {
-          return currentUserQueryContainer(apolloConfig, userOutputParams, {});
+          return currentUserStateQueryContainer(apolloConfig, {outputParams: userStateOutputParamsOnlyIds}, {});
         }
       ),
       mapToNamedResponseAndInputs('apolloConfig',
