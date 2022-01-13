@@ -382,7 +382,7 @@ export const currentUserStateQueryContainer = v((apolloConfig, {outputParams, re
           R.compose(
             apolloConfig => {
               // Combine the possible passed in skip with our own here
-              return logicalOrValueAtPathIntoApolloConfig(apolloConfig, 'options.skip', strPathOr(false, 'userResponse.data.currentUser', props))
+              return logicalOrValueAtPathIntoApolloConfig(apolloConfig, 'options.skip', !strPathOr(false, 'userResponse.data.currentUser', props))
             },
             apolloConfig => {
               // Compose passed in apollo.options.variables (unusual) with our own
