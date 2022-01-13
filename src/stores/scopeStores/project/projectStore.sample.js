@@ -57,6 +57,7 @@ export const createSampleProjectContainer = (apolloConfig, {
     },
 
     // Create sample locations (optional)
+    mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'locations',
     ({deletedResponse, ...props}) => {
       return R.ifElse(
         R.identity,
@@ -71,7 +72,7 @@ export const createSampleProjectContainer = (apolloConfig, {
           );
         }
       )(createSampleLocationsContainer);
-    },
+    }),
     // Delete all projects of this user if desired.
     mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'deletedResponse',
     props => {
