@@ -44,7 +44,7 @@ export const createSampleProjectContainer = (apolloConfig, {
 }, props) => {
 
   return composeWithComponentMaybeOrTaskChain([
-    locations => {
+    ({locations}) => {
       return projectMutationContainer(
         apolloConfig,
         {outputParams: outputParams || projectOutputParams},
