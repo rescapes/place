@@ -1,4 +1,5 @@
 import {
+  adminUserStateQueryContainer,
   currentUserStateQueryContainer,
   normalizeDefaultUserStatePropsForMutating,
   userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds,
@@ -27,6 +28,7 @@ import {
   strPathOr
 } from "@rescapes/ramda";
 import {
+  authenticatedUserLocalContainer,
   composeFuncAtPathIntoApolloConfig,
   composeWithComponentMaybeOrTaskChain,
   containerForApolloType,
@@ -113,20 +115,24 @@ export const userStateScopeObjsQueryContainer = v(R.curry(
           const userPropPaths = ['id', 'user.id'];
           // Use currentUserStateQueryContainer unless user params are specified.
           // Only admins can query for other users (to be controlled on the server)
-          const userState = strPathOr({}, 'userState', props);
-          const queryContainer = R.any(p => strPathOr(null, p, userState), userPropPaths) ?
-            makeQueryContainer :
-            currentUserStateQueryContainer;
+          // TODO disable admin UserState queries until needed
+          // const userState = strPathOr({}, 'userState', props);
+          //const userStateProps = pickDeepPaths(userPropPaths, userState || {});
+          //const user = strPathOr(null, 'userResponse.data.user', props)
+          //adminUserStateQueryContainer
 
-          return queryContainer(
+          return currentUserStateQueryContainer(
             mergeDeep(
               apolloConfig,
               // Keep all props
               {
                 options: {
+                  /*
+                  // TODO this could be used to query for other UserStates by an admin
                   variables: ({userState}) => {
-                    return pickDeepPaths(userPropPaths, userState || {});
+                    return userStateProps;
                   },
+                  */
                   errorPolicy: 'all',
                   partialRefetch: true
                 }
@@ -153,6 +159,9 @@ export const userStateScopeObjsQueryContainer = v(R.curry(
             },
             props
           );
+        }),
+        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userResponse', () => {
+          return authenticatedUserLocalContainer(apolloConfig, {})
         })
       ])(props);
     }),
