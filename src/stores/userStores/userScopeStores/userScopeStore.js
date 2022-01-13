@@ -85,8 +85,6 @@ export const userStateScopeObjsQueryContainer = v(R.curry(
       // Since we only store the id of the scope obj in the userState, if there are other queryParams
       // besides id we need to do a second query on the scope objs directly
       return composeWithComponentMaybeOrTaskChain([
-        // If we got Result.Ok and there are scope props, query for the user's scope objs
-        // Result Object -> Task Object
         nameComponent('queryScopeObjsOfUserStateContainerIfUserScope', userStatesResponse => {
           if (!strPathOr(false, 'data', userStatesResponse)) {
             return containerForApolloType(
@@ -99,7 +97,7 @@ export const userStateScopeObjsQueryContainer = v(R.curry(
           }
           const userScopeName = _userScopeName(scopeName);
           const userStateScopePath = `data.userStates.0.data.${userScopeName}`;
-          const userScopeObjs = strPathOr(null, userStateScopePath, userStatesResponse);
+          const userScopeObjs = strPathOr([], userStateScopePath, userStatesResponse);
 
           return queryScopeObjsOfUserStateContainerIfUserScopeOrOutputParams(apolloConfig, {
             scopeQueryContainer,

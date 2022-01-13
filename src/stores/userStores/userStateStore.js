@@ -21,7 +21,7 @@ import {
   currentUserQueryContainer, filterOutNullAndEmptyDeep,
   filterOutNullDeleteProps,
   filterOutReadOnlyVersionProps,
-  getRenderPropFunction,
+  getRenderPropFunction, logicalOrValueAtPathIntoApolloConfig,
   makeCacheMutationContainer,
   makeMutationRequestContainer,
   makeQueryContainer,
@@ -381,7 +381,8 @@ export const currentUserStateQueryContainer = v((apolloConfig, {outputParams, us
           R.merge(apolloConfig,
             {
               options: {
-                skip: !strPathOr(false, 'userResponse.data.currentUser', props),
+                // Combine the possible passed in skip with our own here
+                skip: logicalOrValueAtPathIntoApolloConfig(apolloConfig, 'skip', strPathOr(false, 'userResponse.data.currentUser', props)),
                 variables: props => {
                   // Get props at the userStatePropPath (unusual) or return no props
                   return userStatePropPath ? strPathOr({}, userStatePropPath, props) : {}
