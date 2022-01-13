@@ -378,20 +378,21 @@ export const currentUserStateQueryContainer = v((apolloConfig, {outputParams, us
     return composeWithComponentMaybeOrTaskChain([
       props => {
         return makeQueryContainer(
-          R.merge(apolloConfig,
-            {
-              options: {
-                // Combine the possible passed in skip with our own here
-                skip: logicalOrValueAtPathIntoApolloConfig(apolloConfig, 'skip', strPathOr(false, 'userResponse.data.currentUser', props)),
-                variables: props => {
+          R.compose(
+            apolloConfig => {
+              // Combine the possible passed in skip with our own here
+              return logicalOrValueAtPathIntoApolloConfig(apolloConfig, 'options.skip', strPathOr(false, 'userResponse.data.currentUser', props))
+            },
+            apolloConfig => {
+              // Compose passed in apollo.options.variables (unusual) with our own
+              return composeFuncAtPathIntoApolloConfig(apolloConfig, 'options.variables',
+                props => {
                   // Get props at the userStatePropPath (unusual) or return no props
                   return userStatePropPath ? strPathOr({}, userStatePropPath, props) : {}
-                },
-                // Pass through error so we can handle it in the component
-                errorPolicy: 'all'
-              }
+                }
+              )
             }
-          ),
+          )(apolloConfig),
           {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
           props
         )
