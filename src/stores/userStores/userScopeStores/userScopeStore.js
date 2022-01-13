@@ -73,6 +73,7 @@ import PropTypes from 'prop-types'
 export const userStateScopeObjsQueryContainer = v(R.curry(
     (apolloConfig,
      {
+       userStateQueryContainer=currentUserStateQueryContainer,
        scopeQueryContainer,
        scopeName,
        readInputTypeMapper,

@@ -11,7 +11,7 @@
 
 import * as R from 'ramda';
 import {
-  addMutateKeyToMutationResponse,
+  addMutateKeyToMutationResponse, authenticatedUserLocalContainer,
   callMutationNTimesAndConcatResponses,
   composeFuncAtPathIntoApolloConfig,
   composeWithComponentMaybeOrTaskChain,
@@ -375,18 +375,33 @@ export const createCacheOnlyPropsForUserState = props => {
  * @returns {Task|Object} A Task or apollo container resolving to the single item user state response {data: {usersStates: []}}
  */
 export const currentUserStateQueryContainer = v((apolloConfig, {outputParams, userStatePropPath}, props) => {
-    return makeQueryContainer(
-      composeFuncAtPathIntoApolloConfig(
-        apolloConfig,
-        'options.variables',
+    return composeWithComponentMaybeOrTaskChain([
+      props => {
+        return makeQueryContainer(
+          R.merge(apolloConfig,
+            {
+              options: {
+                skip: !strPathOr(false, 'userResponse.data.currentUser', props),
+                variables: props => {
+                  // Get props at the userStatePropPath (unusual) or return no props
+                  return userStatePropPath ? strPathOr({}, userStatePropPath, props) : {}
+                },
+                // Pass through error so we can handle it in the component
+                errorPolicy: 'all'
+              }
+            }
+          ),
+          {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
+          props
+        )
+      },
+      // Resolve the current user from the cache
+      mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userResponse',
         props => {
-          // Get props at the userStatePropPath (unusual) or return no props
-          return userStatePropPath ? strPathOr({}, userStatePropPath, props) : {}
+          return authenticatedUserLocalContainer(apolloConfig, props)
         }
-      ),
-      {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
-      props
-    );
+      )
+    ])(props)
   },
   [
     ['apolloConfig', PropTypes.shape({apolloClient: PropTypes.shape()}).isRequired],
