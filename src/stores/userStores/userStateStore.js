@@ -369,12 +369,13 @@ export const createCacheOnlyPropsForUserState = props => {
  * @param {Object} apolloClient The Apollo Client
  * @param {Object} options
  * @param {Object} options.outputParams OutputParams for the UserState query
+ * @param {Object} [options.readInputTypeMapper] Defaults to userStateReadInputTypeMapper
  * @param {String} [options.userStatePropPath] Default null. Instructs the query where to find props to limit
  * the UserState query. This is only useful for checking for filtering out the current UserState
  * @param {Object} props Arguments for the UserState query. Usually empty except for the render method of component queries
  * @returns {Task|Object} A Task or apollo container resolving to the single item user state response {data: {usersStates: []}}
  */
-export const currentUserStateQueryContainer = v((apolloConfig, {outputParams, userStatePropPath}, props) => {
+export const currentUserStateQueryContainer = v((apolloConfig, {outputParams, readInputTypeMapper=userStateReadInputTypeMapper, userStatePropPath}, props) => {
     return composeWithComponentMaybeOrTaskChain([
       props => {
         return makeQueryContainer(
@@ -393,7 +394,7 @@ export const currentUserStateQueryContainer = v((apolloConfig, {outputParams, us
               )
             }
           )(apolloConfig),
-          {name: 'userStates', readInputTypeMapper: userStateReadInputTypeMapper, outputParams},
+          {name: 'userStates', readInputTypeMapper, outputParams},
           props
         )
       },
