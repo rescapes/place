@@ -112,10 +112,10 @@ export const userStateScopeObjsQueryContainer = v(R.curry(
         // Dig into the results and return the userStates with the scope objects
         // where scope names is 'Regions', 'Projects', etc
         nameComponent('queryUserStates', props => {
-          const userPropPaths = ['id', 'user.id'];
+          // TODO disable admin UserState queries until needed
+          //const userPropPaths = ['id', 'user.id'];
           // Use currentUserStateQueryContainer unless user params are specified.
           // Only admins can query for other users (to be controlled on the server)
-          // TODO disable admin UserState queries until needed
           // const userState = strPathOr({}, 'userState', props);
           //const userStateProps = pickDeepPaths(userPropPaths, userState || {});
           //const user = strPathOr(null, 'userResponse.data.user', props)
@@ -160,9 +160,6 @@ export const userStateScopeObjsQueryContainer = v(R.curry(
             props
           );
         }),
-        mapTaskOrComponentToNamedResponseAndInputs(apolloConfig, 'userResponse', () => {
-          return authenticatedUserLocalContainer(apolloConfig, {})
-        })
       ])(props);
     }),
   [
