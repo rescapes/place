@@ -24,6 +24,7 @@ import {
 import PropTypes from 'prop-types';
 import {mapboxOutputParamsFragment} from '../../mapStores/mapboxOutputParams.js';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
+import {geojsonOutputParams} from "../../geojsonOutputParams.js";
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [
@@ -47,20 +48,7 @@ export const projectOutputParams = {
     locations: {
         id: 1
     },
-    geojson: {
-        type: 1,
-        features: {
-            type: 1,
-            id: 1,
-            geometry: {
-                type: 1,
-                coordinates: 1
-            },
-            properties: 1
-        },
-        generator: 1,
-        copyright: 1
-    },
+    geojson: geojsonOutputParams,
     data: R.merge({
             locations: {
                 // unstructured json represent location search params

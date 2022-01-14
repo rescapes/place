@@ -1,5 +1,7 @@
 import {versionOutputParamsMixin} from "@rescapes/apollo";
 import {pickDeepPaths} from "@rescapes/ramda";
+import {geojsonOutputParams, geojsonOutputParamsMinimized} from "../../geojsonOutputParams.js";
+import {geojsonByType} from "@rescapes/helpers";
 
 /**
  * This lacks any data property since the rescape-region SearchLocation.data property is just an example
@@ -24,20 +26,7 @@ export const defaultSearchLocationOutputParams = {
     },
     jurisdictions: {
         id: 1,
-        geojson: {
-            type: 1,
-            features: {
-                type: 1,
-                id: 1,
-                geometry: {
-                    type: 1,
-                    coordinates: 1,
-                },
-                properties: 1
-            },
-            generator: 1,
-            copyright: 1
-        },
+        geojson: geojsonOutputParams,
         data: {
             country: 1,
             countryContains: 1,
@@ -81,20 +70,7 @@ export const defaultSearchLocationOutputParams = {
         versionNumber: 1,
         revisionId: 1,
     },
-    geojson: {
-        type: 1,
-        features: {
-            type: 1,
-            id: 1,
-            geometry: {
-                type: 1,
-                coordinates: 1,
-            },
-            properties: 1,
-        },
-        generator: 1,
-        copyright: 1
-    },
+    geojson: geojsonOutputParams,
     ...versionOutputParamsMixin,
     deleted: 1
 }

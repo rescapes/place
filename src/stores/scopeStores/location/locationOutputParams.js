@@ -1,5 +1,5 @@
 import {versionOutputParamsMixin} from '@rescapes/apollo';
-import {geojsonOutputParamsMinimized} from "../../geojsonOutputParams.js";
+import {geojsonOutputParams, geojsonOutputParamsMinimized} from "../../geojsonOutputParams.js";
 
 export const locationOutputParamsMinimized = {
   id: 1,
@@ -20,20 +20,7 @@ export const locationOutputParams = {
   data: {
     example: 1
   },
-  geojson: {
-    type: 1,
-    features: {
-      type: 1,
-      id: 1,
-      geometry: {
-        type: 1,
-        coordinates: 1
-      },
-      properties: 1
-    },
-    generator: 1,
-    copyright: 1
-  },
+  geojson: geojsonOutputParams,
   deleted: 1,
   ...versionOutputParamsMixin
 };
