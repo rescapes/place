@@ -24,6 +24,7 @@ import {v} from '@rescapes/validate';
 import PropTypes from 'prop-types';
 import {queryVariationContainers} from '../../helpers/variedRequestHelpers.js';
 import {makeQueryFromCacheContainer, containerForApolloType, getRenderPropFunction, readInputTypeMapper} from "@rescapes/apollo";
+import {geojsonOutputParams, geojsonOutputParamsMinimized} from "../../geojsonOutputParams.js";
 
 // TODO should be derived from the remote schema
 const RELATED_PROPS = [];
@@ -49,20 +50,7 @@ export const regionOutputParams = {
   deleted: 1,
   key: 1,
   name: 1,
-  geojson: {
-    type: 1,
-    features: {
-      type: 1,
-      id: 1,
-      geometry: {
-        type: 1,
-        coordinates: 1
-      },
-      properties: 1
-    },
-    generator: 1,
-    copyright: 1
-  },
+  geojson: geojsonOutputParams,
   data: {
     locations: {
       params: 1
