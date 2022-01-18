@@ -12,9 +12,13 @@ import {typePolicies as typePoliciesRescapeApollo, typePoliciesConfig} from '@re
 import {userStateStorePoliciesConfig} from './stores/userStores/userStateStore.js';
 import {regionTypePolicy} from './stores/scopeStores/region/regionStore.js';
 import * as R from 'ramda';
+import {searchLocationTypePolicy} from "./stores/search/searchLocation/searchLocationStore.js";
 
 export const typePolicies = R.mergeRight(
-  {regionTypePolicy},
+  {
+    regionTypePolicy,
+    searchLocationTypePolicy
+  },
   userStateStorePoliciesConfig
 );
 

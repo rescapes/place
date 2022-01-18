@@ -47,6 +47,24 @@ export const searchLocationReadInputTypeMapper = createReadInputTypeMapper(
   'search'
 );
 
+export const searchLocationIdPathLookup = {
+  // Merge userRegions by region. The two paths apply for non-ref and ref versions
+  identification: ['identification.id', 'identification.__ref'],
+  street: ['street.id', 'street.__ref'],
+  jurisdictions: ['jurisdictions.id', 'jurisdictions.__ref'],
+  geojjon: ['geojjon.id', 'geojjon.__ref'],
+};
+
+export const searchLocationTypePolicy = {
+  type: 'LocationType',
+  keyFields: [],
+  // Create a merge function for these fields since we sometimes query fewer fields than other times and don't
+  // want lose cache data with the default merge strategy
+  fields: ['identification', 'street', 'jurisdictions', 'geojson'],
+  idPathLookup: searchLocationIdPathLookup,
+  cacheOnlyFieldLookup: {}
+}
+
 /**
  * Omits some unsupported searchLocation props from querying
  * Does nothing at the moment
