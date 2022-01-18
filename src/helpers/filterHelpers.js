@@ -36,7 +36,7 @@ export const createPropertiesFilter = v(R.curry(({propStrs, isCaseSensitive}, it
       // Or it matches any of the given props
       ...R.map(
         prop => searchString => R.compose(
-          value => R.contains(searchString, value),
+          value => R.includes(searchString, value),
           // Lower the prop value unless case sensitive
           value => R.unless(() => isCaseSensitive, v => R.toLower(v))(value),
           // Find the prop value
