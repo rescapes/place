@@ -52,12 +52,10 @@ export const searchLocationIdPathLookup = {
 
 export const searchLocationTypePolicy = {
   type: 'LocationType',
-  keyFields: [],
+  keyFields: null,
   // Create a merge function for these fields since we sometimes query fewer fields than other times and don't
-  // want lose cache data with the default merge strategy.
-  // Since identification, street, and geojson are just json without ids, this will result in the a right merge,
-  // not a deep merge, but at least it prevents Apollo from giving a warning.
-  // jurisdictions are SearchJurisdiction objects, so they will merge based on id
+  // want lose cache data with the default merge strategy. All fields will deep merge and jurisdiction
+  // will deep merge array items based on matching id
   fields: ['identification', 'street', 'jurisdictions', 'geojson'],
   idPathLookup: searchLocationIdPathLookup,
   cacheOnlyFieldLookup: {}
