@@ -52,7 +52,7 @@ export const searchLocationIdPathLookup = {
   identification: ['identification.id', 'identification.__ref'],
   street: ['street.id', 'street.__ref'],
   jurisdictions: ['jurisdictions.id', 'jurisdictions.__ref'],
-  geojjon: ['geojjon.id', 'geojjon.__ref'],
+  geojson: ['geojson.id', 'geojson.__ref'],
 };
 
 export const searchLocationTypePolicy = {
