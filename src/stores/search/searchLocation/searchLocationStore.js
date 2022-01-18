@@ -48,18 +48,16 @@ export const searchLocationReadInputTypeMapper = createReadInputTypeMapper(
 );
 
 export const searchLocationIdPathLookup = {
-  // Merge userRegions by region. The two paths apply for non-ref and ref versions
-  identification: ['identification.id', 'identification.__ref'],
-  street: ['street.id', 'street.__ref'],
-  jurisdictions: ['jurisdictions.id', 'jurisdictions.__ref'],
-  geojson: ['geojson.id', 'geojson.__ref'],
 };
 
 export const searchLocationTypePolicy = {
   type: 'LocationType',
   keyFields: [],
   // Create a merge function for these fields since we sometimes query fewer fields than other times and don't
-  // want lose cache data with the default merge strategy
+  // want lose cache data with the default merge strategy.
+  // Since identification, street, and geojson are just json without ids, this will result in the a right merge,
+  // not a deep merge, but at least it prevents Apollo from giving a warning.
+  // jurisdictions are SearchJurisdiction objects, so they will merge based on id
   fields: ['identification', 'street', 'jurisdictions', 'geojson'],
   idPathLookup: searchLocationIdPathLookup,
   cacheOnlyFieldLookup: {}
