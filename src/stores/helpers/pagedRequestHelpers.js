@@ -100,7 +100,7 @@ export const queryUsingPaginationContainer = v(R.curry((
                 // Pass the combined previous results
                 {previousPages},
                 // Skip the first page + 1-based index
-                R.merge(props, {orderBy, pageSize: pageSizeOrDefault, page: page + 2})
+                R.mergeRight(props, {orderBy, pageSize: pageSizeOrDefault, page: page + 2})
               );
             });
           },
@@ -124,7 +124,7 @@ export const queryUsingPaginationContainer = v(R.curry((
         props
       );
     }
-  ])(R.merge({page: 1, orderBy}, props));
+  ])(R.mergeRight({page: 1, orderBy}, props));
 }), [
   ['apolloConfig', PropTypes.shape()],
   ['queryConfig', PropTypes.shape({
@@ -255,7 +255,7 @@ export const _paginatedQueryContainer = (
       },
       readInputTypeMapper
     },
-    R.merge({page, pageSize, orderBy}, props)
+    R.mergeRight({page, pageSize, orderBy}, props)
   ));
 };
 
@@ -299,7 +299,7 @@ export const accumulatedSinglePageQueryContainer = (
             pageResponse => R.compose(
               // Set the page size to the number of objects (just for consistency)
               // Hard-code page and pages to 1 since we're combining all results into a single page
-              pageResponse => R.merge(
+              pageResponse => R.mergeRight(
                 pageResponse,
                 {
                   pageSize: R.length(reqPathThrowing(['data', name, 'objects'], pageResponse)),
@@ -361,7 +361,7 @@ export const _modifyApolloConfigOptionsVariablesForPagination = apolloConfig => 
     R.lensPath(['options', 'variables']),
     variables => {
       return props => {
-        return R.merge(
+        return R.mergeRight(
           // Page props and render are combined with the objects prop
             R.pick(specialProps, props),
           {

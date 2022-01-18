@@ -34,7 +34,7 @@ export const createSampleLocationContainer = ({apolloClient}, {}, props) => {
   return makeLocationMutationContainer(
     {apolloClient},
     {outputParams: locationOutputParamsMinimized},
-    R.merge(
+    R.mergeRight(
       {
         "data": {
           "example": {
@@ -84,7 +84,7 @@ export const createSampleLocationsContainer = v((apolloConfig, {forceDelete = tr
       responsePath: 'result.data.mutate.location',
       propVariationFunc: props => {
         const item = reqStrPathThrowing('item', props);
-        return R.merge({
+        return R.mergeRight({
           name: `CrazyHillsborough${item} Rd`,
           key: `crazyHillsborough${item}Rd`
         }, props || {});

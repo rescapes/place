@@ -178,7 +178,7 @@ export const userScopeFromProps = (
             // Remove the user scope instance from the propSets
             propSets => R.omit([userScopeInstancePropPath], propSets),
             // Get the scopeName instance from the userScopeInstance
-            propSets => R.merge({[scopeName]: strPathOr(undefined, `${userScopeInstancePropPath}.${scopeName}`, propSets)}, propSets)
+            propSets => R.mergeRight({[scopeName]: strPathOr(undefined, `${userScopeInstancePropPath}.${scopeName}`, propSets)}, propSets)
           )(propSets)
         )
       }

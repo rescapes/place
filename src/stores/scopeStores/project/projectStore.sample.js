@@ -49,7 +49,7 @@ export const createSampleProjectContainer = (apolloConfig, {
         apolloConfig,
         {outputParams: outputParams || projectOutputParams},
         projectSample(
-          R.merge(
+          R.mergeRight(
             props,
             {locations})
         )
@@ -89,7 +89,7 @@ export const createSampleProjectContainer = (apolloConfig, {
             mutateContainer: projectMutationContainer,
             responsePath: 'result.data.mutate.project'
           },
-          R.merge({
+          R.mergeRight({
               user: {
                 id: reqStrPathThrowing('user.id', props)
               }
@@ -169,7 +169,7 @@ export const createSampleProjectsContainer = v((apolloConfig, {count=10}, props)
             mutationContainer: (apolloConfig, options, props) => {
               return createSampleProjectContainer(
                 apolloConfig,
-                R.merge(
+                R.mergeRight(
                   options,
                   {createSampleLocationsContainer}
                 ),

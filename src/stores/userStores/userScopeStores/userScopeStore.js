@@ -104,7 +104,7 @@ export const userStateScopeObjsQueryContainer = v(R.curry(
             scopeName,
             userScopeName,
             userScopeOutputParams
-          }, R.merge(props, {userStatesResponse, userScopeObjs}));
+          }, R.mergeRight(props, {userStatesResponse, userScopeObjs}));
         }),
 
         // First query for UserState
@@ -315,7 +315,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
                 },
                 // If so merge the query result for that scope object with the user scope version
                 userScopeObj => {
-                  return R.merge(
+                  return R.mergeRight(
                     userScopeObj,
                     {
                       // Get the matching scope object
@@ -365,7 +365,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
                 },
                 p => {
                   const userScopeObjs = R.propOr(null, 'userScopeObjs', p);
-                  return R.merge(
+                  return R.mergeRight(
                     // Use the scopeProps.id if we don't have userScopeObjs
                     R.pick(R.length(userScopeObjs || []) ? [] : ['id'], scopeProps || {}),
                     R.filter(R.length, {
@@ -384,7 +384,7 @@ export const queryScopeObjsOfUserStateContainer = v(R.curry(
           {
             outputParams: scopeOutputParams
           },
-          R.merge(props, {userScopeObjs: _userScopeObjs})
+          R.mergeRight(props, {userScopeObjs: _userScopeObjs})
         );
       })
     ])(props);
@@ -678,8 +678,8 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
 }, props) => {
 
   const propsWithSetUserScopePath = ({userStateResponse, ...props}) => {
-    const propsWithUserState = R.merge(props, {userState: reqStrPathThrowing('data.userStates.0', userStateResponse)})
-    return R.merge(propsWithUserState, {
+    const propsWithUserState = R.mergeRight(props, {userState: reqStrPathThrowing('data.userStates.0', userStateResponse)})
+    return R.mergeRight(propsWithUserState, {
       // Resolve the use scope instance and set scopeInstance[...setPath...] to the value propSets[..setPropPath...]
       // The mutation will be set to skip if this resolves as null because of missing props
       userScope:
@@ -728,7 +728,7 @@ export const userStateScopeObjsSetPropertyThenMutationContainer = (apolloConfig,
                         // mutation function as userScopeData.
                         userScopeData: reqStrPathThrowing('userScope', propsWithSetUserScopePath(
                           // Prefer the mutationProps version of setPropPath in
-                          {userStateResponse, ...R.merge(props, mutationProps.variables)}
+                          {userStateResponse, ...R.mergeRight(props, mutationProps.variables)}
                         ))
                       }
                     }
@@ -859,7 +859,7 @@ export const queryUserScopeRelatedInstancesContainer = (
   )
   return queryContainer(
     composeFuncAtPathIntoApolloConfig(
-      R.merge(
+      R.mergeRight(
         apolloConfig,
         // Skip if we didn't get idObjects
         {options: {skip: !idInstances}},
@@ -993,7 +993,7 @@ export const queryAndMergeInUserScopeRelatedInstancesContainer = (
         // Query for the ids of the instances we need
         return queryContainer(
           composeFuncAtPathIntoApolloConfig(
-            R.merge(
+            R.mergeRight(
               apolloConfig,
               // Skip if we didn't get idObjects
               {options: {skip: !R.length(idInstances)}},

@@ -208,7 +208,7 @@ export const userStateRegionsActiveQueryContainer = (
   propSets
 ) => {
   const userRegion = {activity: {isActive: true}}
-  return userStateRegionsQueryContainer(apolloConfig, {userStateRegionOutputParams}, R.merge(propSets, {userRegion}))
+  return userStateRegionsQueryContainer(apolloConfig, {userStateRegionOutputParams}, R.mergeRight(propSets, {userRegion}))
 }
 
 /**

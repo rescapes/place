@@ -176,7 +176,7 @@ export const deleteLocationsContainer = (
             mutationContainer: makeLocationMutationContainer,
             responsePath: 'result.data.mutate.location',
           },
-          R.merge(props, {existingItemResponses: locationsResponse})
+          R.mergeRight(props, {existingItemResponses: locationsResponse})
         );
       }
     ),

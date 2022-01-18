@@ -114,7 +114,7 @@ export const userScopeOutputParamsFromScopeOutputParamsFragmentDefaultOnlyIds = 
   userScopeOutputParams = {[scopeName]: {id: 1, deleted: 1}}) => {
   const capitalized = capitalize((scopeName));
   return {
-    [`user${capitalized}s`]: R.merge({
+    [`user${capitalized}s`]: R.mergeRight({
         [scopeName]: mergeDeep(
           {id: 1, deleted: 1},
           R.propOr({}, scopeName, userScopeOutputParams)
@@ -263,7 +263,7 @@ export const userStateOutputParamsOnlyIds = userStateOutputParamsCreator({
 export const userStateScopePropPathOutputParamsCreator = scopePropPathValueOutputParamsFragment => {
   // Merge in {[scopeName]: {id: 1}} and {activity: {isActive: 1}} since we use often use that to filter the scope instances
   // we want
-  const mergedOutputFragment = scopeName => R.merge({
+  const mergedOutputFragment = scopeName => R.mergeRight({
       [scopeName]: {id: true},
       activity: {
         isActive: true
@@ -545,7 +545,7 @@ export const userStateMutationContainer = v(R.curry((
                   );
                   userStateCacheMutationContainer(
                     // Omit options here so we don't winnow props with the options.variables func
-                    R.merge(R.omit(['options'], apolloConfig), {store}),
+                    R.mergeRight(R.omit(['options'], apolloConfig), {store}),
                     {outputParams},
                     props,
                     userState
@@ -650,7 +650,7 @@ export const deleteScopeObjectsContainer = (
             outputParams: outputParams,
             readInputTypeMapper
           },
-          R.merge(scopeProps, {render})
+          R.mergeRight(scopeProps, {render})
         );
       }),
     // Remove existing scope objects from the userState if userState was given

@@ -45,7 +45,7 @@ export const testConfig = {
 };
 
 export const configForApolloClient = config => {
-  return R.merge(
+  return R.mergeRight(
     config,
     {
       apollo: {
@@ -63,8 +63,8 @@ export const configForApolloClient = config => {
  * Returns an object {apolloClient:An authorized client}
  */
 export const testAuthTask = () => initializeAuthorizedTask(
-  configForApolloClient(R.merge({settingsConfig}, testConfig))
+  configForApolloClient(R.mergeRight({settingsConfig}, testConfig))
 );
 export const testNoAuthTask = () => initializeNoAuthTask(
-  configForApolloClient(R.merge({settingsConfig}, testConfig))
+  configForApolloClient(R.mergeRight({settingsConfig}, testConfig))
 );

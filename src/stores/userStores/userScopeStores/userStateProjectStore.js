@@ -220,7 +220,7 @@ export const userStateProjectsActiveQueryContainer = (
   propSets
 ) => {
   const userProject = {activity: {isActive: true}}
-  return userStateProjectsQueryContainer(apolloConfig, {userStateProjectOutputParams}, R.merge(propSets, {userProject}))
+  return userStateProjectsQueryContainer(apolloConfig, {userStateProjectOutputParams}, R.mergeRight(propSets, {userProject}))
 }
 
 

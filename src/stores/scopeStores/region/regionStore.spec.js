@@ -78,7 +78,7 @@ describe('regionStore', () => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           // Returns all 10 with 2 queries of pageSize 5
           return reqStrPathThrowing('queryRegionsPaginatedAll', variations)(
-            R.merge(
+            R.mergeRight(
               {regionQueryKey: 'queryRegionsPaginatedAll', pageSize: 5},
               props
             )
@@ -90,7 +90,7 @@ describe('regionStore', () => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           // Returns 3 of the 10 regions on page 3
           return reqStrPathThrowing('queryRegionsPaginated', variations)(
-            R.merge(
+            R.mergeRight(
               {regionQueryKey: 'queryRegionsPaginated', pageSize: 3, page: 2},
               props
             )
@@ -101,7 +101,7 @@ describe('regionStore', () => {
         ({regionResponses, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           return reqStrPathThrowing('queryRegionsMinimized', variations)(
-            R.merge(
+            R.mergeRight(
               {regionQueryKey: 'queryRegionsMinimized'},
               props
             )
@@ -112,7 +112,7 @@ describe('regionStore', () => {
         ({regionResponses, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), regionResponses)};
           return reqStrPathThrowing('queryRegions', variations)(
-            R.merge(
+            R.mergeRight(
               {regionQueryKey: 'queryRegions'},
               props
             )
@@ -122,7 +122,7 @@ describe('regionStore', () => {
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
           return of(regionQueryVariationContainers(
-            R.merge(apolloConfig, {
+            R.mergeRight(apolloConfig, {
               options: {
                 skip: props => {
                   return !strPathOr('user', props);

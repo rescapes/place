@@ -376,7 +376,7 @@ const queryCurrentUserStateMergeScopePropPathValueContainer = (apolloConfig, {
     // Query for the user state by id
     props => {
       return currentUserStateQueryContainer(
-        R.merge(apolloConfig, {
+        R.mergeRight(apolloConfig, {
           options: {
             variables: props => {
               return {};
@@ -469,7 +469,7 @@ const scopeQueryResolveDataPropPathValueContainer = v((apolloConfig, {
     },
     props => {
       return scopeQueryContainer(
-        R.merge(apolloConfig, {
+        R.mergeRight(apolloConfig, {
           options: {
             variables: props => {
               return scopePropsFilter(props);

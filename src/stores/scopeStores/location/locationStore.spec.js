@@ -43,7 +43,7 @@ describe('locationStore', () => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
           // Returns all 10 with 2 queries of pageSize 5
           return reqStrPathThrowing('queryLocationsPaginatedAllMinimized', variations)(
-            R.merge(
+            R.mergeRight(
               {locationQueryKey: 'queryLocationsPaginatedAllMinimized', pageSize: 5},
               props
             )
@@ -55,7 +55,7 @@ describe('locationStore', () => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
           // Returns all 10 with 2 queries of pageSize 5
           return reqStrPathThrowing('queryLocationsPaginatedAll', variations)(
-            R.merge(
+            R.mergeRight(
               {locationQueryKey: 'queryLocationsPaginatedAll', pageSize: 5},
               props
             )
@@ -67,7 +67,7 @@ describe('locationStore', () => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
           // Returns 3 of the 10 locations on page 3
           return reqStrPathThrowing('queryLocationsPaginated', variations)(
-            R.merge(
+            R.mergeRight(
               {locationQueryKey: 'queryLocationsPaginated', pageSize: 3, page: 2},
               props
             )
@@ -78,7 +78,7 @@ describe('locationStore', () => {
         ({locations, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
           return reqStrPathThrowing('queryLocationsMinimized', variations)(
-            R.merge(
+            R.mergeRight(
               {locationQueryKey: 'queryLocationsMinimized'},
               props
             )
@@ -89,7 +89,7 @@ describe('locationStore', () => {
         ({locations, variations}) => {
           const props = {idIn: R.map(reqStrPathThrowing('id'), locations)};
           return reqStrPathThrowing('queryLocations', variations)(
-            R.merge(
+            R.mergeRight(
               {locationQueryKey: 'queryLocations'},
               props
             )
@@ -99,7 +99,7 @@ describe('locationStore', () => {
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
           return of(locationQueryVariationContainers(
-            R.merge(apolloConfig, {
+            R.mergeRight(apolloConfig, {
               options: {
                 skip: props => {
                   return !strPathOr('user', props);

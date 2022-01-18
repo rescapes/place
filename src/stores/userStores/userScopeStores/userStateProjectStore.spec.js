@@ -231,7 +231,7 @@ describe('userProjectStore', () => {
             },
             {
               userState,
-              userProject: R.merge(
+              userProject: R.mergeRight(
                 createUserProjectWithDefaults(
                   project
                 ), {selection: {isSelected: true}}

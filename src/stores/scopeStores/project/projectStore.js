@@ -49,7 +49,7 @@ export const projectOutputParams = {
         id: 1
     },
     geojson: geojsonOutputParams,
-    data: R.merge({
+    data: R.mergeRight({
             locations: {
                 // unstructured json represent location search params
                 params: 1

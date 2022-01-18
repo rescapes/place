@@ -62,7 +62,7 @@ describe('projectStore', () => {
         ({projectResponses, variations, user}) => {
           const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
           // Returns all 4 with 2 queries of pageSize 5
-          return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.merge(props, {
+          return reqStrPathThrowing('queryProjectsPaginatedAll', variations)(R.mergeRight(props, {
             projectQueryKey: 'queryProjectsPaginatedAll',
             pageSize: 5
           }));
@@ -72,7 +72,7 @@ describe('projectStore', () => {
         ({projectResponses, variations,user}) => {
           const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
           // Returns 3 of the 4 projects on page 3
-          return reqStrPathThrowing('queryProjectsPaginated', variations)(R.merge(props, {
+          return reqStrPathThrowing('queryProjectsPaginated', variations)(R.mergeRight(props, {
             projectQueryKey: 'queryProjectsPaginated',
             pageSize: 2,
             page: 2
@@ -82,26 +82,26 @@ describe('projectStore', () => {
       mapToNamedResponseAndInputs('projectsMinimized',
         ({projectResponses, variations, user}) => {
           const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
-          return reqStrPathThrowing('queryProjectsMinimized', variations)(R.merge(props, {projectQueryKey: 'queryProjectsMinimized'}));
+          return reqStrPathThrowing('queryProjectsMinimized', variations)(R.mergeRight(props, {projectQueryKey: 'queryProjectsMinimized'}));
         }
       ),
       mapToNamedResponseAndInputs('projectsFull',
         ({projectResponses, variations, user}) => {
           const props = {user, idIn: R.map(reqStrPathThrowing('id'), projectResponses)};
-          return reqStrPathThrowing('queryProjects', variations)(R.merge(props, {projectQueryKey: 'queryProjects'}));
+          return reqStrPathThrowing('queryProjects', variations)(R.mergeRight(props, {projectQueryKey: 'queryProjects'}));
         }
       ),
       mapToNamedResponseAndInputs('variations',
         ({apolloConfig}) => {
           return of(projectQueryVariationContainers(
-            R.merge(apolloConfig, {
+            R.mergeRight(apolloConfig, {
               options: {
                 skip: props => {
                   return !strPathOr('user', props);
                 },
                 variables: props => {
                   // Search by whatever props are passed into projectFilter
-                  return R.merge(
+                  return R.mergeRight(
                     R.pick(['idIn'], props),
                     {user: R.pick(['id'], reqStrPathThrowing('user', props))}
                   );

@@ -13,7 +13,7 @@ import {userStateStorePoliciesConfig} from './stores/userStores/userStateStore.j
 import {regionTypePolicy} from './stores/scopeStores/region/regionStore.js';
 import * as R from 'ramda';
 
-export const typePolicies = R.merge(
+export const typePolicies = R.mergeRight(
   {regionTypePolicy},
   userStateStorePoliciesConfig
 );
@@ -23,7 +23,7 @@ export const typePolicies = R.merge(
  * @param {[Object]} callerConfig List of type policies from the caller to concat
  * @returns {[Object]} Returns the combined typePoliciesConfig
  */
-export const typePoliciesConfigLocal = typePoliciesConfig(R.merge(
+export const typePoliciesConfigLocal = typePoliciesConfig(R.mergeRight(
   typePoliciesRescapeApollo,
   typePolicies
 ));

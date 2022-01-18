@@ -463,7 +463,7 @@ export const createUserProjectWithDefaults = (project, searchLocations = null, a
  * }
  */
 const createSampleUserStateProps = ({user, userState, regions, projects, searchLocations, additionalUserScopeData}) => {
-  return R.merge(
+  return R.mergeRight(
     userState ?
       R.pick(['id'], userState) :
       {user: R.pick(['id'], user)},
@@ -472,7 +472,7 @@ const createSampleUserStateProps = ({user, userState, regions, projects, searchL
         // Make the first instance of each active
         userRegions: R.addIndex(R.map)(
           (region, i) => {
-            return R.merge(
+            return R.mergeRight(
               createUserRegionWithDefaults(region, searchLocations, additionalUserScopeData),
               {activity: {isActive: !i}}
             );
@@ -481,7 +481,7 @@ const createSampleUserStateProps = ({user, userState, regions, projects, searchL
         ),
         userProjects: R.addIndex(R.map)(
           (project, i) => {
-            return R.merge(
+            return R.mergeRight(
               createUserProjectWithDefaults(project, searchLocations, additionalUserScopeData),
               {activity: {isActive: !i}}
             );

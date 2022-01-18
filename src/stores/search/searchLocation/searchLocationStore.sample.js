@@ -68,7 +68,7 @@ export const createSampleSearchLocationsContainer = v((apolloConfig, {forceDelet
       responsePath: 'result.data.mutate.searchLocation',
       propVariationFunc: props => {
         const item = reqStrPathThrowing('item', props);
-        return R.merge({
+        return R.mergeRight({
           name: `CrazyHillsboroughSearch${item}`,
         }, props || {});
       }

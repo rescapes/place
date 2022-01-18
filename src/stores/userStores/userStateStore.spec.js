@@ -304,7 +304,7 @@ describe('userStateStore', () => {
           const modifiedUserState = R.over(
             R.lensPath(['data', 'userProjects', 0, 'selection']),
             selection => {
-              return R.merge(selection, {
+              return R.mergeRight(selection, {
                 isSelected: true
               });
             },
