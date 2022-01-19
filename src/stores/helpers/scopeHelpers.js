@@ -45,7 +45,7 @@ export const queryAndDeleteIfFoundContainer = (
     response => {
       const objectsToDelete = pathOr(null, ['data', queryName], response);
       if (!objectsToDelete || R.any(response => !R.prop('data', response), objectsToDelete)) {
-        return nameComponent('queryAndDeleteIfFoundContainer', e('div', {}, 'loading'))
+        return nameComponent('queryAndDeleteIfFoundContainer', e('div', {}, 'loading queryAndDeleteIfFoundContainer'))
       }
       return callMutationNTimesAndConcatResponses(
         apolloConfig,
